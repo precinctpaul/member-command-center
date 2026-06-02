@@ -30,6 +30,102 @@ const identityFields = [
   }
 ];
 
+const universalProfileFields = [
+  {
+    key: "preferredName",
+    label: "Preferred Name"
+  },
+  {
+    key: "fullName",
+    label: "Full Name"
+  },
+  {
+    key: "title",
+    label: "Title"
+  },
+  {
+    key: "party",
+    label: "Party"
+  },
+  {
+    key: "district",
+    label: "District"
+  },
+  {
+    key: "jurisdiction",
+    label: "Jurisdiction"
+  },
+  {
+    key: "currentOffice",
+    label: "Current Office",
+    wide: true
+  },
+  {
+    key: "activeStatus",
+    label: "Active Status"
+  },
+  {
+    key: "reelectionYear",
+    label: "Reelection Year"
+  },
+  {
+    key: "pronunciation",
+    label: "Pronunciation"
+  },
+  {
+    key: "birthday",
+    label: "Birthday"
+  },
+  {
+    key: "birthplace",
+    label: "Birthplace"
+  },
+  {
+    key: "family",
+    label: "Family"
+  }
+];
+
+const headshotFields = [
+  {
+    key: "source",
+    label: "Headshot Source"
+  },
+  {
+    key: "altText",
+    label: "Alt Text"
+  },
+  {
+    key: "usageNote",
+    label: "Usage Note",
+    wide: true
+  },
+  {
+    key: "primaryUrl",
+    label: "Primary URL",
+    wide: true
+  }
+];
+
+const bioFields = [
+  {
+    key: "oneLine",
+    label: "One-Line Bio"
+  },
+  {
+    key: "short",
+    label: "Short Bio"
+  },
+  {
+    key: "standard",
+    label: "Standard Bio"
+  },
+  {
+    key: "long",
+    label: "Long Background Bio"
+  }
+];
+
 const financeSnapshotFields = [
   {
     key: "committeeName",
@@ -139,6 +235,26 @@ function renderPeopleList(selectedId) {
   });
 }
 
+function renderFieldGrid(fields, sourceObject) {
+  return fields
+    .map((field) => {
+      const rawValue = sourceObject[field.key];
+      const displayValue = formatValue(rawValue, field.format);
+      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
+      const valueClass = isMissing ? "missing" : "";
+      const wideClass = field.wide ? "wide" : "";
+      const longTextClass = field.wide ? "long-text" : "";
+
+      return `
+        <div class="identity-item ${wideClass}">
+          <div class="identity-label">${escapeHtml(field.label)}</div>
+          <span class="identity-value ${valueClass} ${longTextClass}">${escapeHtml(displayValue)}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function renderSourceIdentityHub(person) {
   const sourceIdentity = person.sourceIdentity || {};
 
@@ -157,7 +273,7 @@ function renderSourceIdentityHub(person) {
     <section class="card">
       <div class="card-header">
         <h3>Source Identity Hub</h3>
-        <div class="source-status">Verified</div>
+        <div class="source-status">Reference IDs</div>
       </div>
       <div class="identity-grid">
         ${rows}
@@ -166,22 +282,115 @@ function renderSourceIdentityHub(person) {
   `;
 }
 
-function renderCampaignFinanceSnapshot(person) {
-  const snapshot = person.campaignFinanceSnapshot || {};
+function renderUniversalReference(person) {
+  const universalProfile = person.universalProfile || {};
 
-  const rows = financeSnapshotFields
+  return `
+    <section class="card priority-card">
+      <div class="card-header">
+        <h3>Universal Reference</h3>
+        <div class="source-status">Everyday Use</div>
+      </div>
+      <div class="identity-grid">
+        ${renderFieldGrid(universalProfileFields, universalProfile)}
+      </div>
+    </section>
+  `;
+}
+
+function renderHeadshotCard(person) {
+  const headshot = person.headshot || {};
+
+  return `
+    <section class="card">
+      <div class="card-header">
+        <h3>Headshot and Media Asset</h3>
+        <div class="source-status">Primary Image</div>
+      </div>
+      <div class="media-card-content">
+        <div class="media-preview">
+          <img src="${escapeHtml(headshot.primaryUrl || person.photoUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />
+        </div>
+        <div class="media-meta identity-grid">
+          ${renderFieldGrid(headshotFields, headshot)}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderBioLibrary(person) {
+  const bio = person.bio || {};
+
+  const rows = bioFields
     .map((field) => {
-      const rawValue = snapshot[field.key];
-      const displayValue = formatValue(rawValue, field.format);
-      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
-      const valueClass = isMissing ? "missing" : "";
-      const wideClass = field.wide ? "wide" : "";
-      const longTextClass = field.wide ? "long-text" : "";
-
       return `
-        <div class="identity-item ${wideClass}">
+        <div class="bio-block">
           <div class="identity-label">${escapeHtml(field.label)}</div>
-          <span class="identity-value ${valueClass} ${longTextClass}">${escapeHtml(displayValue)}</span>
+          <p>${escapeHtml(formatValue(bio[field.key]))}</p>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <section class="card priority-card">
+      <div class="card-header">
+        <h3>Bio Library</h3>
+        <div class="source-status">Copy Reference</div>
+      </div>
+      <div class="bio-library">
+        ${rows}
+      </div>
+    </section>
+  `;
+}
+
+function renderOfficialLinksAndContact(person) {
+  const officialLinks = person.officialLinks || {};
+  const phones = person.phones || [];
+  const offices = person.offices || [];
+  const webHandles = person.webHandles || [];
+
+  const officialRows = Object.entries(officialLinks)
+    .map(([key, value]) => {
+      return `
+        <div class="list-row">
+          <span>${escapeHtml(labelizeKey(key))}</span>
+          <strong>${escapeHtml(value)}</strong>
+        </div>
+      `;
+    })
+    .join("");
+
+  const phoneRows = phones
+    .map((phone) => {
+      return `
+        <div class="list-row">
+          <span>${escapeHtml(phone.label)}</span>
+          <strong>${escapeHtml(phone.value)}</strong>
+        </div>
+      `;
+    })
+    .join("");
+
+  const officeRows = offices
+    .map((office) => {
+      return `
+        <div class="list-row">
+          <span>${escapeHtml(office.label)}</span>
+          <strong>${escapeHtml(office.value)}</strong>
+        </div>
+      `;
+    })
+    .join("");
+
+  const handleRows = webHandles
+    .map((handle) => {
+      return `
+        <div class="list-row">
+          <span>${escapeHtml(handle.label)}</span>
+          <strong>${escapeHtml(handle.value)}</strong>
         </div>
       `;
     })
@@ -190,47 +399,50 @@ function renderCampaignFinanceSnapshot(person) {
   return `
     <section class="card">
       <div class="card-header">
-        <h3>Campaign Finance Snapshot</h3>
-        <div class="source-status">OpenFEC Proof</div>
+        <h3>Official Links and Contact</h3>
+        <div class="source-status">Reference</div>
       </div>
-      <div class="identity-grid">
-        ${rows}
+      <div class="contact-grid">
+        <div class="contact-column">
+          <h4>Official Links</h4>
+          <div class="list-block compact-list">
+            ${officialRows}
+          </div>
+        </div>
+        <div class="contact-column">
+          <h4>Phones</h4>
+          <div class="list-block compact-list">
+            ${phoneRows}
+          </div>
+        </div>
+        <div class="contact-column wide-column">
+          <h4>Offices</h4>
+          <div class="list-block compact-list">
+            ${officeRows}
+          </div>
+        </div>
+        <div class="contact-column wide-column">
+          <h4>Social and Web Handles</h4>
+          <div class="list-block compact-list">
+            ${handleRows}
+          </div>
+        </div>
       </div>
     </section>
   `;
 }
 
-function renderCoreDetails(person) {
+function renderCampaignFinanceSnapshot(person) {
+  const snapshot = person.campaignFinanceSnapshot || {};
+
   return `
-    <section class="card">
+    <section class="card secondary-card">
       <div class="card-header">
-        <h3>Core Profile</h3>
+        <h3>Campaign Finance Snapshot</h3>
+        <div class="source-status">OpenFEC Proof</div>
       </div>
-      <div class="details-grid">
-        <div class="detail-item">
-          <div class="detail-label">Jurisdiction</div>
-          <div class="detail-value">${escapeHtml(person.jurisdiction)}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">District</div>
-          <div class="detail-value">${escapeHtml(person.district)}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Party</div>
-          <div class="detail-value">${escapeHtml(person.party)}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Reelection Year</div>
-          <div class="detail-value">${escapeHtml(person.reelectionYear)}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Birthplace</div>
-          <div class="detail-value">${escapeHtml(person.birthPlace)}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Family</div>
-          <div class="detail-value">${escapeHtml(person.family)}</div>
-        </div>
+      <div class="identity-grid">
+        ${renderFieldGrid(financeSnapshotFields, snapshot)}
       </div>
     </section>
   `;
@@ -243,9 +455,10 @@ function renderCommittees(person) {
     ? committees
         .map((committee) => {
           return `
-            <div class="list-row">
-              <span>${escapeHtml(committee.source)}</span>
+            <div class="list-row committee-row">
+              <span>${escapeHtml(committee.source)} · ${committee.active ? "Active" : "Inactive"}</span>
               <strong>${escapeHtml(committee.name)}</strong>
+              <em>${escapeHtml(committee.role || "Member")}</em>
             </div>
           `;
         })
@@ -255,7 +468,8 @@ function renderCommittees(person) {
   return `
     <section class="card">
       <div class="card-header">
-        <h3>Committee and Caucus Proof Slice</h3>
+        <h3>Committees and Caucuses</h3>
+        <div class="source-status">Memberships</div>
       </div>
       <div class="list-block">
         ${rows}
@@ -272,7 +486,7 @@ function renderSourceEndpoints(person) {
       const label = labelizeKey(key);
 
       return `
-        <div class="list-row">
+        <div class="list-row endpoint-row">
           <span>${escapeHtml(label)}</span>
           <strong>${escapeHtml(value)}</strong>
         </div>
@@ -281,7 +495,7 @@ function renderSourceEndpoints(person) {
     .join("");
 
   return `
-    <section class="card">
+    <section class="card secondary-card">
       <div class="card-header">
         <h3>Verified Source Endpoints</h3>
       </div>
@@ -309,7 +523,7 @@ function renderProofStatus(person) {
     .join("");
 
   return `
-    <section class="card">
+    <section class="card secondary-card">
       <div class="card-header">
         <h3>Connection Status</h3>
       </div>
@@ -321,16 +535,18 @@ function renderProofStatus(person) {
 }
 
 function renderProfile(person) {
+  const headshot = person.headshot || {};
+
   profileRoot.innerHTML = `
     <article>
       <section class="profile-hero">
         <div class="photo-wrap">
-          <img src="${escapeHtml(person.photoUrl)}" alt="${escapeHtml(person.displayName)}" />
+          <img src="${escapeHtml(headshot.primaryUrl || person.photoUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />
         </div>
         <div class="profile-title">
           <p class="eyebrow">${escapeHtml(person.title)}</p>
           <h2>${escapeHtml(person.displayName)}</h2>
-          <p>${escapeHtml(person.jurisdiction)} · ${escapeHtml(person.district)}</p>
+          <p>${escapeHtml(person.currentOffice || person.jurisdiction)} · ${escapeHtml(person.district)}</p>
           <div class="badges">
             <span class="badge">${escapeHtml(person.party)}</span>
             <span class="badge">${person.active ? "Active" : "Inactive"}</span>
@@ -340,10 +556,13 @@ function renderProfile(person) {
       </section>
 
       <section class="profile-content">
+        ${renderUniversalReference(person)}
+        ${renderBioLibrary(person)}
+        ${renderHeadshotCard(person)}
+        ${renderOfficialLinksAndContact(person)}
+        ${renderCommittees(person)}
         ${renderSourceIdentityHub(person)}
         ${renderCampaignFinanceSnapshot(person)}
-        ${renderCoreDetails(person)}
-        ${renderCommittees(person)}
         ${renderProofStatus(person)}
         ${renderSourceEndpoints(person)}
       </section>
