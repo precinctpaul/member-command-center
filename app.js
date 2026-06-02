@@ -6,27 +6,33 @@ const profileRoot = document.getElementById("profileRoot");
 const identityFields = [
   {
     key: "bioguideId",
-    label: "Bioguide ID"
+    label: "Bioguide ID",
+    copyable: true
   },
   {
     key: "fecCandidateId",
-    label: "FEC Candidate ID"
+    label: "FEC Candidate ID",
+    copyable: true
   },
   {
     key: "fecPrincipalCommitteeId",
-    label: "FEC Principal Committee ID"
+    label: "FEC Principal Committee ID",
+    copyable: true
   },
   {
     key: "policyNotePersonId",
-    label: "PolicyNote Person ID"
+    label: "PolicyNote Person ID",
+    copyable: true
   },
   {
     key: "policyNoteEntityId",
-    label: "PolicyNote Entity ID"
+    label: "PolicyNote Entity ID",
+    copyable: true
   },
   {
     key: "googleKnowledgeGraphMid",
-    label: "Google Knowledge Graph MID"
+    label: "Google Knowledge Graph MID",
+    copyable: true
   }
 ];
 
@@ -103,26 +109,32 @@ const headshotFields = [
   {
     key: "primaryUrl",
     label: "Primary URL",
-    wide: true
+    wide: true,
+    copyable: true,
+    link: true
   }
 ];
 
 const bioFields = [
   {
     key: "oneLine",
-    label: "One-Line Bio"
+    label: "One-Line Bio",
+    copyable: true
   },
   {
     key: "short",
-    label: "Short Bio"
+    label: "Short Bio",
+    copyable: true
   },
   {
     key: "standard",
-    label: "Standard Bio"
+    label: "Standard Bio",
+    copyable: true
   },
   {
     key: "long",
-    label: "Long Background Bio"
+    label: "Long Background Bio",
+    copyable: true
   }
 ];
 
@@ -356,12 +368,14 @@ const legislativeMechanicsFields = [
   {
     key: "sponsoredLegislationEndpoint",
     label: "Sponsored Legislation Endpoint",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "cosponsoredLegislationEndpoint",
     label: "Cosponsored Legislation Endpoint",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "votingRecordEndpointStatus",
@@ -434,32 +448,38 @@ const geographyFields = [
   {
     key: "electionInfoUrl",
     label: "Election Info URL",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "voterRegistrationUrl",
     label: "Voter Registration URL",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "voterRegistrationConfirmationUrl",
     label: "Registration Confirmation URL",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "absenteeVotingInfoUrl",
     label: "Absentee Voting Info URL",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "votingLocationFinderUrl",
     label: "Voting Location Finder URL",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "ballotInfoUrl",
     label: "Ballot Info URL",
-    wide: true
+    wide: true,
+    link: true
   },
   {
     key: "implementationNote",
@@ -591,6 +611,34 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function normalizeUrl(value) {
+  const url = String(value || "").trim();
+
+  if (!url) {
+    return "";
+  }
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
+  return `https://${url}`;
+}
+
+function isLikelyUrl(value) {
+  const text = String(value || "").trim();
+
+  return (
+    text.startsWith("http://") ||
+    text.startsWith("https://") ||
+    text.includes(".gov") ||
+    text.includes(".com") ||
+    text.includes(".org") ||
+    text.includes(".net") ||
+    text.includes(".social")
+  );
+}
+
 function formatValue(value, format) {
   if (value === null || value === undefined || value === "") {
     return "Not added yet";
@@ -603,20 +651,69 @@ function formatValue(value, format) {
   return value;
 }
 
-function formatMissing(value) {
-  if (value === null || value === undefined || value === "") {
-    return '<span class="identity-value missing">Not added yet</span>';
-  }
-
-  return `<span class="identity-value">${escapeHtml(value)}</span>`;
-}
-
 function labelizeKey(key) {
   return key
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (character) => character.toUpperCase())
     .replace("Youtube", "YouTube")
+    .replace("Id", "ID")
+    .replace("Fec", "FEC")
     .replace("Gov", "Gov");
+}
+
+function renderCopyButton(value, label = "Copy") {
+  const safeValue = escapeHtml(value);
+
+  return `
+    <button class="copy-button" type="button" data-copy-value="${safeValue}">
+      ${escapeHtml(label)}
+    </button>
+  `;
+}
+
+function renderValueContent(value, field = {}) {
+  const displayValue = formatValue(value, field.format);
+  const isMissing = value === null || value === undefined || value === "";
+
+  if (isMissing) {
+    return `<span class="identity-value missing">Not added yet</span>`;
+  }
+
+  if (field.link || isLikelyUrl(displayValue)) {
+    const href = normalizeUrl(displayValue);
+
+    return `
+      <a class="identity-value value-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">
+        ${escapeHtml(displayValue)}
+      </a>
+    `;
+  }
+
+  return `<span class="identity-value">${escapeHtml(displayValue)}</span>`;
+}
+
+function renderFieldGrid(fields, sourceObject) {
+  return fields
+    .map((field) => {
+      const rawValue = sourceObject[field.key];
+      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
+      const wideClass = field.wide ? "wide" : "";
+      const longTextClass = field.wide ? "long-text" : "";
+      const valueBlockClass = field.wide ? "field-value-block wide-value-block" : "field-value-block";
+
+      return `
+        <div class="identity-item ${wideClass}">
+          <div class="field-topline">
+            <div class="identity-label">${escapeHtml(field.label)}</div>
+            ${field.copyable && !isMissing ? renderCopyButton(rawValue) : ""}
+          </div>
+          <div class="${valueBlockClass} ${longTextClass}">
+            ${renderValueContent(rawValue, field)}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderPeopleList(selectedId) {
@@ -646,36 +743,33 @@ function renderPeopleList(selectedId) {
   });
 }
 
-function renderFieldGrid(fields, sourceObject) {
-  return fields
-    .map((field) => {
-      const rawValue = sourceObject[field.key];
-      const displayValue = formatValue(rawValue, field.format);
-      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
-      const valueClass = isMissing ? "missing" : "";
-      const wideClass = field.wide ? "wide" : "";
-      const longTextClass = field.wide ? "long-text" : "";
+function renderModuleCard(title, status, fields, sourceObject, options = {}) {
+  const openAttribute = options.openByDefault ? "open" : "";
 
-      return `
-        <div class="identity-item ${wideClass}">
-          <div class="identity-label">${escapeHtml(field.label)}</div>
-          <span class="identity-value ${valueClass} ${longTextClass}">${escapeHtml(displayValue)}</span>
+  return `
+    <details class="card details-card secondary-card" ${openAttribute}>
+      <summary class="card-header details-summary">
+        <h3>${escapeHtml(title)}</h3>
+        <div class="summary-actions">
+          <div class="source-status">${escapeHtml(status)}</div>
+          <span class="chevron" aria-hidden="true">▾</span>
         </div>
-      `;
-    })
-    .join("");
+      </summary>
+      <div class="identity-grid">
+        ${renderFieldGrid(fields, sourceObject || {})}
+      </div>
+    </details>
+  `;
 }
 
-function renderModuleCard(title, status, fields, sourceObject) {
+function renderOpenCard(title, status, bodyHtml, extraClass = "") {
   return `
-    <section class="card secondary-card">
+    <section class="card ${extraClass}">
       <div class="card-header">
         <h3>${escapeHtml(title)}</h3>
         <div class="source-status">${escapeHtml(status)}</div>
       </div>
-      <div class="identity-grid">
-        ${renderFieldGrid(fields, sourceObject || {})}
-      </div>
+      ${bodyHtml}
     </section>
   `;
 }
@@ -685,63 +779,59 @@ function renderSourceIdentityHub(person) {
 
   const rows = identityFields
     .map((field) => {
+      const rawValue = sourceIdentity[field.key];
+      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
+
       return `
         <div class="identity-item">
-          <div class="identity-label">${escapeHtml(field.label)}</div>
-          ${formatMissing(sourceIdentity[field.key])}
+          <div class="field-topline">
+            <div class="identity-label">${escapeHtml(field.label)}</div>
+            ${!isMissing ? renderCopyButton(rawValue) : ""}
+          </div>
+          <div class="field-value-block">
+            ${renderValueContent(rawValue, field)}
+          </div>
         </div>
       `;
     })
     .join("");
 
-  return `
-    <section class="card">
-      <div class="card-header">
-        <h3>Source Identity Hub</h3>
-        <div class="source-status">Reference IDs</div>
-      </div>
-      <div class="identity-grid">
-        ${rows}
-      </div>
-    </section>
-  `;
+  return renderOpenCard(
+    "Source Identity Hub",
+    "Reference IDs",
+    `<div class="identity-grid">${rows}</div>`,
+    "secondary-card"
+  );
 }
 
 function renderUniversalReference(person) {
   const universalProfile = person.universalProfile || {};
 
-  return `
-    <section class="card priority-card">
-      <div class="card-header">
-        <h3>Universal Reference</h3>
-        <div class="source-status">Everyday Use</div>
-      </div>
-      <div class="identity-grid">
-        ${renderFieldGrid(universalProfileFields, universalProfile)}
-      </div>
-    </section>
-  `;
+  return renderOpenCard(
+    "Universal Reference",
+    "Everyday Use",
+    `<div class="identity-grid">${renderFieldGrid(universalProfileFields, universalProfile)}</div>`,
+    "priority-card"
+  );
 }
 
 function renderHeadshotCard(person) {
   const headshot = person.headshot || {};
+  const imageUrl = headshot.primaryUrl || person.photoUrl;
 
-  return `
-    <section class="card">
-      <div class="card-header">
-        <h3>Headshot and Media Asset</h3>
-        <div class="source-status">Primary Image</div>
+  const bodyHtml = `
+    <div class="media-card-content">
+      <div class="media-preview">
+        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />
+        ${imageUrl ? renderCopyButton(imageUrl, "Copy Headshot URL") : ""}
       </div>
-      <div class="media-card-content">
-        <div class="media-preview">
-          <img src="${escapeHtml(headshot.primaryUrl || person.photoUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />
-        </div>
-        <div class="media-meta identity-grid">
-          ${renderFieldGrid(headshotFields, headshot)}
-        </div>
+      <div class="media-meta identity-grid">
+        ${renderFieldGrid(headshotFields, headshot)}
       </div>
-    </section>
+    </div>
   `;
+
+  return renderOpenCard("Headshot and Media Asset", "Primary Image", bodyHtml);
 }
 
 function renderBioLibrary(person) {
@@ -749,26 +839,27 @@ function renderBioLibrary(person) {
 
   const rows = bioFields
     .map((field) => {
+      const rawValue = bio[field.key];
+      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
+
       return `
         <div class="bio-block">
-          <div class="identity-label">${escapeHtml(field.label)}</div>
-          <p>${escapeHtml(formatValue(bio[field.key]))}</p>
+          <div class="field-topline">
+            <div class="identity-label">${escapeHtml(field.label)}</div>
+            ${field.copyable && !isMissing ? renderCopyButton(rawValue) : ""}
+          </div>
+          <p>${escapeHtml(formatValue(rawValue))}</p>
         </div>
       `;
     })
     .join("");
 
-  return `
-    <section class="card priority-card">
-      <div class="card-header">
-        <h3>Bio Library</h3>
-        <div class="source-status">Copy Reference</div>
-      </div>
-      <div class="bio-library">
-        ${rows}
-      </div>
-    </section>
-  `;
+  return renderOpenCard(
+    "Bio Library",
+    "Copy Reference",
+    `<div class="bio-library">${rows}</div>`,
+    "priority-card"
+  );
 }
 
 function renderOfficialLinksAndContact(person) {
@@ -779,98 +870,99 @@ function renderOfficialLinksAndContact(person) {
 
   const officialRows = Object.entries(officialLinks)
     .map(([key, value]) => {
-      return `
-        <div class="list-row">
-          <span>${escapeHtml(labelizeKey(key))}</span>
-          <strong>${escapeHtml(value)}</strong>
-        </div>
-      `;
+      return renderCopyableListRow(labelizeKey(key), value, {
+        link: isLikelyUrl(value),
+        copyable: key === "officialWebsite" || key === "contactForm"
+      });
     })
     .join("");
 
   const phoneRows = phones
     .map((phone) => {
-      return `
-        <div class="list-row">
-          <span>${escapeHtml(phone.label)}</span>
-          <strong>${escapeHtml(phone.value)}</strong>
-        </div>
-      `;
+      return renderCopyableListRow(phone.label, phone.value, {
+        copyable: true
+      });
     })
     .join("");
 
   const officeRows = offices
     .map((office) => {
-      return `
-        <div class="list-row">
-          <span>${escapeHtml(office.label)}</span>
-          <strong>${escapeHtml(office.value)}</strong>
-        </div>
-      `;
+      return renderCopyableListRow(office.label, office.value, {
+        copyable: true
+      });
     })
     .join("");
 
   const handleRows = webHandles
     .map((handle) => {
-      return `
-        <div class="list-row">
-          <span>${escapeHtml(handle.label)}</span>
-          <strong>${escapeHtml(handle.value)}</strong>
-        </div>
-      `;
+      return renderCopyableListRow(handle.label, handle.value, {
+        link: isLikelyUrl(handle.value),
+        copyable: false
+      });
     })
     .join("");
 
+  const bodyHtml = `
+    <div class="contact-grid">
+      <div class="contact-column">
+        <h4>Official Links</h4>
+        <div class="list-block compact-list">
+          ${officialRows}
+        </div>
+      </div>
+      <div class="contact-column">
+        <h4>Phones</h4>
+        <div class="list-block compact-list">
+          ${phoneRows}
+        </div>
+      </div>
+      <div class="contact-column wide-column">
+        <h4>Offices</h4>
+        <div class="list-block compact-list">
+          ${officeRows}
+        </div>
+      </div>
+      <div class="contact-column wide-column">
+        <h4>Social and Web Handles</h4>
+        <div class="list-block compact-list">
+          ${handleRows}
+        </div>
+      </div>
+    </div>
+  `;
+
+  return renderOpenCard("Official Links and Contact", "Reference", bodyHtml);
+}
+
+function renderCopyableListRow(label, value, options = {}) {
+  const safeValue = escapeHtml(value);
+  const valueHtml = options.link
+    ? `<a href="${escapeHtml(normalizeUrl(value))}" target="_blank" rel="noopener noreferrer">${safeValue}</a>`
+    : `<strong>${safeValue}</strong>`;
+
   return `
-    <section class="card">
-      <div class="card-header">
-        <h3>Official Links and Contact</h3>
-        <div class="source-status">Reference</div>
+    <div class="list-row copyable-list-row">
+      <span>${escapeHtml(label)}</span>
+      <div class="list-value-group">
+        ${valueHtml}
+        ${options.copyable ? renderCopyButton(value) : ""}
       </div>
-      <div class="contact-grid">
-        <div class="contact-column">
-          <h4>Official Links</h4>
-          <div class="list-block compact-list">
-            ${officialRows}
-          </div>
-        </div>
-        <div class="contact-column">
-          <h4>Phones</h4>
-          <div class="list-block compact-list">
-            ${phoneRows}
-          </div>
-        </div>
-        <div class="contact-column wide-column">
-          <h4>Offices</h4>
-          <div class="list-block compact-list">
-            ${officeRows}
-          </div>
-        </div>
-        <div class="contact-column wide-column">
-          <h4>Social and Web Handles</h4>
-          <div class="list-block compact-list">
-            ${handleRows}
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
   `;
 }
 
 function renderCampaignFinanceSnapshot(person) {
   const snapshot = person.campaignFinanceSnapshot || {};
 
-  return `
-    <section class="card secondary-card">
-      <div class="card-header">
-        <h3>Campaign Finance Snapshot</h3>
-        <div class="source-status">OpenFEC Proof</div>
-      </div>
-      <div class="identity-grid">
-        ${renderFieldGrid(financeSnapshotFields, snapshot)}
-      </div>
-    </section>
-  `;
+  return renderModuleCard(
+    "Campaign Finance Snapshot",
+    "OpenFEC Proof",
+    financeSnapshotFields,
+    snapshot,
+    {
+      openByDefault: false
+    }
+  );
 }
 
 function renderYouTubeProofVideos(person) {
@@ -883,25 +975,35 @@ function renderYouTubeProofVideos(person) {
 
   const rows = videos
     .map((video) => {
+      const youtubeUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(video.videoId)}`;
+
       return `
-        <div class="list-row">
+        <div class="list-row video-row">
           <span>${escapeHtml(video.videoId)}</span>
-          <strong>${escapeHtml(video.title)}</strong>
+          <div class="list-value-group">
+            <a href="${escapeHtml(youtubeUrl)}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(video.title)}
+            </a>
+            ${renderCopyButton(youtubeUrl, "Copy Link")}
+          </div>
         </div>
       `;
     })
     .join("");
 
   return `
-    <section class="card secondary-card">
-      <div class="card-header">
+    <details class="card details-card secondary-card">
+      <summary class="card-header details-summary">
         <h3>YouTube Proof Videos</h3>
-        <div class="source-status">Video IDs</div>
-      </div>
+        <div class="summary-actions">
+          <div class="source-status">Video IDs</div>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+      </summary>
       <div class="list-block">
         ${rows}
       </div>
-    </section>
+    </details>
   `;
 }
 
@@ -922,17 +1024,11 @@ function renderCommittees(person) {
         .join("")
     : '<p class="note">No committee memberships added yet.</p>';
 
-  return `
-    <section class="card">
-      <div class="card-header">
-        <h3>Committees and Caucuses</h3>
-        <div class="source-status">Memberships</div>
-      </div>
-      <div class="list-block">
-        ${rows}
-      </div>
-    </section>
-  `;
+  return renderOpenCard(
+    "Committees and Caucuses",
+    "Memberships",
+    `<div class="list-block">${rows}</div>`
+  );
 }
 
 function renderSourceEndpoints(person) {
@@ -945,21 +1041,30 @@ function renderSourceEndpoints(person) {
       return `
         <div class="list-row endpoint-row">
           <span>${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value)}</strong>
+          <div class="list-value-group">
+            <a href="${escapeHtml(normalizeUrl(value))}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(value)}
+            </a>
+            ${renderCopyButton(value, "Copy")}
+          </div>
         </div>
       `;
     })
     .join("");
 
   return `
-    <section class="card secondary-card">
-      <div class="card-header">
+    <details class="card details-card secondary-card">
+      <summary class="card-header details-summary">
         <h3>Verified Source Endpoints</h3>
-      </div>
+        <div class="summary-actions">
+          <div class="source-status">API Links</div>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+      </summary>
       <div class="list-block">
         ${rows}
       </div>
-    </section>
+    </details>
   `;
 }
 
@@ -980,15 +1085,60 @@ function renderProofStatus(person) {
     .join("");
 
   return `
-    <section class="card secondary-card">
-      <div class="card-header">
+    <details class="card details-card secondary-card">
+      <summary class="card-header details-summary">
         <h3>Connection Status</h3>
-      </div>
+        <div class="summary-actions">
+          <div class="source-status">Status</div>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+      </summary>
       <div class="list-block">
         ${rows}
       </div>
-    </section>
+    </details>
   `;
+}
+
+function bindCopyButtons() {
+  document.querySelectorAll(".copy-button").forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const copyValue = button.getAttribute("data-copy-value") || "";
+      const originalText = button.textContent;
+
+      try {
+        await navigator.clipboard.writeText(copyValue);
+        button.textContent = "Copied ✓";
+        button.classList.add("copied");
+      } catch (error) {
+        fallbackCopyText(copyValue);
+        button.textContent = "Copied ✓";
+        button.classList.add("copied");
+      }
+
+      window.setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove("copied");
+      }, 1400);
+    });
+  });
+}
+
+function fallbackCopyText(value) {
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-9999px";
+  textarea.style.left = "-9999px";
+
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textarea);
 }
 
 function renderProfile(person) {
@@ -1038,6 +1188,8 @@ function renderProfile(person) {
       </section>
     </article>
   `;
+
+  bindCopyButtons();
 }
 
 function boot() {
