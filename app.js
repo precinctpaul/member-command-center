@@ -1,605 +1,174 @@
-const people = window.MEMBER_COMMAND_CENTER_PEOPLE || [];
-
 const peopleList = document.getElementById("peopleList");
 const profileRoot = document.getElementById("profileRoot");
 
+let people = [];
+let selectedPersonId = null;
+
 const identityFields = [
-  {
-    key: "bioguideId",
-    label: "Bioguide ID",
-    copyable: true
-  },
-  {
-    key: "fecCandidateId",
-    label: "FEC Candidate ID",
-    copyable: true
-  },
-  {
-    key: "fecPrincipalCommitteeId",
-    label: "FEC Principal Committee ID",
-    copyable: true
-  },
-  {
-    key: "policyNotePersonId",
-    label: "PolicyNote Person ID",
-    copyable: true
-  },
-  {
-    key: "policyNoteEntityId",
-    label: "PolicyNote Entity ID",
-    copyable: true
-  },
-  {
-    key: "googleKnowledgeGraphMid",
-    label: "Google Knowledge Graph MID",
-    copyable: true
-  }
+  { key: "bioguideId", label: "Bioguide ID", copyable: true },
+  { key: "fecCandidateId", label: "FEC Candidate ID", copyable: true },
+  { key: "fecPrincipalCommitteeId", label: "FEC Principal Committee ID", copyable: true },
+  { key: "policyNotePersonId", label: "PolicyNote Person ID", copyable: true },
+  { key: "policyNoteEntityId", label: "PolicyNote Entity ID", copyable: true },
+  { key: "googleKnowledgeGraphMid", label: "Google Knowledge Graph MID", copyable: true }
 ];
 
 const universalProfileFields = [
-  {
-    key: "preferredName",
-    label: "Preferred Name"
-  },
-  {
-    key: "fullName",
-    label: "Full Name"
-  },
-  {
-    key: "title",
-    label: "Title"
-  },
-  {
-    key: "party",
-    label: "Party"
-  },
-  {
-    key: "district",
-    label: "District"
-  },
-  {
-    key: "jurisdiction",
-    label: "Jurisdiction"
-  },
-  {
-    key: "currentOffice",
-    label: "Current Office",
-    wide: true
-  },
-  {
-    key: "activeStatus",
-    label: "Active Status"
-  },
-  {
-    key: "reelectionYear",
-    label: "Reelection Year"
-  },
-  {
-    key: "pronunciation",
-    label: "Pronunciation"
-  },
-  {
-    key: "birthday",
-    label: "Birthday"
-  },
-  {
-    key: "birthplace",
-    label: "Birthplace"
-  },
-  {
-    key: "family",
-    label: "Family"
-  }
+  { key: "preferredName", label: "Preferred Name" },
+  { key: "fullName", label: "Full Name" },
+  { key: "title", label: "Title" },
+  { key: "party", label: "Party" },
+  { key: "district", label: "District" },
+  { key: "jurisdiction", label: "Jurisdiction" },
+  { key: "currentOffice", label: "Current Office", wide: true },
+  { key: "activeStatus", label: "Active Status" },
+  { key: "reelectionYear", label: "Reelection Year" },
+  { key: "pronunciation", label: "Pronunciation" },
+  { key: "birthday", label: "Birthday" },
+  { key: "birthplace", label: "Birthplace" },
+  { key: "family", label: "Family" }
 ];
 
 const headshotFields = [
-  {
-    key: "source",
-    label: "Headshot Source"
-  },
-  {
-    key: "altText",
-    label: "Alt Text"
-  },
-  {
-    key: "usageNote",
-    label: "Usage Note",
-    wide: true
-  },
-  {
-    key: "primaryUrl",
-    label: "Primary URL",
-    wide: true,
-    copyable: true,
-    link: true
-  }
+  { key: "source", label: "Headshot Source" },
+  { key: "altText", label: "Alt Text" },
+  { key: "usageNote", label: "Usage Note", wide: true },
+  { key: "primaryUrl", label: "Primary URL", wide: true, copyable: true, link: true }
 ];
 
 const bioFields = [
-  {
-    key: "oneLine",
-    label: "One-Line Bio",
-    copyable: true
-  },
-  {
-    key: "short",
-    label: "Short Bio",
-    copyable: true
-  },
-  {
-    key: "standard",
-    label: "Standard Bio",
-    copyable: true
-  },
-  {
-    key: "long",
-    label: "Long Background Bio",
-    copyable: true
-  }
+  { key: "oneLine", label: "One-Line Bio", copyable: true },
+  { key: "short", label: "Short Bio", copyable: true },
+  { key: "standard", label: "Standard Bio", copyable: true },
+  { key: "long", label: "Long Background Bio", copyable: true }
 ];
 
 const raceContextFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "electionCycle",
-    label: "Election Cycle"
-  },
-  {
-    key: "office",
-    label: "Office"
-  },
-  {
-    key: "district",
-    label: "District"
-  },
-  {
-    key: "incumbentStatus",
-    label: "Incumbent Status"
-  },
-  {
-    key: "reelectionYear",
-    label: "Reelection Year"
-  },
-  {
-    key: "openSeatStatus",
-    label: "Open Seat Status",
-    wide: true
-  },
-  {
-    key: "declaredChallengers",
-    label: "Declared Challengers"
-  },
-  {
-    key: "filingDeadline",
-    label: "Filing Deadline"
-  },
-  {
-    key: "electionRulesSource",
-    label: "Election Rules Source"
-  },
-  {
-    key: "opponentDataSource",
-    label: "Opponent Data Source",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "electionCycle", label: "Election Cycle" },
+  { key: "office", label: "Office" },
+  { key: "district", label: "District" },
+  { key: "incumbentStatus", label: "Incumbent Status" },
+  { key: "reelectionYear", label: "Reelection Year" },
+  { key: "openSeatStatus", label: "Open Seat Status", wide: true },
+  { key: "declaredChallengers", label: "Declared Challengers" },
+  { key: "filingDeadline", label: "Filing Deadline" },
+  { key: "electionRulesSource", label: "Election Rules Source" },
+  { key: "opponentDataSource", label: "Opponent Data Source", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const factCheckFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "googleFactCheckQuery",
-    label: "Google Fact Check Query"
-  },
-  {
-    key: "latestProofResult",
-    label: "Latest Proof Result",
-    wide: true
-  },
-  {
-    key: "sourceApi",
-    label: "Source API"
-  },
-  {
-    key: "intendedUse",
-    label: "Intended Use",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "googleFactCheckQuery", label: "Google Fact Check Query" },
+  { key: "latestProofResult", label: "Latest Proof Result", wide: true },
+  { key: "sourceApi", label: "Source API" },
+  { key: "intendedUse", label: "Intended Use", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const mediaTrackingFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "youtubeChannelTitle",
-    label: "YouTube Channel Title"
-  },
-  {
-    key: "youtubeChannelId",
-    label: "YouTube Channel ID"
-  },
-  {
-    key: "youtubeSearchResultsReturned",
-    label: "YouTube Search Results Returned",
-    format: "number"
-  },
-  {
-    key: "officialChannelPublishedAt",
-    label: "Official Channel Published"
-  },
-  {
-    key: "publicCommentaryStatus",
-    label: "Public Commentary Status"
-  },
-  {
-    key: "sentimentStatus",
-    label: "Sentiment Status",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "youtubeChannelTitle", label: "YouTube Channel Title" },
+  { key: "youtubeChannelId", label: "YouTube Channel ID" },
+  { key: "youtubeSearchResultsReturned", label: "YouTube Search Results Returned", format: "number" },
+  { key: "officialChannelPublishedAt", label: "Official Channel Published" },
+  { key: "publicCommentaryStatus", label: "Public Commentary Status" },
+  { key: "sentimentStatus", label: "Sentiment Status", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const webClippingFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "sourceApi",
-    label: "Source API"
-  },
-  {
-    key: "queryPattern",
-    label: "Query Pattern"
-  },
-  {
-    key: "currentStatus",
-    label: "Current Status"
-  },
-  {
-    key: "intendedUse",
-    label: "Intended Use",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "sourceApi", label: "Source API" },
+  { key: "queryPattern", label: "Query Pattern" },
+  { key: "currentStatus", label: "Current Status" },
+  { key: "intendedUse", label: "Intended Use", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const deepFinanceFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "receiptsEndpoint",
-    label: "Receipts Endpoint"
-  },
-  {
-    key: "disbursementsEndpoint",
-    label: "Disbursements Endpoint"
-  },
-  {
-    key: "independentExpendituresEndpoint",
-    label: "Independent Expenditures Endpoint"
-  },
-  {
-    key: "receiptsAvailable",
-    label: "Receipts Available",
-    format: "number"
-  },
-  {
-    key: "disbursementsAvailable",
-    label: "Disbursements Available",
-    format: "number"
-  },
-  {
-    key: "independentExpendituresAvailable",
-    label: "Independent Expenditures Available",
-    format: "number"
-  },
-  {
-    key: "donorFieldsToTrack",
-    label: "Donor Fields To Track",
-    wide: true
-  },
-  {
-    key: "spendingFieldsToTrack",
-    label: "Spending Fields To Track",
-    wide: true
-  },
-  {
-    key: "outsideMoneyFieldsToTrack",
-    label: "Outside Money Fields To Track",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "receiptsEndpoint", label: "Receipts Endpoint" },
+  { key: "disbursementsEndpoint", label: "Disbursements Endpoint" },
+  { key: "independentExpendituresEndpoint", label: "Independent Expenditures Endpoint" },
+  { key: "receiptsAvailable", label: "Receipts Available", format: "number" },
+  { key: "disbursementsAvailable", label: "Disbursements Available", format: "number" },
+  { key: "independentExpendituresAvailable", label: "Independent Expenditures Available", format: "number" },
+  { key: "donorFieldsToTrack", label: "Donor Fields To Track", wide: true },
+  { key: "spendingFieldsToTrack", label: "Spending Fields To Track", wide: true },
+  { key: "outsideMoneyFieldsToTrack", label: "Outside Money Fields To Track", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const legislativeMechanicsFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "bioguideId",
-    label: "Bioguide ID"
-  },
-  {
-    key: "sponsoredLegislationCount",
-    label: "Sponsored Legislation Count",
-    format: "number"
-  },
-  {
-    key: "cosponsoredLegislationStatus",
-    label: "Cosponsored Legislation Status"
-  },
-  {
-    key: "votingRecordStatus",
-    label: "Voting Record Status"
-  },
-  {
-    key: "sponsoredLegislationEndpoint",
-    label: "Sponsored Legislation Endpoint",
-    wide: true,
-    link: true
-  },
-  {
-    key: "cosponsoredLegislationEndpoint",
-    label: "Cosponsored Legislation Endpoint",
-    wide: true,
-    link: true
-  },
-  {
-    key: "votingRecordEndpointStatus",
-    label: "Voting Record Endpoint Status",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "bioguideId", label: "Bioguide ID" },
+  { key: "sponsoredLegislationCount", label: "Sponsored Legislation Count", format: "number" },
+  { key: "cosponsoredLegislationStatus", label: "Cosponsored Legislation Status" },
+  { key: "votingRecordStatus", label: "Voting Record Status" },
+  { key: "sponsoredLegislationEndpoint", label: "Sponsored Legislation Endpoint", wide: true, link: true },
+  { key: "cosponsoredLegislationEndpoint", label: "Cosponsored Legislation Endpoint", wide: true, link: true },
+  { key: "votingRecordEndpointStatus", label: "Voting Record Endpoint Status", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const verbalRecordFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "sourceApi",
-    label: "Source API"
-  },
-  {
-    key: "primarySource",
-    label: "Primary Source"
-  },
-  {
-    key: "currentStatus",
-    label: "Current Status"
-  },
-  {
-    key: "intendedUse",
-    label: "Intended Use",
-    wide: true
-  },
-  {
-    key: "parserRequirement",
-    label: "Parser Requirement",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "sourceApi", label: "Source API" },
+  { key: "primarySource", label: "Primary Source" },
+  { key: "currentStatus", label: "Current Status" },
+  { key: "intendedUse", label: "Intended Use", wide: true },
+  { key: "parserRequirement", label: "Parser Requirement", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const geographyFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "district",
-    label: "District"
-  },
-  {
-    key: "state",
-    label: "State"
-  },
-  {
-    key: "googleCivicStatus",
-    label: "Google Civic Status",
-    wide: true
-  },
-  {
-    key: "electionAdministrationBody",
-    label: "Election Administration Body"
-  },
-  {
-    key: "electionInfoUrl",
-    label: "Election Info URL",
-    wide: true,
-    link: true
-  },
-  {
-    key: "voterRegistrationUrl",
-    label: "Voter Registration URL",
-    wide: true,
-    link: true
-  },
-  {
-    key: "voterRegistrationConfirmationUrl",
-    label: "Registration Confirmation URL",
-    wide: true,
-    link: true
-  },
-  {
-    key: "absenteeVotingInfoUrl",
-    label: "Absentee Voting Info URL",
-    wide: true,
-    link: true
-  },
-  {
-    key: "votingLocationFinderUrl",
-    label: "Voting Location Finder URL",
-    wide: true,
-    link: true
-  },
-  {
-    key: "ballotInfoUrl",
-    label: "Ballot Info URL",
-    wide: true,
-    link: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "district", label: "District" },
+  { key: "state", label: "State" },
+  { key: "googleCivicStatus", label: "Google Civic Status", wide: true },
+  { key: "electionAdministrationBody", label: "Election Administration Body" },
+  { key: "electionInfoUrl", label: "Election Info URL", wide: true, link: true },
+  { key: "voterRegistrationUrl", label: "Voter Registration URL", wide: true, link: true },
+  { key: "voterRegistrationConfirmationUrl", label: "Registration Confirmation URL", wide: true, link: true },
+  { key: "absenteeVotingInfoUrl", label: "Absentee Voting Info URL", wide: true, link: true },
+  { key: "votingLocationFinderUrl", label: "Voting Location Finder URL", wide: true, link: true },
+  { key: "ballotInfoUrl", label: "Ballot Info URL", wide: true, link: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const powerMappingFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "sourceApi",
-    label: "Source API"
-  },
-  {
-    key: "staffDirectoryStatus",
-    label: "Staff Directory Status"
-  },
-  {
-    key: "stakeholderDirectoryStatus",
-    label: "Stakeholder Directory Status"
-  },
-  {
-    key: "committeeGatekeeperStatus",
-    label: "Committee Gatekeeper Status"
-  },
-  {
-    key: "intendedUse",
-    label: "Intended Use",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "sourceApi", label: "Source API" },
+  { key: "staffDirectoryStatus", label: "Staff Directory Status" },
+  { key: "stakeholderDirectoryStatus", label: "Stakeholder Directory Status" },
+  { key: "committeeGatekeeperStatus", label: "Committee Gatekeeper Status" },
+  { key: "intendedUse", label: "Intended Use", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const alertingFields = [
-  {
-    key: "moduleStatus",
-    label: "Module Status"
-  },
-  {
-    key: "currentStatus",
-    label: "Current Status"
-  },
-  {
-    key: "dataSourceType",
-    label: "Data Source Type"
-  },
-  {
-    key: "alertBehavior",
-    label: "Alert Behavior"
-  },
-  {
-    key: "schedulerRequirement",
-    label: "Scheduler Requirement",
-    wide: true
-  },
-  {
-    key: "suggestedPollingTargets",
-    label: "Suggested Polling Targets",
-    wide: true
-  },
-  {
-    key: "implementationNote",
-    label: "Implementation Note",
-    wide: true
-  }
+  { key: "moduleStatus", label: "Module Status" },
+  { key: "currentStatus", label: "Current Status" },
+  { key: "dataSourceType", label: "Data Source Type" },
+  { key: "alertBehavior", label: "Alert Behavior" },
+  { key: "schedulerRequirement", label: "Scheduler Requirement", wide: true },
+  { key: "suggestedPollingTargets", label: "Suggested Polling Targets", wide: true },
+  { key: "implementationNote", label: "Implementation Note", wide: true }
 ];
 
 const financeSnapshotFields = [
-  {
-    key: "committeeName",
-    label: "Committee"
-  },
-  {
-    key: "fecCandidateId",
-    label: "FEC Candidate ID"
-  },
-  {
-    key: "fecPrincipalCommitteeId",
-    label: "Principal Committee ID"
-  },
-  {
-    key: "itemizedReceiptsReturned",
-    label: "Itemized Receipts Returned",
-    format: "number"
-  },
-  {
-    key: "itemizedDisbursementsReturned",
-    label: "Itemized Disbursements Returned",
-    format: "number"
-  },
-  {
-    key: "independentExpendituresReturned",
-    label: "Independent Expenditures Returned",
-    format: "number"
-  },
-  {
-    key: "latestReceiptDateSeen",
-    label: "Latest Receipt Date Seen"
-  },
-  {
-    key: "latestDisbursementDateSeen",
-    label: "Latest Disbursement Date Seen"
-  },
-  {
-    key: "outsideSpenderProofExample",
-    label: "Outside Spender Proof Example"
-  },
-  {
-    key: "proofNotes",
-    label: "Proof Notes",
-    wide: true
-  }
+  { key: "committeeName", label: "Committee" },
+  { key: "fecCandidateId", label: "FEC Candidate ID" },
+  { key: "fecPrincipalCommitteeId", label: "Principal Committee ID" },
+  { key: "itemizedReceiptsReturned", label: "Itemized Receipts Returned", format: "number" },
+  { key: "itemizedDisbursementsReturned", label: "Itemized Disbursements Returned", format: "number" },
+  { key: "independentExpendituresReturned", label: "Independent Expenditures Returned", format: "number" },
+  { key: "latestReceiptDateSeen", label: "Latest Receipt Date Seen" },
+  { key: "latestDisbursementDateSeen", label: "Latest Disbursement Date Seen" },
+  { key: "outsideSpenderProofExample", label: "Outside Spender Proof Example" },
+  { key: "proofNotes", label: "Proof Notes", wide: true }
 ];
 
 function escapeHtml(value) {
@@ -692,7 +261,7 @@ function renderValueContent(value, field = {}) {
   return `<span class="identity-value">${escapeHtml(displayValue)}</span>`;
 }
 
-function renderFieldGrid(fields, sourceObject) {
+function renderFieldGrid(fields, sourceObject = {}) {
   return fields
     .map((field) => {
       const rawValue = sourceObject[field.key];
@@ -720,11 +289,19 @@ function renderPeopleList(selectedId) {
   peopleList.innerHTML = people
     .map((person) => {
       const activeClass = person.id === selectedId ? "active" : "";
+      const completion = person.profileCompletion || {};
+      const completionSummary = [
+        completion.universalReference,
+        completion.bioLibrary,
+        completion.headshot,
+        completion.contact
+      ].filter(Boolean).join(" · ");
 
       return `
         <button class="person-button ${activeClass}" type="button" data-person-id="${escapeHtml(person.id)}">
           <strong>${escapeHtml(person.displayName)}</strong>
-          <span>${escapeHtml(person.title)} · ${escapeHtml(person.district)}</span>
+          <span>${escapeHtml(person.title || "Unknown title")} · ${escapeHtml(person.district || "No district")}</span>
+          <span>${escapeHtml(person.officeType || "Unknown office type")} · ${escapeHtml(completionSummary || "No completion status")}</span>
         </button>
       `;
     })
@@ -736,6 +313,9 @@ function renderPeopleList(selectedId) {
       const person = people.find((item) => item.id === personId);
 
       if (person) {
+        selectedPersonId = person.id;
+        window.MEMBER_COMMAND_CENTER_SELECTED_PERSON_ID = selectedPersonId;
+        window.MEMBER_COMMAND_CENTER_SELECTED_PERSON = person;
         renderPeopleList(person.id);
         renderProfile(person);
       }
@@ -772,6 +352,27 @@ function renderOpenCard(title, status, bodyHtml, extraClass = "") {
       ${bodyHtml}
     </section>
   `;
+}
+
+function renderCompletionCard(person) {
+  const completion = person.profileCompletion || {};
+  const rows = Object.entries(completion)
+    .map(([key, value]) => {
+      return `
+        <div class="list-row">
+          <span>${escapeHtml(labelizeKey(key))}</span>
+          <strong>${escapeHtml(value || "Missing")}</strong>
+        </div>
+      `;
+    })
+    .join("");
+
+  return renderOpenCard(
+    "Profile Completion",
+    "Data Readiness",
+    `<div class="list-block">${rows}</div>`,
+    "secondary-card"
+  );
 }
 
 function renderSourceIdentityHub(person) {
@@ -818,11 +419,14 @@ function renderUniversalReference(person) {
 function renderHeadshotCard(person) {
   const headshot = person.headshot || {};
   const imageUrl = headshot.primaryUrl || person.photoUrl;
+  const imageHtml = imageUrl
+    ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />`
+    : `<div class="missing-photo">No headshot added</div>`;
 
   const bodyHtml = `
     <div class="media-card-content">
       <div class="media-preview">
-        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />
+        ${imageHtml}
         ${imageUrl ? renderCopyButton(imageUrl, "Copy Headshot URL") : ""}
       </div>
       <div class="media-meta identity-grid">
@@ -862,6 +466,25 @@ function renderBioLibrary(person) {
   );
 }
 
+function renderCopyableListRow(label, value, options = {}) {
+  const safeValue = escapeHtml(formatValue(value));
+  const isMissing = value === null || value === undefined || value === "";
+
+  const valueHtml = options.link && !isMissing
+    ? `<a href="${escapeHtml(normalizeUrl(value))}" target="_blank" rel="noopener noreferrer">${safeValue}</a>`
+    : `<strong>${safeValue}</strong>`;
+
+  return `
+    <div class="list-row copyable-list-row">
+      <span>${escapeHtml(label)}</span>
+      <div class="list-value-group">
+        ${valueHtml}
+        ${options.copyable && !isMissing ? renderCopyButton(value) : ""}
+      </div>
+    </div>
+  `;
+}
+
 function renderOfficialLinksAndContact(person) {
   const officialLinks = person.officialLinks || {};
   const phones = person.phones || [];
@@ -877,30 +500,20 @@ function renderOfficialLinksAndContact(person) {
     })
     .join("");
 
-  const phoneRows = phones
-    .map((phone) => {
-      return renderCopyableListRow(phone.label, phone.value, {
-        copyable: true
-      });
-    })
-    .join("");
+  const phoneRows = phones.length
+    ? phones.map((phone) => renderCopyableListRow(phone.label, phone.value, { copyable: true })).join("")
+    : '<p class="note">No phone numbers added yet.</p>';
 
-  const officeRows = offices
-    .map((office) => {
-      return renderCopyableListRow(office.label, office.value, {
-        copyable: true
-      });
-    })
-    .join("");
+  const officeRows = offices.length
+    ? offices.map((office) => renderCopyableListRow(office.label, office.value, { copyable: true })).join("")
+    : '<p class="note">No office addresses added yet.</p>';
 
-  const handleRows = webHandles
-    .map((handle) => {
-      return renderCopyableListRow(handle.label, handle.value, {
+  const handleRows = webHandles.length
+    ? webHandles.map((handle) => renderCopyableListRow(handle.label, handle.value, {
         link: isLikelyUrl(handle.value),
         copyable: false
-      });
-    })
-    .join("");
+      })).join("")
+    : '<p class="note">No social or web handles added yet.</p>';
 
   const bodyHtml = `
     <div class="contact-grid">
@@ -934,34 +547,13 @@ function renderOfficialLinksAndContact(person) {
   return renderOpenCard("Official Links and Contact", "Reference", bodyHtml);
 }
 
-function renderCopyableListRow(label, value, options = {}) {
-  const safeValue = escapeHtml(value);
-  const valueHtml = options.link
-    ? `<a href="${escapeHtml(normalizeUrl(value))}" target="_blank" rel="noopener noreferrer">${safeValue}</a>`
-    : `<strong>${safeValue}</strong>`;
-
-  return `
-    <div class="list-row copyable-list-row">
-      <span>${escapeHtml(label)}</span>
-      <div class="list-value-group">
-        ${valueHtml}
-        ${options.copyable ? renderCopyButton(value) : ""}
-      </div>
-    </div>
-  `;
-}
-
 function renderCampaignFinanceSnapshot(person) {
-  const snapshot = person.campaignFinanceSnapshot || {};
-
   return renderModuleCard(
     "Campaign Finance Snapshot",
     "OpenFEC Proof",
     financeSnapshotFields,
-    snapshot,
-    {
-      openByDefault: false
-    }
+    person.campaignFinanceSnapshot || {},
+    { openByDefault: false }
   );
 }
 
@@ -970,7 +562,13 @@ function renderYouTubeProofVideos(person) {
   const videos = mediaTracking.proofVideos || [];
 
   if (!videos.length) {
-    return "";
+    return renderModuleCard(
+      "YouTube Proof Videos",
+      "Video IDs",
+      [],
+      {},
+      { openByDefault: false }
+    );
   }
 
   const rows = videos
@@ -1062,7 +660,7 @@ function renderSourceEndpoints(person) {
         </div>
       </summary>
       <div class="list-block">
-        ${rows}
+        ${rows || '<p class="note">No source endpoints added yet.</p>'}
       </div>
     </details>
   `;
@@ -1094,7 +692,7 @@ function renderProofStatus(person) {
         </div>
       </summary>
       <div class="list-block">
-        ${rows}
+        ${rows || '<p class="note">No connection statuses added yet.</p>'}
       </div>
     </details>
   `;
@@ -1143,26 +741,34 @@ function fallbackCopyText(value) {
 
 function renderProfile(person) {
   const headshot = person.headshot || {};
+  const heroImage = headshot.primaryUrl || person.photoUrl;
+  const heroImageHtml = heroImage
+    ? `<img src="${escapeHtml(heroImage)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />`
+    : `<div class="missing-photo">No headshot</div>`;
+
+  window.MEMBER_COMMAND_CENTER_SELECTED_PERSON_ID = person.id;
+  window.MEMBER_COMMAND_CENTER_SELECTED_PERSON = person;
 
   profileRoot.innerHTML = `
     <article>
       <section class="profile-hero">
         <div class="photo-wrap">
-          <img src="${escapeHtml(headshot.primaryUrl || person.photoUrl)}" alt="${escapeHtml(headshot.altText || person.displayName)}" />
+          ${heroImageHtml}
         </div>
         <div class="profile-title">
-          <p class="eyebrow">${escapeHtml(person.title)}</p>
+          <p class="eyebrow">${escapeHtml(person.title || "Profile")}</p>
           <h2>${escapeHtml(person.displayName)}</h2>
-          <p>${escapeHtml(person.currentOffice || person.jurisdiction)} · ${escapeHtml(person.district)}</p>
+          <p>${escapeHtml(person.currentOffice || person.jurisdiction || "Office not added")} · ${escapeHtml(person.district || "District not added")}</p>
           <div class="badges">
-            <span class="badge">${escapeHtml(person.party)}</span>
+            <span class="badge">${escapeHtml(person.party || "Party not added")}</span>
             <span class="badge">${person.active ? "Active" : "Inactive"}</span>
-            <span class="badge">Pronounced ${escapeHtml(person.pronunciation)}</span>
+            <span class="badge">${person.pronunciation ? `Pronounced ${escapeHtml(person.pronunciation)}` : "Pronunciation not added"}</span>
           </div>
         </div>
       </section>
 
       <section class="profile-content">
+        ${renderCompletionCard(person)}
         ${renderUniversalReference(person)}
         ${renderBioLibrary(person)}
         ${renderHeadshotCard(person)}
@@ -1190,18 +796,73 @@ function renderProfile(person) {
   `;
 
   bindCopyButtons();
+
+  window.dispatchEvent(new CustomEvent("member-command-center:profile-rendered", {
+    detail: {
+      person
+    }
+  }));
 }
 
-function boot() {
-  if (!people.length) {
-    profileRoot.innerHTML = '<p class="note">No people records available.</p>';
-    return;
+function showLoadError(error) {
+  profileRoot.innerHTML = `
+    <section class="profile-content">
+      <section class="card">
+        <div class="card-header">
+          <h3>Data Load Error</h3>
+          <div class="source-status">Check Local Server</div>
+        </div>
+        <div class="note">
+          <p>Could not load <strong>data/people.json</strong>.</p>
+          <p>${escapeHtml(error instanceof Error ? error.message : String(error))}</p>
+          <p>Run this from Command Prompt:</p>
+          <pre>cd /d C:\\dev\\member-command-center
+py -m http.server 8080</pre>
+          <p>Then open <strong>http://localhost:8080</strong>.</p>
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+async function loadPeople() {
+  const response = await fetch("data/people.json", {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
 
-  const firstPerson = people[0];
+  const loadedPeople = await response.json();
 
-  renderPeopleList(firstPerson.id);
-  renderProfile(firstPerson);
+  if (!Array.isArray(loadedPeople)) {
+    throw new Error("data/people.json must contain an array of people.");
+  }
+
+  return loadedPeople;
+}
+
+async function boot() {
+  try {
+    people = await loadPeople();
+    window.MEMBER_COMMAND_CENTER_PEOPLE = people;
+
+    if (!people.length) {
+      profileRoot.innerHTML = '<p class="note">No people records available.</p>';
+      return;
+    }
+
+    const firstPerson = people[0];
+    selectedPersonId = firstPerson.id;
+
+    renderPeopleList(firstPerson.id);
+    renderProfile(firstPerson);
+  } catch (error) {
+    showLoadError(error);
+  }
 }
 
 boot();

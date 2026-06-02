@@ -17,8 +17,7 @@
   }
 
   function getCurrentPerson() {
-    const people = window.MEMBER_COMMAND_CENTER_PEOPLE || [];
-    return people[0] || null;
+    return window.MEMBER_COMMAND_CENTER_SELECTED_PERSON || (window.MEMBER_COMMAND_CENTER_PEOPLE || [])[0] || null;
   }
 
   function getSourceIdentity(person) {
@@ -251,9 +250,11 @@
   function renderGreenEasyWinsShell() {
     const profileContent = getProfileContentElement();
 
-    if (!profileContent || document.getElementById("greenEasyWinsRoot")) {
+    if (!profileContent) {
       return;
     }
+
+    document.getElementById("greenEasyWinsRoot")?.remove();
 
     const person = getCurrentPerson();
 
@@ -278,7 +279,7 @@
 
         <div class="green-api-config">
           <p class="green-status-note">
-            Enter API keys locally for testing.  These are saved only in this browser's localStorage.  Do not use this front-end storage pattern for production secrets.
+            Current profile: <strong>${escapeHtml(person.displayName)}</strong>.  Enter API keys locally for testing.  These are saved only in this browser's localStorage.  Do not use this front-end storage pattern for production secrets.
           </p>
 
           <div class="green-api-config-grid">
@@ -454,6 +455,32 @@
     return null;
   }
 
+  function getNestedValue(object, path) {
+    return path.split(".").reduce((currentValue, key) => {
+      if (currentValue === null || currentValue === undefined) {
+        return "";
+      }
+
+      return currentValue[key];
+    }, object);
+  }
+
+  function formatDisplayValue(value) {
+    if (value === null || value === undefined || value === "") {
+      return "Not available";
+    }
+
+    if (Array.isArray(value)) {
+      return value.join(", ");
+    }
+
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+
+    return value;
+  }
+
   function renderApiSummaryCard(title, apiResponse, fields = []) {
     const count = getPaginationCount(apiResponse);
     const results = getResultArray(apiResponse);
@@ -481,48 +508,14 @@
           <span>Total Count: ${escapeHtml(count ?? "unknown")}</span>
           <span>Returned: ${escapeHtml(results.length)}</span>
         </div>
-        ${
-          apiResponse.error
-            ? `<p class="green-status-note green-error">${escapeHtml(apiResponse.error)}</p>`
-            : ""
-        }
-        ${
-          fieldRows
-            ? `<div class="green-result-list">${fieldRows}</div>`
-            : ""
-        }
+        ${apiResponse.error ? `<p class="green-status-note green-error">${escapeHtml(apiResponse.error)}</p>` : ""}
+        ${fieldRows ? `<div class="green-result-list">${fieldRows}</div>` : ""}
         <details>
           <summary class="green-status-note">Raw JSON preview</summary>
           <pre class="green-json-preview">${escapeHtml(JSON.stringify(apiResponse.data, null, 2))}</pre>
         </details>
       </div>
     `;
-  }
-
-  function getNestedValue(object, path) {
-    return path.split(".").reduce((currentValue, key) => {
-      if (currentValue === null || currentValue === undefined) {
-        return "";
-      }
-
-      return currentValue[key];
-    }, object);
-  }
-
-  function formatDisplayValue(value) {
-    if (value === null || value === undefined || value === "") {
-      return "Not available";
-    }
-
-    if (Array.isArray(value)) {
-      return value.join(", ");
-    }
-
-    if (typeof value === "object") {
-      return JSON.stringify(value);
-    }
-
-    return value;
   }
 
   async function runCampaignRiskModule() {
@@ -543,7 +536,7 @@
         <div class="green-result-card">
           <h4>Campaign Risk & Vulnerability</h4>
           <p class="green-status-note">
-            Uses OpenFEC audit reports, Schedule D debts, and Schedule C loans for committee ${escapeHtml(identity.fecPrincipalCommitteeId)}.
+            Uses OpenFEC audit reports, Schedule D debts, and Schedule C loans for committee ${escapeHtml(identity.fecPrincipalCommitteeId || "not available")}.
           </p>
         </div>
       `);
@@ -593,7 +586,7 @@
         <div class="green-result-card">
           <h4>Dark Money & Outside Spending</h4>
           <p class="green-status-note">
-            Uses OpenFEC electioneering communications and Schedule F party coordinated expenditures for candidate ${escapeHtml(identity.fecCandidateId)}.
+            Uses OpenFEC electioneering communications and Schedule F party coordinated expenditures for candidate ${escapeHtml(identity.fecCandidateId || person.displayName)}.
           </p>
         </div>
       `);
@@ -704,11 +697,7 @@
           <span>Status: ${escapeHtml(apiResponse.status ?? "n/a")}</span>
           <span>Returned: ${escapeHtml(items.length)}</span>
         </div>
-        ${
-          apiResponse.error
-            ? `<p class="green-status-note green-error">${escapeHtml(apiResponse.error)}</p>`
-            : ""
-        }
+        ${apiResponse.error ? `<p class="green-status-note green-error">${escapeHtml(apiResponse.error)}</p>` : ""}
         <div class="green-result-list">
           <div class="green-result-row">
             <span>Channel Title</span>
@@ -768,11 +757,7 @@
           <span>Total Results: ${escapeHtml(totalResults)}</span>
           <span>Returned: ${escapeHtml(items.length)}</span>
         </div>
-        ${
-          apiResponse.error
-            ? `<p class="green-status-note green-error">${escapeHtml(apiResponse.error)}</p>`
-            : ""
-        }
+        ${apiResponse.error ? `<p class="green-status-note green-error">${escapeHtml(apiResponse.error)}</p>` : ""}
         <div class="green-image-grid">
           ${imageCards || '<p class="green-status-note">No image results returned.</p>'}
         </div>
@@ -787,9 +772,9 @@
   function bootGreenEasyWins() {
     injectGreenEasyWinStyles();
 
-    window.setTimeout(() => {
+    window.addEventListener("member-command-center:profile-rendered", () => {
       renderGreenEasyWinsShell();
-    }, 0);
+    });
   }
 
   bootGreenEasyWins();

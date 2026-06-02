@@ -1,0 +1,231 @@
+{
+  "id": "",
+  "displayName": "",
+  "preferredName": "",
+  "fullName": "",
+  "title": "",
+  "party": "",
+  "district": "",
+  "state": "",
+  "officeType": "",
+  "jurisdiction": "",
+  "currentOffice": "",
+  "active": true,
+  "reelectionYear": "",
+  "pronunciation": "",
+  "birthPlace": "",
+  "birthday": "",
+  "family": "",
+  "photoUrl": "",
+
+  "profileCompletion": {
+    "universalReference": "Missing",
+    "bioLibrary": "Missing",
+    "headshot": "Missing",
+    "contact": "Missing",
+    "committees": "Missing",
+    "sourceIds": "Missing",
+    "intelligence": "Missing"
+  },
+
+  "headshot": {
+    "primaryUrl": "",
+    "source": "",
+    "altText": "",
+    "usageNote": ""
+  },
+
+  "bio": {
+    "oneLine": "",
+    "short": "",
+    "standard": "",
+    "long": ""
+  },
+
+  "universalProfile": {
+    "preferredName": "",
+    "fullName": "",
+    "title": "",
+    "party": "",
+    "district": "",
+    "jurisdiction": "",
+    "currentOffice": "",
+    "activeStatus": "",
+    "reelectionYear": "",
+    "pronunciation": "",
+    "birthday": "",
+    "birthplace": "",
+    "family": ""
+  },
+
+  "officialLinks": {
+    "officialWebsite": "",
+    "contactForm": "",
+    "youtubeChannelTitle": "",
+    "youtubeChannelId": "",
+    "policyNoteSearch": ""
+  },
+
+  "phones": [],
+  "offices": [],
+  "webHandles": [],
+  "committees": [],
+
+  "sourceIdentity": {
+    "bioguideId": "",
+    "fecCandidateId": "",
+    "fecPrincipalCommitteeId": "",
+    "policyNotePersonId": "",
+    "policyNoteEntityId": "",
+    "googleKnowledgeGraphMid": ""
+  },
+
+  "campaignFinanceSnapshot": {
+    "committeeName": "",
+    "fecCandidateId": "",
+    "fecPrincipalCommitteeId": "",
+    "itemizedReceiptsReturned": "",
+    "itemizedDisbursementsReturned": "",
+    "independentExpendituresReturned": "",
+    "latestReceiptDateSeen": "",
+    "latestDisbursementDateSeen": "",
+    "outsideSpenderProofExample": "",
+    "proofNotes": ""
+  },
+
+  "raceContext": {
+    "moduleStatus": "",
+    "electionCycle": "",
+    "office": "",
+    "district": "",
+    "incumbentStatus": "",
+    "reelectionYear": "",
+    "openSeatStatus": "",
+    "declaredChallengers": "",
+    "filingDeadline": "",
+    "electionRulesSource": "",
+    "opponentDataSource": "",
+    "implementationNote": ""
+  },
+
+  "factCheckIndex": {
+    "moduleStatus": "",
+    "googleFactCheckQuery": "",
+    "latestProofResult": "",
+    "sourceApi": "",
+    "intendedUse": "",
+    "implementationNote": ""
+  },
+
+  "mediaTracking": {
+    "moduleStatus": "",
+    "youtubeChannelTitle": "",
+    "youtubeChannelId": "",
+    "youtubeSearchResultsReturned": "",
+    "officialChannelPublishedAt": "",
+    "proofVideos": [],
+    "publicCommentaryStatus": "",
+    "sentimentStatus": "",
+    "implementationNote": ""
+  },
+
+  "webClippings": {
+    "moduleStatus": "",
+    "sourceApi": "",
+    "queryPattern": "",
+    "currentStatus": "",
+    "intendedUse": "",
+    "implementationNote": ""
+  },
+
+  "deepCampaignFinance": {
+    "moduleStatus": "",
+    "receiptsEndpoint": "",
+    "disbursementsEndpoint": "",
+    "independentExpendituresEndpoint": "",
+    "receiptsAvailable": "",
+    "disbursementsAvailable": "",
+    "independentExpendituresAvailable": "",
+    "donorFieldsToTrack": "",
+    "spendingFieldsToTrack": "",
+    "outsideMoneyFieldsToTrack": "",
+    "implementationNote": ""
+  },
+
+  "legislativeMechanics": {
+    "moduleStatus": "",
+    "bioguideId": "",
+    "sponsoredLegislationCount": "",
+    "cosponsoredLegislationStatus": "",
+    "votingRecordStatus": "",
+    "sponsoredLegislationEndpoint": "",
+    "cosponsoredLegislationEndpoint": "",
+    "votingRecordEndpointStatus": "",
+    "implementationNote": ""
+  },
+
+  "verbalRecords": {
+    "moduleStatus": "",
+    "sourceApi": "",
+    "primarySource": "",
+    "currentStatus": "",
+    "intendedUse": "",
+    "parserRequirement": "",
+    "implementationNote": ""
+  },
+
+  "politicalGeography": {
+    "moduleStatus": "",
+    "district": "",
+    "state": "",
+    "googleCivicStatus": "",
+    "electionAdministrationBody": "",
+    "electionInfoUrl": "",
+    "voterRegistrationUrl": "",
+    "voterRegistrationConfirmationUrl": "",
+    "absenteeVotingInfoUrl": "",
+    "votingLocationFinderUrl": "",
+    "ballotInfoUrl": "",
+    "implementationNote": ""
+  },
+
+  "powerMapping": {
+    "moduleStatus": "",
+    "sourceApi": "",
+    "staffDirectoryStatus": "",
+    "stakeholderDirectoryStatus": "",
+    "committeeGatekeeperStatus": "",
+    "intendedUse": "",
+    "implementationNote": ""
+  },
+
+  "alertingInfrastructure": {
+    "moduleStatus": "",
+    "currentStatus": "",
+    "dataSourceType": "",
+    "alertBehavior": "",
+    "schedulerRequirement": "",
+    "suggestedPollingTargets": "",
+    "implementationNote": ""
+  },
+
+  "sourceEndpoints": {},
+
+  "proofStatus": {
+    "identityHub": "",
+    "universalProfile": "",
+    "biography": "",
+    "headshot": "",
+    "officialLinks": "",
+    "committees": "",
+    "raceContext": "",
+    "factCheckIndex": "",
+    "mediaTracking": "",
+    "deepCampaignFinance": "",
+    "legislativeMechanics": "",
+    "verbalRecords": "",
+    "politicalGeography": "",
+    "powerMapping": "",
+    "alertingInfrastructure": ""
+  }
+}
