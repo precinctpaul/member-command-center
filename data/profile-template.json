@@ -11,7 +11,7 @@
   "jurisdiction": "",
   "currentOffice": "",
   "active": true,
-  "reelectionYear": "",
+  "reelectionYear": null,
   "pronunciation": "",
   "birthPlace": "",
   "birthday": "",
@@ -19,13 +19,15 @@
   "photoUrl": "",
 
   "profileCompletion": {
-    "universalReference": "Missing",
-    "bioLibrary": "Missing",
-    "headshot": "Missing",
-    "contact": "Missing",
-    "committees": "Missing",
-    "sourceIds": "Missing",
-    "intelligence": "Missing"
+    "universalReference": "Not started",
+    "bioLibrary": "Not started",
+    "headshot": "Not started",
+    "contact": "Not started",
+    "committees": "Not started",
+    "sourceIds": "Not started",
+    "intelligence": "Not started",
+    "dataQuality": "Not started",
+    "sourceTracking": "Not started"
   },
 
   "headshot": {
@@ -39,7 +41,8 @@
     "oneLine": "",
     "short": "",
     "standard": "",
-    "long": ""
+    "long": "",
+    "plainEnglish": ""
   },
 
   "universalProfile": {
@@ -61,15 +64,61 @@
   "officialLinks": {
     "officialWebsite": "",
     "contactForm": "",
+    "campaignWebsite": "",
+    "congressGovProfile": "",
+    "ballotpedia": "",
+    "wikipedia": "",
     "youtubeChannelTitle": "",
     "youtubeChannelId": "",
     "policyNoteSearch": ""
   },
 
-  "phones": [],
-  "offices": [],
-  "webHandles": [],
-  "committees": [],
+  "phones": [
+    {
+      "label": "",
+      "value": "",
+      "source": "",
+      "lastChecked": ""
+    }
+  ],
+
+  "offices": [
+    {
+      "label": "",
+      "value": "",
+      "source": "",
+      "lastChecked": ""
+    }
+  ],
+
+  "webHandles": [
+    {
+      "label": "",
+      "value": "",
+      "source": "",
+      "lastChecked": ""
+    }
+  ],
+
+  "committees": [
+    {
+      "name": "",
+      "role": "",
+      "source": "",
+      "active": true,
+      "lastChecked": ""
+    }
+  ],
+
+  "caucuses": [
+    {
+      "name": "",
+      "role": "",
+      "source": "",
+      "active": true,
+      "lastChecked": ""
+    }
+  ],
 
   "sourceIdentity": {
     "bioguideId": "",
@@ -77,8 +126,34 @@
     "fecPrincipalCommitteeId": "",
     "policyNotePersonId": "",
     "policyNoteEntityId": "",
-    "googleKnowledgeGraphMid": ""
+    "googleKnowledgeGraphMid": "",
+    "youtubeChannelId": "",
+    "openStatesPersonId": "",
+    "stateLegislatureId": "",
+    "stateCampaignFinanceId": ""
   },
+
+  "dataQualityNotes": [
+    {
+      "label": "",
+      "value": "",
+      "severity": "note",
+      "owner": "",
+      "lastChecked": ""
+    }
+  ],
+
+  "sourceTracking": [
+    {
+      "label": "",
+      "value": "",
+      "type": "",
+      "sourceName": "",
+      "sourceUrl": "",
+      "lastChecked": "",
+      "confidence": ""
+    }
+  ],
 
   "campaignFinanceSnapshot": {
     "committeeName": "",
@@ -94,7 +169,7 @@
   },
 
   "raceContext": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "electionCycle": "",
     "office": "",
     "district": "",
@@ -109,7 +184,7 @@
   },
 
   "factCheckIndex": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "googleFactCheckQuery": "",
     "latestProofResult": "",
     "sourceApi": "",
@@ -118,7 +193,7 @@
   },
 
   "mediaTracking": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "youtubeChannelTitle": "",
     "youtubeChannelId": "",
     "youtubeSearchResultsReturned": "",
@@ -130,7 +205,7 @@
   },
 
   "webClippings": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "sourceApi": "",
     "queryPattern": "",
     "currentStatus": "",
@@ -139,7 +214,7 @@
   },
 
   "deepCampaignFinance": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "receiptsEndpoint": "",
     "disbursementsEndpoint": "",
     "independentExpendituresEndpoint": "",
@@ -153,7 +228,7 @@
   },
 
   "legislativeMechanics": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "bioguideId": "",
     "sponsoredLegislationCount": "",
     "cosponsoredLegislationStatus": "",
@@ -165,7 +240,7 @@
   },
 
   "verbalRecords": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "sourceApi": "",
     "primarySource": "",
     "currentStatus": "",
@@ -175,7 +250,7 @@
   },
 
   "politicalGeography": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "district": "",
     "state": "",
     "googleCivicStatus": "",
@@ -190,7 +265,7 @@
   },
 
   "powerMapping": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "sourceApi": "",
     "staffDirectoryStatus": "",
     "stakeholderDirectoryStatus": "",
@@ -200,7 +275,7 @@
   },
 
   "alertingInfrastructure": {
-    "moduleStatus": "",
+    "moduleStatus": "Not started",
     "currentStatus": "",
     "dataSourceType": "",
     "alertBehavior": "",
@@ -211,21 +286,5 @@
 
   "sourceEndpoints": {},
 
-  "proofStatus": {
-    "identityHub": "",
-    "universalProfile": "",
-    "biography": "",
-    "headshot": "",
-    "officialLinks": "",
-    "committees": "",
-    "raceContext": "",
-    "factCheckIndex": "",
-    "mediaTracking": "",
-    "deepCampaignFinance": "",
-    "legislativeMechanics": "",
-    "verbalRecords": "",
-    "politicalGeography": "",
-    "powerMapping": "",
-    "alertingInfrastructure": ""
-  }
+  "proofStatus": {}
 }
