@@ -22,6 +22,18 @@ window.MEMBER_COMMAND_CENTER_PEOPLE = [
       policyNoteEntityId: "legislator-10004532",
       googleKnowledgeGraphMid: "kg:/g/11f0xw2_p4"
     },
+    campaignFinanceSnapshot: {
+      committeeName: "JAKE AUCHINCLOSS FOR CONGRESS",
+      fecCandidateId: "H0MA04192",
+      fecPrincipalCommitteeId: "C00721449",
+      itemizedReceiptsReturned: 13977,
+      itemizedDisbursementsReturned: 3583,
+      independentExpendituresReturned: 71,
+      latestReceiptDateSeen: "2026-03-31",
+      latestDisbursementDateSeen: "2026-03-31",
+      outsideSpenderProofExample: "WITH HONOR FUND II, INC.",
+      proofNotes: "Proof snapshot built from successful OpenFEC Schedule A, Schedule B, and Schedule E API responses."
+    },
     sourceEndpoints: {
       congressSponsoredLegislation: "https://api.congress.gov/v3/member/A000148/sponsored-legislation",
       congressCosponsoredLegislation: "https://api.congress.gov/v3/member/A000148/cosponsored-legislation",

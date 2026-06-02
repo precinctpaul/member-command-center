@@ -30,6 +30,53 @@ const identityFields = [
   }
 ];
 
+const financeSnapshotFields = [
+  {
+    key: "committeeName",
+    label: "Committee"
+  },
+  {
+    key: "fecCandidateId",
+    label: "FEC Candidate ID"
+  },
+  {
+    key: "fecPrincipalCommitteeId",
+    label: "Principal Committee ID"
+  },
+  {
+    key: "itemizedReceiptsReturned",
+    label: "Itemized Receipts Returned",
+    format: "number"
+  },
+  {
+    key: "itemizedDisbursementsReturned",
+    label: "Itemized Disbursements Returned",
+    format: "number"
+  },
+  {
+    key: "independentExpendituresReturned",
+    label: "Independent Expenditures Returned",
+    format: "number"
+  },
+  {
+    key: "latestReceiptDateSeen",
+    label: "Latest Receipt Date Seen"
+  },
+  {
+    key: "latestDisbursementDateSeen",
+    label: "Latest Disbursement Date Seen"
+  },
+  {
+    key: "outsideSpenderProofExample",
+    label: "Outside Spender Proof Example"
+  },
+  {
+    key: "proofNotes",
+    label: "Proof Notes",
+    wide: true
+  }
+];
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -39,12 +86,30 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function formatValue(value, format) {
+  if (value === null || value === undefined || value === "") {
+    return "Not added yet";
+  }
+
+  if (format === "number") {
+    return Number(value).toLocaleString();
+  }
+
+  return value;
+}
+
 function formatMissing(value) {
   if (value === null || value === undefined || value === "") {
     return '<span class="identity-value missing">Not added yet</span>';
   }
 
   return `<span class="identity-value">${escapeHtml(value)}</span>`;
+}
+
+function labelizeKey(key) {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (character) => character.toUpperCase());
 }
 
 function renderPeopleList(selectedId) {
@@ -93,6 +158,40 @@ function renderSourceIdentityHub(person) {
       <div class="card-header">
         <h3>Source Identity Hub</h3>
         <div class="source-status">Verified</div>
+      </div>
+      <div class="identity-grid">
+        ${rows}
+      </div>
+    </section>
+  `;
+}
+
+function renderCampaignFinanceSnapshot(person) {
+  const snapshot = person.campaignFinanceSnapshot || {};
+
+  const rows = financeSnapshotFields
+    .map((field) => {
+      const rawValue = snapshot[field.key];
+      const displayValue = formatValue(rawValue, field.format);
+      const isMissing = rawValue === null || rawValue === undefined || rawValue === "";
+      const valueClass = isMissing ? "missing" : "";
+      const wideClass = field.wide ? "wide" : "";
+      const longTextClass = field.wide ? "long-text" : "";
+
+      return `
+        <div class="identity-item ${wideClass}">
+          <div class="identity-label">${escapeHtml(field.label)}</div>
+          <span class="identity-value ${valueClass} ${longTextClass}">${escapeHtml(displayValue)}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <section class="card">
+      <div class="card-header">
+        <h3>Campaign Finance Snapshot</h3>
+        <div class="source-status">OpenFEC Proof</div>
       </div>
       <div class="identity-grid">
         ${rows}
@@ -170,9 +269,7 @@ function renderSourceEndpoints(person) {
 
   const rows = Object.entries(sourceEndpoints)
     .map(([key, value]) => {
-      const label = key
-        .replace(/([A-Z])/g, " $1")
-        .replace(/^./, (character) => character.toUpperCase());
+      const label = labelizeKey(key);
 
       return `
         <div class="list-row">
@@ -200,9 +297,7 @@ function renderProofStatus(person) {
 
   const rows = Object.entries(proofStatus)
     .map(([key, value]) => {
-      const label = key
-        .replace(/([A-Z])/g, " $1")
-        .replace(/^./, (character) => character.toUpperCase());
+      const label = labelizeKey(key);
 
       return `
         <div class="list-row">
@@ -246,6 +341,7 @@ function renderProfile(person) {
 
       <section class="profile-content">
         ${renderSourceIdentityHub(person)}
+        ${renderCampaignFinanceSnapshot(person)}
         ${renderCoreDetails(person)}
         ${renderCommittees(person)}
         ${renderProofStatus(person)}
