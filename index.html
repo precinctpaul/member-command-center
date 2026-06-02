@@ -11,12 +11,21 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="app-kicker">Proof Build v0.7</div>
+        <div class="app-kicker">Proof Build v0.8.1</div>
         <h1>Member Command Center</h1>
         <p>Political intelligence dashboard for elected officials.</p>
       </div>
 
       <div class="sidebar-controls" aria-label="Profile search and filters">
+        <button
+          id="newProfileButton"
+          class="secondary-button"
+          type="button"
+          style="border-color: rgba(96, 165, 250, 0.55); background: rgba(96, 165, 250, 0.14); font-weight: 900;"
+        >
+          + New Profile JSON
+        </button>
+
         <label class="control-label" for="profileSearch">Search by name</label>
         <input
           id="profileSearch"
@@ -88,6 +97,7 @@
   <script src="profileStatus.js"></script>
   <script src="profileFilters.js"></script>
   <script src="renderProfile.js"></script>
+  <script src="profileBuilder.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
