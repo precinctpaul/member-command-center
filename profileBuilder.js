@@ -1,7 +1,7 @@
 (function () {
   const U = window.MCCUtils;
 
-  function renderProfileBuilder({ existingPeople, onBackToProfiles }) {
+  function renderProfileBuilder({ existingPeople, onBackToProfiles, onPreviewGeneratedProfile }) {
     const profileView = document.getElementById("profileView");
     if (!profileView) return;
 
@@ -18,14 +18,14 @@
           <div class="hero-kicker">Profile Builder</div>
           <h2 class="profile-name">New Profile JSON</h2>
           <div class="profile-title">
-            Generate a copy-ready profile object for <code>data/people.json</code>.  This helper does not write to disk.
+            Generate, preview, and copy a profile object for <code>data/people.json</code>.  This helper does not write to disk.
           </div>
 
           <div class="hero-meta">
             <span class="badge partial">Local helper</span>
             <span class="badge state">Static app safe</span>
             <span class="badge other">Manual paste required</span>
-            <span class="badge federal">v0.8.1</span>
+            <span class="badge federal">v0.8.2</span>
           </div>
         </div>
       </section>
@@ -129,6 +129,10 @@
           <div style="height: 14px"></div>
 
           <div class="grid-three">
+            <button id="previewGeneratedProfileButton" class="secondary-button" type="button">
+              Preview Generated Profile
+            </button>
+
             <button id="generateProfileJsonButton" class="secondary-button" type="button">
               Generate JSON
             </button>
@@ -136,27 +140,29 @@
             <button id="copyProfileJsonButton" class="secondary-button" type="button">
               Copy JSON Object
             </button>
-
-            <button id="copyProfileJsonWithCommaButton" class="secondary-button" type="button">
-              Copy With Leading Comma
-            </button>
           </div>
 
           <div style="height: 10px"></div>
 
           <div class="grid-three">
-            <button id="backToProfilesButton" class="secondary-button" type="button">
-              Back to Profiles
-            </button>
-
-            <button id="clearBuilderButton" class="secondary-button" type="button">
-              Clear Builder
+            <button id="copyProfileJsonWithCommaButton" class="secondary-button" type="button">
+              Copy With Leading Comma
             </button>
 
             <button id="selectGeneratedJsonButton" class="secondary-button" type="button">
               Select JSON Text
             </button>
+
+            <button id="clearBuilderButton" class="secondary-button" type="button">
+              Clear Builder
+            </button>
           </div>
+
+          <div style="height: 10px"></div>
+
+          <button id="backToProfilesButton" class="secondary-button" type="button">
+            Back to Profiles
+          </button>
         </div>
       </section>
 
@@ -184,7 +190,8 @@
 
     bindBuilderEvents({
       existingPeople,
-      onBackToProfiles
+      onBackToProfiles,
+      onPreviewGeneratedProfile
     });
 
     generateAndDisplayJson(existingPeople);
@@ -218,10 +225,11 @@
     `;
   }
 
-  function bindBuilderEvents({ existingPeople, onBackToProfiles }) {
+  function bindBuilderEvents({ existingPeople, onBackToProfiles, onPreviewGeneratedProfile }) {
     const generateButton = document.getElementById("generateProfileJsonButton");
     const copyButton = document.getElementById("copyProfileJsonButton");
     const copyWithCommaButton = document.getElementById("copyProfileJsonWithCommaButton");
+    const previewButton = document.getElementById("previewGeneratedProfileButton");
     const backButton = document.getElementById("backToProfilesButton");
     const clearButton = document.getElementById("clearBuilderButton");
     const selectButton = document.getElementById("selectGeneratedJsonButton");
@@ -254,6 +262,13 @@
     if (copyWithCommaButton) {
       copyWithCommaButton.addEventListener("click", async () => {
         await copyGeneratedJson({ includeLeadingComma: true, button: copyWithCommaButton });
+      });
+    }
+
+    if (previewButton) {
+      previewButton.addEventListener("click", () => {
+        const profile = buildProfileObject(existingPeople);
+        onPreviewGeneratedProfile(profile);
       });
     }
 

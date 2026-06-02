@@ -1,15 +1,18 @@
 (function () {
   const PEOPLE_URL = "data/people.json";
+  const TEMP_PROFILE_PREFIX = "temp-preview-";
 
   const U = window.MCCUtils;
   const S = window.MCCStatus;
   const F = window.MCCFilters;
   const R = window.MCCRender;
+  const B = window.MCCBuilder;
 
   const state = {
     people: [],
     filteredPeople: [],
     activePersonId: null,
+    mode: "profile",
     filters: {
       search: "",
       officeType: "all",
@@ -25,6 +28,8 @@
       state,
       onChange: applyFilters
     });
+
+    bindNewProfileButton();
 
     try {
       const response = await fetch(PEOPLE_URL, { cache: "no-store" });
@@ -57,18 +62,32 @@
     }
   }
 
+  function bindNewProfileButton() {
+    const newProfileButton = document.getElementById("newProfileButton");
+
+    if (!newProfileButton) return;
+
+    newProfileButton.addEventListener("click", () => {
+      state.mode = "builder";
+      state.activePersonId = null;
+      renderApp();
+    });
+  }
+
   function applyFilters() {
     state.filteredPeople = F.getFilteredPeople(state.people, state.filters);
 
-    if (
-      state.filteredPeople.length > 0 &&
-      !state.filteredPeople.some((person) => person.id === state.activePersonId)
-    ) {
-      state.activePersonId = state.filteredPeople[0].id;
-    }
+    if (state.mode !== "builder") {
+      if (
+        state.filteredPeople.length > 0 &&
+        !state.filteredPeople.some((person) => person.id === state.activePersonId)
+      ) {
+        state.activePersonId = state.filteredPeople[0].id;
+      }
 
-    if (state.filteredPeople.length === 0) {
-      state.activePersonId = null;
+      if (state.filteredPeople.length === 0) {
+        state.activePersonId = null;
+      }
     }
 
     renderApp();
@@ -79,6 +98,7 @@
       people: state.filteredPeople,
       activePersonId: state.activePersonId,
       onSelect: (profileId) => {
+        state.mode = "profile";
         state.activePersonId = profileId;
         renderApp();
       }
@@ -89,8 +109,106 @@
       visible: state.filteredPeople.length
     });
 
+    if (state.mode === "builder") {
+      B.renderProfileBuilder({
+        existingPeople: state.people,
+        onBackToProfiles: () => {
+          state.mode = "profile";
+
+          if (!state.activePersonId && state.filteredPeople.length > 0) {
+            state.activePersonId = state.filteredPeople[0].id;
+          }
+
+          renderApp();
+        },
+        onPreviewGeneratedProfile: (rawProfile) => {
+          previewGeneratedProfile(rawProfile);
+        }
+      });
+
+      return;
+    }
+
     const activePerson = state.people.find((person) => person.id === state.activePersonId) || null;
     R.renderProfileView(activePerson);
+  }
+
+  function previewGeneratedProfile(rawProfile) {
+    if (!rawProfile || typeof rawProfile !== "object") return;
+
+    const tempId = `${TEMP_PROFILE_PREFIX}${rawProfile.id || U.slugify(rawProfile.fullName || rawProfile.displayName || "new-profile")}`;
+
+    const tempRawProfile = {
+      ...rawProfile,
+      id: tempId,
+      displayName: `${rawProfile.displayName || rawProfile.fullName || "New Profile"} Preview`,
+      fullName: rawProfile.fullName || rawProfile.displayName || "New Profile",
+      isTemporaryPreview: true,
+      dataQualityNotes: [
+        ...(Array.isArray(rawProfile.dataQualityNotes) ? rawProfile.dataQualityNotes : []),
+        {
+          label: "Temporary preview",
+          value: "This profile exists only in browser memory. Refreshing the page removes it. Copy the JSON and paste it into data/people.json to make it permanent.",
+          severity: "note",
+          owner: "builder",
+          lastChecked: new Date().toISOString().slice(0, 10)
+        }
+      ],
+      sourceTracking: [
+        ...(Array.isArray(rawProfile.sourceTracking) ? rawProfile.sourceTracking : []),
+        {
+          label: "Temporary profile preview",
+          value: "Generated profile was previewed locally without writing to disk.",
+          type: "local-preview",
+          sourceName: "Member Command Center",
+          sourceUrl: "",
+          lastChecked: new Date().toISOString().slice(0, 10),
+          confidence: "Preview only"
+        }
+      ],
+      proofStatus: {
+        ...(rawProfile.proofStatus || {}),
+        temporaryPreview: "Preview only, not saved to people.json"
+      }
+    };
+
+    const normalizedPreview = normalizePerson(tempRawProfile, state.people.length);
+    normalizedPreview.isTemporaryPreview = true;
+    normalizedPreview.name = `${normalizedPreview.name} Preview`;
+
+    state.people = [
+      ...state.people.filter((person) => !person.isTemporaryPreview),
+      normalizedPreview
+    ];
+
+    state.mode = "profile";
+    state.activePersonId = normalizedPreview.id;
+
+    temporarilyClearFiltersForPreview(normalizedPreview);
+    applyFilters();
+  }
+
+  function temporarilyClearFiltersForPreview(previewProfile) {
+    const profileWouldBeVisible = F.getFilteredPeople([previewProfile], state.filters).length > 0;
+
+    if (profileWouldBeVisible) return;
+
+    state.filters = {
+      search: "",
+      officeType: "all",
+      party: "all",
+      completion: "all"
+    };
+
+    const profileSearch = document.getElementById("profileSearch");
+    const officeTypeFilter = document.getElementById("officeTypeFilter");
+    const partyFilter = document.getElementById("partyFilter");
+    const completionFilter = document.getElementById("completionFilter");
+
+    if (profileSearch) profileSearch.value = "";
+    if (officeTypeFilter) officeTypeFilter.value = "all";
+    if (partyFilter) partyFilter.value = "all";
+    if (completionFilter) completionFilter.value = "all";
   }
 
   function normalizePeoplePayload(data) {
@@ -120,6 +238,8 @@
         rawPerson.slug,
         rawPerson.bioguideId,
         rawPerson.fecCandidateId,
+        rawPerson.sourceIdentity?.bioguideId,
+        rawPerson.sourceIdentity?.fecCandidateId,
         U.slugify(name),
         `profile-${index + 1}`
       )
@@ -149,6 +269,7 @@
   window.MCCApp = {
     state,
     applyFilters,
-    renderApp
+    renderApp,
+    previewGeneratedProfile
   };
 })();
