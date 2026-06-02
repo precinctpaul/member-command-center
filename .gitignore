@@ -1,0 +1,37 @@
+# Local environment secrets
+.env
+server/.env
+server/*.env
+
+# Local SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+data/member_command_center.sqlite
+data/*.sqlite
+data/*.sqlite3
+data/*.db
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
