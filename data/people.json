@@ -18,7 +18,6 @@
     "birthday": "1988-01-29",
     "family": "Wife, Michelle Auchincloss; three children",
     "photoUrl": "https://s3.amazonaws.com/fn-document-service/file-by-sha384/332f6fe7639ff4759ea1e8e879eb3e02c429a9ce4fda47854321ebff5b218066dceef5a4f25f21d505794a6deb62fb84",
-
     "profileCompletion": {
       "universalReference": "Complete",
       "bioLibrary": "Complete",
@@ -28,21 +27,18 @@
       "sourceIds": "Complete",
       "intelligence": "Scaffolded"
     },
-
     "headshot": {
       "primaryUrl": "https://s3.amazonaws.com/fn-document-service/file-by-sha384/332f6fe7639ff4759ea1e8e879eb3e02c429a9ce4fda47854321ebff5b218066dceef5a4f25f21d505794a6deb62fb84",
       "source": "PolicyNote",
       "altText": "Official headshot of Rep. Jake Auchincloss",
       "usageNote": "Use as the primary profile reference image until replaced by a campaign-approved or official congressional press image."
     },
-
     "bio": {
       "oneLine": "Jake Auchincloss is a Democratic U.S. Representative for Massachusetts's 4th Congressional District.",
       "short": "Jake Auchincloss represents Massachusetts's 4th Congressional District in the U.S. House.  A Marine veteran and former Newton city councilor, he works on issues including transportation, housing, health care, foreign policy, China competitiveness, and technology policy.",
       "standard": "Jake Auchincloss is the Democratic U.S. Representative for Massachusetts's 4th Congressional District.  Born in Newton, Massachusetts, he served as a Marine officer, including service in Afghanistan, before earning an M.B.A. and entering local government on the Newton City Council.  In Congress, Auchincloss has focused on transportation, housing, health care, pharmacy benefit manager reform, foreign policy, China competitiveness, and technology policy.  His committee and caucus work includes Energy and Commerce, Transportation and Infrastructure, and the House Select Committee on the Chinese Communist Party.",
       "long": "Jake Auchincloss is a Democratic U.S. Representative for Massachusetts's 4th Congressional District.  Born in Newton, Massachusetts, he studied government and economics at Harvard before serving as a Marine officer, including service in Afghanistan.  After returning to civilian life, he earned an M.B.A. and won a seat on the Newton City Council.  Auchincloss later ran for Congress in 2020 after Rep. Joseph P. Kennedy III left the seat to run for the U.S. Senate.  In Congress, he has built a profile around transportation, housing, health care, pharmacy benefit manager reform, technology policy, foreign policy, Afghanistan, China competitiveness, and support for U.S. allies.  His current profile includes work with the House Committee on Energy and Commerce, the House Committee on Transportation and Infrastructure, and the House Select Committee on the Chinese Communist Party."
     },
-
     "universalProfile": {
       "preferredName": "Jake",
       "fullName": "Jake Auchincloss",
@@ -58,7 +54,6 @@
       "birthplace": "Newton, MA",
       "family": "Wife, Michelle Auchincloss; three children"
     },
-
     "officialLinks": {
       "officialWebsite": "https://auchincloss.house.gov",
       "contactForm": "https://auchincloss.house.gov/contact/emailme",
@@ -66,7 +61,6 @@
       "youtubeChannelId": "UCLTp0xAT0gBrF8WReNliMwA",
       "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Jake%20Auchincloss"
     },
-
     "phones": [
       {
         "label": "Washington Office",
@@ -85,7 +79,6 @@
         "value": "202-225-0182"
       }
     ],
-
     "offices": [
       {
         "label": "Washington, DC",
@@ -104,7 +97,6 @@
         "value": "1 Government Center, Office 237B, Fall River, MA 02722"
       }
     ],
-
     "webHandles": [
       {
         "label": "Official Website",
@@ -127,7 +119,6 @@
         "value": "RepAuchincloss"
       }
     ],
-
     "committees": [
       {
         "name": "House Committee on Energy and Commerce",
@@ -184,7 +175,6 @@
         "active": true
       }
     ],
-
     "sourceIdentity": {
       "bioguideId": "A000148",
       "fecCandidateId": "H0MA04192",
@@ -193,7 +183,6 @@
       "policyNoteEntityId": "legislator-10004532",
       "googleKnowledgeGraphMid": "kg:/g/11f0xw2_p4"
     },
-
     "campaignFinanceSnapshot": {
       "committeeName": "JAKE AUCHINCLOSS FOR CONGRESS",
       "fecCandidateId": "H0MA04192",
@@ -206,7 +195,6 @@
       "outsideSpenderProofExample": "WITH HONOR FUND II, INC.",
       "proofNotes": "Proof snapshot built from successful OpenFEC Schedule A, Schedule B, and Schedule E API responses."
     },
-
     "raceContext": {
       "moduleStatus": "Scaffolded",
       "electionCycle": "2026",
@@ -221,7 +209,6 @@
       "opponentDataSource": "OpenFEC candidate and committee search",
       "implementationNote": "This module should eventually connect OpenFEC challenger search, Google Civic election metadata, and manually verified state filing information."
     },
-
     "factCheckIndex": {
       "moduleStatus": "Scaffolded",
       "googleFactCheckQuery": "Jake Auchincloss",
@@ -230,7 +217,6 @@
       "intendedUse": "Track verified third-party fact-checks of claims made by or about the representative.",
       "implementationNote": "Store fact-check claims as separate records with claimant, claim text, rating, publisher, review date, and URL."
     },
-
     "mediaTracking": {
       "moduleStatus": "Scaffolded",
       "youtubeChannelTitle": "Rep. Auchincloss",
@@ -258,7 +244,6 @@
       "sentimentStatus": "Requires separate sentiment analysis layer",
       "implementationNote": "The YouTube Data API retrieves raw comments, but it does not classify sentiment.  A separate sentiment or theme-classification step is required before displaying positive, negative, neutral, attack-line, or risk indicators."
     },
-
     "webClippings": {
       "moduleStatus": "Scaffolded",
       "sourceApi": "Google Custom Search JSON API",
@@ -267,7 +252,6 @@
       "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
       "implementationNote": "Store title, snippet, source, URL, published date if available, query used, and retrieval date."
     },
-
     "deepCampaignFinance": {
       "moduleStatus": "Proof slice available",
       "receiptsEndpoint": "OpenFEC Schedule A",
@@ -281,7 +265,6 @@
       "outsideMoneyFieldsToTrack": "Committee, support/oppose indicator, amount, payee, description, filing date, dissemination date",
       "implementationNote": "This module intentionally excludes vendor footprint identification for now."
     },
-
     "legislativeMechanics": {
       "moduleStatus": "Proof slice available",
       "bioguideId": "A000148",
@@ -293,7 +276,6 @@
       "votingRecordEndpointStatus": "Needs roll call vote wiring",
       "implementationNote": "This module should eventually display sponsored bills, cosponsored bills, latest actions, policy areas, vote history, and bill-level status."
     },
-
     "verbalRecords": {
       "moduleStatus": "Scaffolded",
       "sourceApi": "GovInfo API",
@@ -303,7 +285,6 @@
       "parserRequirement": "GovInfo can provide Congressional Record documents, but the transcripts are dense.  A parser must extract speaker blocks and identify where the target representative is speaking or being discussed.",
       "implementationNote": "Store date, chamber, document package ID, section, speaker, extracted text block, confidence score, and source URL."
     },
-
     "politicalGeography": {
       "moduleStatus": "Scaffolded",
       "district": "MA-04",
@@ -318,7 +299,6 @@
       "ballotInfoUrl": "https://www.sec.state.ma.us/WhereDoIVoteMA/",
       "implementationNote": "Polling places, early vote hubs, and drop boxes require a real voter address or district-specific civic lookup before display."
     },
-
     "powerMapping": {
       "moduleStatus": "Scaffolded",
       "sourceApi": "PolicyNote API",
@@ -328,7 +308,6 @@
       "intendedUse": "Track staffers, chiefs of staff, legislative aides, committee staff, caucus contacts, and other stakeholder relationships connected to the representative.",
       "implementationNote": "This should remain a reference directory first, not a relationship-scoring engine."
     },
-
     "alertingInfrastructure": {
       "moduleStatus": "Scaffolded",
       "currentStatus": "Not live",
@@ -338,7 +317,6 @@
       "suggestedPollingTargets": "Congress.gov actions, OpenFEC filings, Google Fact Check claims, YouTube videos/comments, Custom Search results, GovInfo Congressional Record packages, PolicyNote updates",
       "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
     },
-
     "sourceEndpoints": {
       "congressSponsoredLegislation": "https://api.congress.gov/v3/member/A000148/sponsored-legislation",
       "congressCosponsoredLegislation": "https://api.congress.gov/v3/member/A000148/cosponsored-legislation",
@@ -353,7 +331,6 @@
       "govInfoPackages": "https://api.govinfo.gov/packages",
       "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
     },
-
     "proofStatus": {
       "identityHub": "Verified proof record",
       "universalProfile": "Built",
@@ -376,7 +353,6 @@
       "googleFactCheck": "Connected, no matching claims returned in proof query"
     }
   },
-
   {
     "id": "buffy-wicks",
     "displayName": "Buffy Wicks",
@@ -396,7 +372,6 @@
     "birthday": "",
     "family": "",
     "photoUrl": "",
-
     "profileCompletion": {
       "universalReference": "Partial",
       "bioLibrary": "Partial",
@@ -406,21 +381,18 @@
       "sourceIds": "Partial",
       "intelligence": "Not started"
     },
-
     "headshot": {
       "primaryUrl": "",
       "source": "",
       "altText": "Headshot of Buffy Wicks",
       "usageNote": "Missing.  Add an official or campaign-approved image URL."
     },
-
     "bio": {
       "oneLine": "Buffy Wicks is a Democratic member of the California State Assembly.",
       "short": "Buffy Wicks is a Democratic California State Assemblymember.  This is a partial profile used to test missing-field handling in the Member Command Center.",
       "standard": "",
       "long": ""
     },
-
     "universalProfile": {
       "preferredName": "Buffy",
       "fullName": "Buffy Wicks",
@@ -436,7 +408,6 @@
       "birthplace": "",
       "family": ""
     },
-
     "officialLinks": {
       "officialWebsite": "",
       "contactForm": "",
@@ -444,7 +415,6 @@
       "youtubeChannelId": "",
       "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Buffy%20Wicks"
     },
-
     "phones": [],
     "offices": [],
     "webHandles": [
@@ -453,9 +423,7 @@
         "value": "https://data.policynote.com/v1/people/search?name=Buffy%20Wicks"
       }
     ],
-
     "committees": [],
-
     "sourceIdentity": {
       "bioguideId": "",
       "fecCandidateId": "",
@@ -464,7 +432,6 @@
       "policyNoteEntityId": "",
       "googleKnowledgeGraphMid": ""
     },
-
     "campaignFinanceSnapshot": {
       "committeeName": "",
       "fecCandidateId": "",
@@ -477,7 +444,6 @@
       "outsideSpenderProofExample": "",
       "proofNotes": "Not applicable yet.  State-level campaign finance should be handled separately from federal OpenFEC records."
     },
-
     "raceContext": {
       "moduleStatus": "Not started",
       "electionCycle": "",
@@ -492,7 +458,6 @@
       "opponentDataSource": "State campaign finance and election filing data",
       "implementationNote": "This state-level profile proves the app cannot assume every person has federal IDs."
     },
-
     "factCheckIndex": {
       "moduleStatus": "Not started",
       "googleFactCheckQuery": "Buffy Wicks",
@@ -501,7 +466,6 @@
       "intendedUse": "Track verified third-party fact-checks of claims made by or about the representative.",
       "implementationNote": "Not populated yet."
     },
-
     "mediaTracking": {
       "moduleStatus": "Not started",
       "youtubeChannelTitle": "",
@@ -513,7 +477,6 @@
       "sentimentStatus": "Requires separate sentiment analysis layer",
       "implementationNote": "Not populated yet."
     },
-
     "webClippings": {
       "moduleStatus": "Not started",
       "sourceApi": "Google Custom Search JSON API",
@@ -522,7 +485,6 @@
       "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
       "implementationNote": "Not populated yet."
     },
-
     "deepCampaignFinance": {
       "moduleStatus": "Not applicable yet",
       "receiptsEndpoint": "",
@@ -536,7 +498,6 @@
       "outsideMoneyFieldsToTrack": "State-level outside spending fields depend on California campaign finance sources.",
       "implementationNote": "Do not use federal OpenFEC assumptions for this profile."
     },
-
     "legislativeMechanics": {
       "moduleStatus": "Not started",
       "bioguideId": "",
@@ -548,7 +509,6 @@
       "votingRecordEndpointStatus": "Needs state legislative source wiring",
       "implementationNote": "State legislative tracking will need a state source, not Congress.gov."
     },
-
     "verbalRecords": {
       "moduleStatus": "Not started",
       "sourceApi": "",
@@ -558,7 +518,6 @@
       "parserRequirement": "State transcript parsing requirements are unknown.",
       "implementationNote": "Not populated yet."
     },
-
     "politicalGeography": {
       "moduleStatus": "Not started",
       "district": "CA-14",
@@ -573,7 +532,6 @@
       "ballotInfoUrl": "",
       "implementationNote": "Not populated yet."
     },
-
     "powerMapping": {
       "moduleStatus": "Not started",
       "sourceApi": "PolicyNote API",
@@ -583,7 +541,6 @@
       "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
       "implementationNote": "Not populated yet."
     },
-
     "alertingInfrastructure": {
       "moduleStatus": "Scaffolded",
       "currentStatus": "Not live",
@@ -593,7 +550,6 @@
       "suggestedPollingTargets": "State legislative updates, state campaign filings, Google Fact Check claims, YouTube videos/comments, Custom Search results, PolicyNote updates",
       "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
     },
-
     "sourceEndpoints": {
       "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Buffy%20Wicks",
       "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Buffy+Wicks",
@@ -601,7 +557,6 @@
       "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
       "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
     },
-
     "proofStatus": {
       "identityHub": "Partial",
       "universalProfile": "Partial",
@@ -616,6 +571,3116 @@
       "legislativeMechanics": "State source required",
       "verbalRecords": "Not started",
       "politicalGeography": "Not started",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "marie-gluesenkamp-perez",
+    "displayName": "Marie Gluesenkamp Perez",
+    "preferredName": "Marie",
+    "fullName": "Marie Gluesenkamp Perez",
+    "title": "Representative",
+    "party": "Democratic",
+    "district": "WA-03",
+    "state": "WA",
+    "officeType": "Federal",
+    "jurisdiction": "United States House of Representatives",
+    "currentOffice": "U.S. Representative for Washington's 3rd Congressional District",
+    "active": true,
+    "reelectionYear": 2026,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Partial",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Partial",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Marie Gluesenkamp Perez",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Marie Gluesenkamp Perez is a Democratic U.S. Representative for Washington's 3rd Congressional District.",
+      "short": "Marie Gluesenkamp Perez represents Washington's 3rd Congressional District in the U.S. House.",
+      "standard": "Marie Gluesenkamp Perez is a Democratic U.S. Representative for Washington's 3rd Congressional District. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Marie",
+      "fullName": "Marie Gluesenkamp Perez",
+      "title": "Representative",
+      "party": "Democratic",
+      "district": "WA-03",
+      "jurisdiction": "United States House of Representatives",
+      "currentOffice": "U.S. Representative for Washington's 3rd Congressional District",
+      "activeStatus": "Active",
+      "reelectionYear": 2026,
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://gluesenkampperez.house.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://marieforcongress.com",
+      "congressGovProfile": "https://bioguide.congress.gov/search/bio/G000600",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Marie%20Gluesenkamp%20Perez"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://gluesenkampperez.house.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://marieforcongress.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Marie%20Gluesenkamp%20Perez"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "G000600",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official House site and Bioguide identity checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://gluesenkampperez.house.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://gluesenkampperez.house.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://marieforcongress.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://marieforcongress.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      {
+        "label": "Bioguide",
+        "value": "G000600",
+        "type": "federal-id",
+        "sourceName": "Biographical Directory of the U.S. Congress",
+        "sourceUrl": "https://bioguide.congress.gov/search/bio/G000600",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Marie%20Gluesenkamp%20Perez",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Marie%20Gluesenkamp%20Perez",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": ""
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "2026",
+      "office": "Representative",
+      "district": "WA-03",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": 2026,
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Marie Gluesenkamp Perez",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Marie Gluesenkamp Perez",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "Not started",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "Federal profile needs FEC IDs."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "G000600",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/G000600/sponsored-legislation",
+      "cosponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/G000600/cosponsored-legislation",
+      "votingRecordEndpointStatus": "Needs roll call vote wiring",
+      "implementationNote": "Congress.gov Bioguide available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "WA-03",
+      "state": "WA",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "https://api.congress.gov/v3/member/G000600/sponsored-legislation",
+      "congressCosponsoredLegislation": "https://api.congress.gov/v3/member/G000600/cosponsored-legislation",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Marie%20Gluesenkamp%20Perez",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Marie%20Gluesenkamp%20Perez",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "Not started",
+      "legislativeMechanics": "Congress.gov ID available",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "jared-golden",
+    "displayName": "Jared Golden",
+    "preferredName": "Jared",
+    "fullName": "Jared Golden",
+    "title": "Representative",
+    "party": "Democratic",
+    "district": "ME-02",
+    "state": "ME",
+    "officeType": "Federal",
+    "jurisdiction": "United States House of Representatives",
+    "currentOffice": "U.S. Representative for Maine's 2nd Congressional District",
+    "active": true,
+    "reelectionYear": 2026,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Partial",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Partial",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Jared Golden",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Jared Golden is a Democratic U.S. Representative for Maine's 2nd Congressional District.",
+      "short": "Jared Golden represents Maine's 2nd Congressional District in the U.S. House.",
+      "standard": "Jared Golden is a Democratic U.S. Representative for Maine's 2nd Congressional District. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Jared",
+      "fullName": "Jared Golden",
+      "title": "Representative",
+      "party": "Democratic",
+      "district": "ME-02",
+      "jurisdiction": "United States House of Representatives",
+      "currentOffice": "U.S. Representative for Maine's 2nd Congressional District",
+      "activeStatus": "Active",
+      "reelectionYear": 2026,
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://golden.house.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://jaredgoldenforcongress.com",
+      "congressGovProfile": "https://bioguide.congress.gov/search/bio/G000592",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Jared%20Golden"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://golden.house.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://jaredgoldenforcongress.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Jared%20Golden"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "G000592",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official House site and Bioguide identity checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://golden.house.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://golden.house.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://jaredgoldenforcongress.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://jaredgoldenforcongress.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      {
+        "label": "Bioguide",
+        "value": "G000592",
+        "type": "federal-id",
+        "sourceName": "Biographical Directory of the U.S. Congress",
+        "sourceUrl": "https://bioguide.congress.gov/search/bio/G000592",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Jared%20Golden",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Jared%20Golden",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": ""
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "2026",
+      "office": "Representative",
+      "district": "ME-02",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": 2026,
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Jared Golden",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Jared Golden",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "Not started",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "Federal profile needs FEC IDs."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "G000592",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/G000592/sponsored-legislation",
+      "cosponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/G000592/cosponsored-legislation",
+      "votingRecordEndpointStatus": "Needs roll call vote wiring",
+      "implementationNote": "Congress.gov Bioguide available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "ME-02",
+      "state": "ME",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "https://api.congress.gov/v3/member/G000592/sponsored-legislation",
+      "congressCosponsoredLegislation": "https://api.congress.gov/v3/member/G000592/cosponsored-legislation",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Jared%20Golden",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Jared%20Golden",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "Not started",
+      "legislativeMechanics": "Congress.gov ID available",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "don-davis",
+    "displayName": "Don Davis",
+    "preferredName": "Don",
+    "fullName": "Don Davis",
+    "title": "Representative",
+    "party": "Democratic",
+    "district": "NC-01",
+    "state": "NC",
+    "officeType": "Federal",
+    "jurisdiction": "United States House of Representatives",
+    "currentOffice": "U.S. Representative for North Carolina's 1st Congressional District",
+    "active": true,
+    "reelectionYear": 2026,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Partial",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Partial",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Don Davis",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Don Davis is a Democratic U.S. Representative for North Carolina's 1st Congressional District.",
+      "short": "Don Davis represents North Carolina's 1st Congressional District in the U.S. House.",
+      "standard": "Don Davis is a Democratic U.S. Representative for North Carolina's 1st Congressional District. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Don",
+      "fullName": "Don Davis",
+      "title": "Representative",
+      "party": "Democratic",
+      "district": "NC-01",
+      "jurisdiction": "United States House of Representatives",
+      "currentOffice": "U.S. Representative for North Carolina's 1st Congressional District",
+      "activeStatus": "Active",
+      "reelectionYear": 2026,
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://dondavis.house.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://votedondavis.com",
+      "congressGovProfile": "https://bioguide.congress.gov/search/bio/D000230",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Don%20Davis"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://dondavis.house.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://votedondavis.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Don%20Davis"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "D000230",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official House site and Bioguide identity checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://dondavis.house.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://dondavis.house.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://votedondavis.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://votedondavis.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      {
+        "label": "Bioguide",
+        "value": "D000230",
+        "type": "federal-id",
+        "sourceName": "Biographical Directory of the U.S. Congress",
+        "sourceUrl": "https://bioguide.congress.gov/search/bio/D000230",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Don%20Davis",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Don%20Davis",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": ""
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "2026",
+      "office": "Representative",
+      "district": "NC-01",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": 2026,
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Don Davis",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Don Davis",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "Not started",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "Federal profile needs FEC IDs."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "D000230",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/D000230/sponsored-legislation",
+      "cosponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/D000230/cosponsored-legislation",
+      "votingRecordEndpointStatus": "Needs roll call vote wiring",
+      "implementationNote": "Congress.gov Bioguide available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "NC-01",
+      "state": "NC",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "https://api.congress.gov/v3/member/D000230/sponsored-legislation",
+      "congressCosponsoredLegislation": "https://api.congress.gov/v3/member/D000230/cosponsored-legislation",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Don%20Davis",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Don%20Davis",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "Not started",
+      "legislativeMechanics": "Congress.gov ID available",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "greg-landsman",
+    "displayName": "Greg Landsman",
+    "preferredName": "Greg",
+    "fullName": "Greg Landsman",
+    "title": "Representative",
+    "party": "Democratic",
+    "district": "OH-01",
+    "state": "OH",
+    "officeType": "Federal",
+    "jurisdiction": "United States House of Representatives",
+    "currentOffice": "U.S. Representative for Ohio's 1st Congressional District",
+    "active": true,
+    "reelectionYear": 2026,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Partial",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Partial",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Greg Landsman",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Greg Landsman is a Democratic U.S. Representative for Ohio's 1st Congressional District.",
+      "short": "Greg Landsman represents Ohio's 1st Congressional District in the U.S. House.",
+      "standard": "Greg Landsman is a Democratic U.S. Representative for Ohio's 1st Congressional District. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Greg",
+      "fullName": "Greg Landsman",
+      "title": "Representative",
+      "party": "Democratic",
+      "district": "OH-01",
+      "jurisdiction": "United States House of Representatives",
+      "currentOffice": "U.S. Representative for Ohio's 1st Congressional District",
+      "activeStatus": "Active",
+      "reelectionYear": 2026,
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://landsman.house.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://www.landsmanforcongress.com",
+      "congressGovProfile": "https://bioguide.congress.gov/search/bio/L000601",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Greg%20Landsman"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://landsman.house.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://www.landsmanforcongress.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Greg%20Landsman"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "L000601",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official House site and Bioguide identity checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://landsman.house.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://landsman.house.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://www.landsmanforcongress.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://www.landsmanforcongress.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      {
+        "label": "Bioguide",
+        "value": "L000601",
+        "type": "federal-id",
+        "sourceName": "Biographical Directory of the U.S. Congress",
+        "sourceUrl": "https://bioguide.congress.gov/search/bio/L000601",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Greg%20Landsman",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Greg%20Landsman",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": ""
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "2026",
+      "office": "Representative",
+      "district": "OH-01",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": 2026,
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Greg Landsman",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Greg Landsman",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "Not started",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "Federal profile needs FEC IDs."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "L000601",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/L000601/sponsored-legislation",
+      "cosponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/L000601/cosponsored-legislation",
+      "votingRecordEndpointStatus": "Needs roll call vote wiring",
+      "implementationNote": "Congress.gov Bioguide available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "OH-01",
+      "state": "OH",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "https://api.congress.gov/v3/member/L000601/sponsored-legislation",
+      "congressCosponsoredLegislation": "https://api.congress.gov/v3/member/L000601/cosponsored-legislation",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Greg%20Landsman",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Greg%20Landsman",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "Not started",
+      "legislativeMechanics": "Congress.gov ID available",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "pat-ryan",
+    "displayName": "Pat Ryan",
+    "preferredName": "Pat",
+    "fullName": "Pat Ryan",
+    "title": "Representative",
+    "party": "Democratic",
+    "district": "NY-18",
+    "state": "NY",
+    "officeType": "Federal",
+    "jurisdiction": "United States House of Representatives",
+    "currentOffice": "U.S. Representative for New York's 18th Congressional District",
+    "active": true,
+    "reelectionYear": 2026,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Partial",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Partial",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Pat Ryan",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Pat Ryan is a Democratic U.S. Representative for New York's 18th Congressional District.",
+      "short": "Pat Ryan represents New York's 18th Congressional District in the U.S. House.",
+      "standard": "Pat Ryan is a Democratic U.S. Representative for New York's 18th Congressional District. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Pat",
+      "fullName": "Pat Ryan",
+      "title": "Representative",
+      "party": "Democratic",
+      "district": "NY-18",
+      "jurisdiction": "United States House of Representatives",
+      "currentOffice": "U.S. Representative for New York's 18th Congressional District",
+      "activeStatus": "Active",
+      "reelectionYear": 2026,
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://patryan.house.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://www.patryanforcongress.com",
+      "congressGovProfile": "https://bioguide.congress.gov/search/bio/R000579",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Pat%20Ryan"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://patryan.house.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://www.patryanforcongress.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Pat%20Ryan"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "R000579",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official House site and Bioguide identity checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://patryan.house.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://patryan.house.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://www.patryanforcongress.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://www.patryanforcongress.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      {
+        "label": "Bioguide",
+        "value": "R000579",
+        "type": "federal-id",
+        "sourceName": "Biographical Directory of the U.S. Congress",
+        "sourceUrl": "https://bioguide.congress.gov/search/bio/R000579",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Pat%20Ryan",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Pat%20Ryan",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": ""
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "2026",
+      "office": "Representative",
+      "district": "NY-18",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": 2026,
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Pat Ryan",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Pat Ryan",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "Not started",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "Federal profile needs FEC IDs."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "R000579",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/R000579/sponsored-legislation",
+      "cosponsoredLegislationEndpoint": "https://api.congress.gov/v3/member/R000579/cosponsored-legislation",
+      "votingRecordEndpointStatus": "Needs roll call vote wiring",
+      "implementationNote": "Congress.gov Bioguide available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "NY-18",
+      "state": "NY",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "https://api.congress.gov/v3/member/R000579/sponsored-legislation",
+      "congressCosponsoredLegislation": "https://api.congress.gov/v3/member/R000579/cosponsored-legislation",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Pat%20Ryan",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Pat%20Ryan",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "Not started",
+      "legislativeMechanics": "Congress.gov ID available",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "josh-stein",
+    "displayName": "Josh Stein",
+    "preferredName": "Josh",
+    "fullName": "Josh Stein",
+    "title": "Governor",
+    "party": "Democratic",
+    "district": "Statewide",
+    "state": "NC",
+    "officeType": "State",
+    "jurisdiction": "State of North Carolina",
+    "currentOffice": "Governor of North Carolina",
+    "active": true,
+    "reelectionYear": null,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Not started",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Not started",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Josh Stein",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Josh Stein is a Democratic Governor of North Carolina.",
+      "short": "Josh Stein is the Governor of North Carolina.",
+      "standard": "Josh Stein is a Democratic state executive serving as Governor of North Carolina. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Josh",
+      "fullName": "Josh Stein",
+      "title": "Governor",
+      "party": "Democratic",
+      "district": "Statewide",
+      "jurisdiction": "State of North Carolina",
+      "currentOffice": "Governor of North Carolina",
+      "activeStatus": "Active",
+      "reelectionYear": "",
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://governor.nc.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://www.joshstein.org",
+      "congressGovProfile": "",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Josh%20Stein"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://governor.nc.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://www.joshstein.org"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Josh%20Stein"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official governor website checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://governor.nc.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://governor.nc.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://www.joshstein.org",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://www.joshstein.org",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      null,
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Josh%20Stein",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Josh%20Stein",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": "State-level campaign finance should be handled separately from federal OpenFEC records."
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "",
+      "office": "Governor",
+      "district": "Statewide",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": "",
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Josh Stein",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Josh Stein",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "State source required",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "State profile needs state campaign finance source wiring."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "",
+      "cosponsoredLegislationEndpoint": "",
+      "votingRecordEndpointStatus": "Needs state legislative source wiring",
+      "implementationNote": "No federal legislative ID available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "Statewide",
+      "state": "NC",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "",
+      "congressCosponsoredLegislation": "",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Josh%20Stein",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Josh%20Stein",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "State source required",
+      "legislativeMechanics": "State source required",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "jeff-jackson",
+    "displayName": "Jeff Jackson",
+    "preferredName": "Jeff",
+    "fullName": "Jeff Jackson",
+    "title": "Attorney General",
+    "party": "Democratic",
+    "district": "Statewide",
+    "state": "NC",
+    "officeType": "State",
+    "jurisdiction": "State of North Carolina",
+    "currentOffice": "Attorney General of North Carolina",
+    "active": true,
+    "reelectionYear": null,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Not started",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Not started",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Jeff Jackson",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Jeff Jackson is a Democratic Attorney General of North Carolina.",
+      "short": "Jeff Jackson is the Attorney General of North Carolina.",
+      "standard": "Jeff Jackson is a Democratic state executive serving as Attorney General of North Carolina. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Jeff",
+      "fullName": "Jeff Jackson",
+      "title": "Attorney General",
+      "party": "Democratic",
+      "district": "Statewide",
+      "jurisdiction": "State of North Carolina",
+      "currentOffice": "Attorney General of North Carolina",
+      "activeStatus": "Active",
+      "reelectionYear": "",
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://ncdoj.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://www.jeffjacksonnc.com",
+      "congressGovProfile": "",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Jeff%20Jackson"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://ncdoj.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://www.jeffjacksonnc.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Jeff%20Jackson"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official North Carolina Department of Justice site checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://ncdoj.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://ncdoj.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://www.jeffjacksonnc.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://www.jeffjacksonnc.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      null,
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Jeff%20Jackson",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Jeff%20Jackson",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": "State-level campaign finance should be handled separately from federal OpenFEC records."
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "",
+      "office": "Attorney General",
+      "district": "Statewide",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": "",
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Jeff Jackson",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Jeff Jackson",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "State source required",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "State profile needs state campaign finance source wiring."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "",
+      "cosponsoredLegislationEndpoint": "",
+      "votingRecordEndpointStatus": "Needs state legislative source wiring",
+      "implementationNote": "No federal legislative ID available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "Statewide",
+      "state": "NC",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "",
+      "congressCosponsoredLegislation": "",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Jeff%20Jackson",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Jeff%20Jackson",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "State source required",
+      "legislativeMechanics": "State source required",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "maura-healey",
+    "displayName": "Maura Healey",
+    "preferredName": "Maura",
+    "fullName": "Maura Healey",
+    "title": "Governor",
+    "party": "Democratic",
+    "district": "Statewide",
+    "state": "MA",
+    "officeType": "State",
+    "jurisdiction": "Commonwealth of Massachusetts",
+    "currentOffice": "Governor of Massachusetts",
+    "active": true,
+    "reelectionYear": null,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Not started",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Not started",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Maura Healey",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Maura Healey is a Democratic Governor of Massachusetts.",
+      "short": "Maura Healey is the Governor of Massachusetts.",
+      "standard": "Maura Healey is a Democratic state executive serving as Governor of Massachusetts. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Maura",
+      "fullName": "Maura Healey",
+      "title": "Governor",
+      "party": "Democratic",
+      "district": "Statewide",
+      "jurisdiction": "Commonwealth of Massachusetts",
+      "currentOffice": "Governor of Massachusetts",
+      "activeStatus": "Active",
+      "reelectionYear": "",
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://www.mass.gov/orgs/governor-maura-healey-and-lt-governor-kim-driscoll",
+      "contactForm": "",
+      "campaignWebsite": "https://maurahealey.com",
+      "congressGovProfile": "",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Maura%20Healey"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://www.mass.gov/orgs/governor-maura-healey-and-lt-governor-kim-driscoll"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://maurahealey.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Maura%20Healey"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official Massachusetts governor page checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://www.mass.gov/orgs/governor-maura-healey-and-lt-governor-kim-driscoll",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://www.mass.gov/orgs/governor-maura-healey-and-lt-governor-kim-driscoll",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://maurahealey.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://maurahealey.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      null,
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Maura%20Healey",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Maura%20Healey",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": "State-level campaign finance should be handled separately from federal OpenFEC records."
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "",
+      "office": "Governor",
+      "district": "Statewide",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": "",
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Maura Healey",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Maura Healey",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "State source required",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "State profile needs state campaign finance source wiring."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "",
+      "cosponsoredLegislationEndpoint": "",
+      "votingRecordEndpointStatus": "Needs state legislative source wiring",
+      "implementationNote": "No federal legislative ID available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "Statewide",
+      "state": "MA",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "",
+      "congressCosponsoredLegislation": "",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Maura%20Healey",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Maura%20Healey",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "State source required",
+      "legislativeMechanics": "State source required",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "wes-moore",
+    "displayName": "Wes Moore",
+    "preferredName": "Wes",
+    "fullName": "Wes Moore",
+    "title": "Governor",
+    "party": "Democratic",
+    "district": "Statewide",
+    "state": "MD",
+    "officeType": "State",
+    "jurisdiction": "State of Maryland",
+    "currentOffice": "Governor of Maryland",
+    "active": true,
+    "reelectionYear": null,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Not started",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Not started",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Wes Moore",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Wes Moore is a Democratic Governor of Maryland.",
+      "short": "Wes Moore is the Governor of Maryland.",
+      "standard": "Wes Moore is a Democratic state executive serving as Governor of Maryland. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Wes",
+      "fullName": "Wes Moore",
+      "title": "Governor",
+      "party": "Democratic",
+      "district": "Statewide",
+      "jurisdiction": "State of Maryland",
+      "currentOffice": "Governor of Maryland",
+      "activeStatus": "Active",
+      "reelectionYear": "",
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://governor.maryland.gov",
+      "contactForm": "",
+      "campaignWebsite": "https://wesmoore.com",
+      "congressGovProfile": "",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Wes%20Moore"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://governor.maryland.gov"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://wesmoore.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Wes%20Moore"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official Maryland governor website checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://governor.maryland.gov",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://governor.maryland.gov",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://wesmoore.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://wesmoore.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      null,
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Wes%20Moore",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Wes%20Moore",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": "State-level campaign finance should be handled separately from federal OpenFEC records."
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "",
+      "office": "Governor",
+      "district": "Statewide",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": "",
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Wes Moore",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Wes Moore",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "State source required",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "State profile needs state campaign finance source wiring."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "",
+      "cosponsoredLegislationEndpoint": "",
+      "votingRecordEndpointStatus": "Needs state legislative source wiring",
+      "implementationNote": "No federal legislative ID available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "Statewide",
+      "state": "MD",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "",
+      "congressCosponsoredLegislation": "",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Wes%20Moore",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Wes%20Moore",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "State source required",
+      "legislativeMechanics": "State source required",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
+      "powerMapping": "Not started",
+      "alertingInfrastructure": "Polling required"
+    }
+  },
+  {
+    "id": "mallory-mcmorrow",
+    "displayName": "Mallory McMorrow",
+    "preferredName": "Mallory",
+    "fullName": "Mallory McMorrow",
+    "title": "State Senator",
+    "party": "Democratic",
+    "district": "MI-SD-08",
+    "state": "MI",
+    "officeType": "State",
+    "jurisdiction": "Michigan Senate",
+    "currentOffice": "Michigan State Senator for the 8th Senate District",
+    "active": true,
+    "reelectionYear": null,
+    "pronunciation": "",
+    "birthPlace": "",
+    "birthday": "",
+    "family": "",
+    "photoUrl": "",
+    "profileCompletion": {
+      "universalReference": "Not started",
+      "bioLibrary": "Partial",
+      "headshot": "Missing",
+      "contact": "Partial",
+      "committees": "Not started",
+      "sourceIds": "Not started",
+      "intelligence": "Scaffolded",
+      "dataQuality": "Partial",
+      "sourceTracking": "Partial"
+    },
+    "headshot": {
+      "primaryUrl": "",
+      "source": "",
+      "altText": "Headshot of Mallory McMorrow",
+      "usageNote": "Missing. Add an official or campaign-approved image URL."
+    },
+    "bio": {
+      "oneLine": "Mallory McMorrow is a Democratic Michigan State Senator for the 8th Senate District.",
+      "short": "Mallory McMorrow represents Michigan's 8th Senate District.",
+      "standard": "Mallory McMorrow is a Democratic Michigan State Senator representing the 8th Senate District. This seed profile is intentionally partial and ready for source enrichment.",
+      "long": "",
+      "plainEnglish": ""
+    },
+    "universalProfile": {
+      "preferredName": "Mallory",
+      "fullName": "Mallory McMorrow",
+      "title": "State Senator",
+      "party": "Democratic",
+      "district": "MI-SD-08",
+      "jurisdiction": "Michigan Senate",
+      "currentOffice": "Michigan State Senator for the 8th Senate District",
+      "activeStatus": "Active",
+      "reelectionYear": "",
+      "pronunciation": "",
+      "birthday": "",
+      "birthplace": "",
+      "family": ""
+    },
+    "officialLinks": {
+      "officialWebsite": "https://senatedems.com/mcmorrow/bio/",
+      "contactForm": "",
+      "campaignWebsite": "https://www.mcmorrowformichigan.com",
+      "congressGovProfile": "",
+      "ballotpedia": "",
+      "wikipedia": "",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Mallory%20McMorrow"
+    },
+    "phones": [],
+    "offices": [],
+    "webHandles": [
+      {
+        "label": "Official Website",
+        "value": "https://senatedems.com/mcmorrow/bio/"
+      },
+      {
+        "label": "Campaign Website",
+        "value": "https://www.mcmorrowformichigan.com"
+      },
+      {
+        "label": "PolicyNote Search",
+        "value": "https://data.policynote.com/v1/people/search?name=Mallory%20McMorrow"
+      }
+    ],
+    "committees": [],
+    "caucuses": [],
+    "sourceIdentity": {
+      "bioguideId": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "policyNotePersonId": "",
+      "policyNoteEntityId": "",
+      "googleKnowledgeGraphMid": "",
+      "youtubeChannelId": "",
+      "openStatesPersonId": "",
+      "stateLegislatureId": "",
+      "stateCampaignFinanceId": ""
+    },
+    "dataQualityNotes": [
+      {
+        "label": "Seed profile",
+        "value": "Added in Proof Build v0.9 as part of the real profile expansion sprint.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Needs source deepening",
+        "value": "This profile has identity and official-link scaffolding only. Committee, finance, media, and race modules still need enrichment.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Missing headshot",
+        "value": "Add an official or campaign-approved image URL.",
+        "severity": "warning",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      },
+      {
+        "label": "Source note",
+        "value": "Official Michigan Senate Democratic profile checked during v0.9 seed pass.",
+        "severity": "note",
+        "owner": "research",
+        "lastChecked": "2026-06-02"
+      }
+    ],
+    "sourceTracking": [
+      {
+        "label": "Official website",
+        "value": "https://senatedems.com/mcmorrow/bio/",
+        "type": "official-site",
+        "sourceName": "Official office website",
+        "sourceUrl": "https://senatedems.com/mcmorrow/bio/",
+        "lastChecked": "2026-06-02",
+        "confidence": "High"
+      },
+      {
+        "label": "Campaign website",
+        "value": "https://www.mcmorrowformichigan.com",
+        "type": "campaign-site",
+        "sourceName": "Campaign website",
+        "sourceUrl": "https://www.mcmorrowformichigan.com",
+        "lastChecked": "2026-06-02",
+        "confidence": "Medium"
+      },
+      null,
+      {
+        "label": "PolicyNote search",
+        "value": "https://data.policynote.com/v1/people/search?name=Mallory%20McMorrow",
+        "type": "api-search",
+        "sourceName": "PolicyNote",
+        "sourceUrl": "https://data.policynote.com/v1/people/search?name=Mallory%20McMorrow",
+        "lastChecked": "2026-06-02",
+        "confidence": "Needs verification"
+      }
+    ],
+    "campaignFinanceSnapshot": {
+      "committeeName": "",
+      "fecCandidateId": "",
+      "fecPrincipalCommitteeId": "",
+      "itemizedReceiptsReturned": "",
+      "itemizedDisbursementsReturned": "",
+      "independentExpendituresReturned": "",
+      "latestReceiptDateSeen": "",
+      "latestDisbursementDateSeen": "",
+      "outsideSpenderProofExample": "",
+      "proofNotes": "State-level campaign finance should be handled separately from federal OpenFEC records."
+    },
+    "raceContext": {
+      "moduleStatus": "Scaffolded",
+      "electionCycle": "",
+      "office": "State Senator",
+      "district": "MI-SD-08",
+      "incumbentStatus": "Incumbent",
+      "reelectionYear": "",
+      "openSeatStatus": "Not populated yet",
+      "declaredChallengers": "Not populated yet",
+      "filingDeadline": "Not populated yet",
+      "electionRulesSource": "State election authority / official source required",
+      "opponentDataSource": "Not populated yet",
+      "implementationNote": "Seed profile only. Needs race-specific enrichment."
+    },
+    "factCheckIndex": {
+      "moduleStatus": "Not started",
+      "googleFactCheckQuery": "Mallory McMorrow",
+      "latestProofResult": "",
+      "sourceApi": "Google Fact Check Tools API",
+      "intendedUse": "Track verified third-party fact-checks of claims made by or about the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "mediaTracking": {
+      "moduleStatus": "Not started",
+      "youtubeChannelTitle": "",
+      "youtubeChannelId": "",
+      "youtubeSearchResultsReturned": "",
+      "officialChannelPublishedAt": "",
+      "proofVideos": [],
+      "publicCommentaryStatus": "Not populated yet",
+      "sentimentStatus": "Requires separate sentiment analysis layer",
+      "implementationNote": "Not populated yet."
+    },
+    "webClippings": {
+      "moduleStatus": "Not started",
+      "sourceApi": "Google Custom Search JSON API",
+      "queryPattern": "Mallory McMorrow",
+      "currentStatus": "Not populated yet",
+      "intendedUse": "Track public web mentions, news clips, interviews, releases, and other searchable web results.",
+      "implementationNote": "Not populated yet."
+    },
+    "deepCampaignFinance": {
+      "moduleStatus": "State source required",
+      "receiptsEndpoint": "",
+      "disbursementsEndpoint": "",
+      "independentExpendituresEndpoint": "",
+      "receiptsAvailable": "",
+      "disbursementsAvailable": "",
+      "independentExpendituresAvailable": "",
+      "donorFieldsToTrack": "",
+      "spendingFieldsToTrack": "",
+      "outsideMoneyFieldsToTrack": "",
+      "implementationNote": "State profile needs state campaign finance source wiring."
+    },
+    "legislativeMechanics": {
+      "moduleStatus": "Scaffolded",
+      "bioguideId": "",
+      "sponsoredLegislationCount": "",
+      "cosponsoredLegislationStatus": "",
+      "votingRecordStatus": "",
+      "sponsoredLegislationEndpoint": "",
+      "cosponsoredLegislationEndpoint": "",
+      "votingRecordEndpointStatus": "Needs state legislative source wiring",
+      "implementationNote": "No federal legislative ID available."
+    },
+    "verbalRecords": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "primarySource": "",
+      "currentStatus": "",
+      "intendedUse": "Track floor speeches, remarks, debate participation, and verbal mentions.",
+      "parserRequirement": "",
+      "implementationNote": "Not populated yet."
+    },
+    "politicalGeography": {
+      "moduleStatus": "Scaffolded",
+      "district": "MI-SD-08",
+      "state": "MI",
+      "googleCivicStatus": "",
+      "electionAdministrationBody": "",
+      "electionInfoUrl": "",
+      "voterRegistrationUrl": "",
+      "voterRegistrationConfirmationUrl": "",
+      "absenteeVotingInfoUrl": "",
+      "votingLocationFinderUrl": "",
+      "ballotInfoUrl": "",
+      "implementationNote": "Needs district and election source enrichment."
+    },
+    "powerMapping": {
+      "moduleStatus": "Not started",
+      "sourceApi": "",
+      "staffDirectoryStatus": "Not populated yet",
+      "stakeholderDirectoryStatus": "Not populated yet",
+      "committeeGatekeeperStatus": "Not populated yet",
+      "intendedUse": "Track staffers, aides, committee staff, caucus contacts, and stakeholder relationships connected to the official.",
+      "implementationNote": "Not populated yet."
+    },
+    "alertingInfrastructure": {
+      "moduleStatus": "Scaffolded",
+      "currentStatus": "Not live",
+      "dataSourceType": "REST APIs",
+      "alertBehavior": "Requires scheduled polling",
+      "schedulerRequirement": "A scheduled task or backend worker must poll sources and compare new results against stored prior results.",
+      "suggestedPollingTargets": "Official website updates, source endpoints, media search, fact-check search, and legislative or campaign finance sources.",
+      "implementationNote": "Alerts should be generated from detected changes, not from page refreshes."
+    },
+    "sourceEndpoints": {
+      "congressSponsoredLegislation": "",
+      "congressCosponsoredLegislation": "",
+      "fecReceipts": "",
+      "fecDisbursements": "",
+      "fecIndependentExpenditures": "",
+      "policyNoteSearch": "https://data.policynote.com/v1/people/search?name=Mallory%20McMorrow",
+      "googleFactCheckSearch": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=Mallory%20McMorrow",
+      "googleCivicVoterInfo": "https://www.googleapis.com/civicinfo/v2/voterinfo",
+      "youtubeSearch": "https://www.googleapis.com/youtube/v3/search",
+      "googleCustomSearch": "https://www.googleapis.com/customsearch/v1"
+    },
+    "proofStatus": {
+      "identityHub": "Seeded v0.9 profile",
+      "universalProfile": "Partial",
+      "biography": "Partial",
+      "headshot": "Missing",
+      "officialLinks": "Partial",
+      "committees": "Not started",
+      "raceContext": "Scaffolded",
+      "factCheckIndex": "Not started",
+      "mediaTracking": "Not started",
+      "deepCampaignFinance": "State source required",
+      "legislativeMechanics": "State source required",
+      "verbalRecords": "Not started",
+      "politicalGeography": "Scaffolded",
       "powerMapping": "Not started",
       "alertingInfrastructure": "Polling required"
     }
