@@ -76,6 +76,8 @@
       ${renderHeadshotAndMedia(person)}
       ${renderOfficialLinksAndContact(person)}
       ${renderCommitteesAndCaucuses(person)}
+      ${renderDataQualityNotes(person)}
+      ${renderSourceTracking(person)}
       ${renderAdvancedSections(person)}
     `;
 
@@ -89,12 +91,14 @@
     const initials = U.getInitials(person.name);
     const headshot = U.getFirstValue(
       person.headshotUrl,
+      person.photoUrl,
+      person.headshot?.primaryUrl,
       person.headshot,
       person.media?.headshotUrl,
       person.media?.headshot
     );
 
-    const headshotHtml = headshot
+    const headshotHtml = typeof headshot === "string" && U.hasContent(headshot)
       ? `<img src="${U.escapeAttribute(headshot)}" alt="${U.escapeAttribute(person.name)} headshot" data-headshot-initials="${U.escapeAttribute(initials)}" />`
       : renderHeadshotPlaceholder(initials);
 
@@ -107,7 +111,7 @@
         <div class="hero-content">
           <div class="hero-kicker">${U.escapeHtml(person.officeTypeLabel)} Profile</div>
           <h2 class="profile-name">${U.escapeHtml(person.name)}</h2>
-          <div class="profile-title">${U.escapeHtml(person.title || person.office || "Elected official")}</div>
+          <div class="profile-title">${U.escapeHtml(person.title || person.office || person.currentOffice || "Elected official")}</div>
 
           <div class="hero-meta">
             <span class="badge ${U.escapeAttribute(person.officeTypeNormalized)}">${U.escapeHtml(person.officeTypeLabel)}</span>
@@ -232,13 +236,13 @@
 
   function renderUniversalReference(person) {
     const ids = U.flattenObject({
-      "Bioguide ID": U.getFirstValue(person.bioguideId, person.ids?.bioguideId, person.identifiers?.bioguideId),
-      "FEC Candidate ID": U.getFirstValue(person.fecCandidateId, person.ids?.fecCandidateId, person.identifiers?.fecCandidateId),
-      "FEC Committee ID": U.getFirstValue(person.fecCommitteeId, person.fecPrincipalCommitteeId, person.ids?.fecCommitteeId, person.ids?.fecPrincipalCommitteeId),
-      "PolicyNote Person ID": U.getFirstValue(person.policyNotePersonId, person.ids?.policyNotePersonId, person.identifiers?.policyNotePersonId),
-      "PolicyNote Entity ID": U.getFirstValue(person.policyNoteEntityId, person.ids?.policyNoteEntityId, person.identifiers?.policyNoteEntityId),
-      "Google Knowledge Graph MID": U.getFirstValue(person.googleKgMid, person.googleKnowledgeGraphMid, person.ids?.googleKgMid),
-      "YouTube Channel ID": U.getFirstValue(person.youtubeChannelId, person.ids?.youtubeChannelId, person.social?.youtubeChannelId)
+      "Bioguide ID": U.getFirstValue(person.bioguideId, person.ids?.bioguideId, person.identifiers?.bioguideId, person.sourceIdentity?.bioguideId),
+      "FEC Candidate ID": U.getFirstValue(person.fecCandidateId, person.ids?.fecCandidateId, person.identifiers?.fecCandidateId, person.sourceIdentity?.fecCandidateId),
+      "FEC Committee ID": U.getFirstValue(person.fecCommitteeId, person.fecPrincipalCommitteeId, person.ids?.fecCommitteeId, person.ids?.fecPrincipalCommitteeId, person.sourceIdentity?.fecPrincipalCommitteeId),
+      "PolicyNote Person ID": U.getFirstValue(person.policyNotePersonId, person.ids?.policyNotePersonId, person.identifiers?.policyNotePersonId, person.sourceIdentity?.policyNotePersonId),
+      "PolicyNote Entity ID": U.getFirstValue(person.policyNoteEntityId, person.ids?.policyNoteEntityId, person.identifiers?.policyNoteEntityId, person.sourceIdentity?.policyNoteEntityId),
+      "Google Knowledge Graph MID": U.getFirstValue(person.googleKgMid, person.googleKnowledgeGraphMid, person.ids?.googleKgMid, person.sourceIdentity?.googleKnowledgeGraphMid),
+      "YouTube Channel ID": U.getFirstValue(person.youtubeChannelId, person.ids?.youtubeChannelId, person.social?.youtubeChannelId, person.officialLinks?.youtubeChannelId)
     });
 
     return renderSection({
@@ -253,12 +257,18 @@
   function renderBioLibrary(person) {
     const bioItems = [];
 
+    const oneLineBio = U.getFirstValue(person.bio?.oneLine, person.bio?.headline);
     const officialBio = U.getFirstValue(person.officialBio, person.bio?.official, person.bio?.officialBio);
     const shortBio = U.getFirstValue(person.shortBio, person.bio?.short, person.bio?.shortBio);
+    const standardBio = U.getFirstValue(person.bio?.standard, person.bio?.medium);
+    const longBio = U.getFirstValue(person.bio?.long);
     const plainEnglishBio = U.getFirstValue(person.plainEnglishBio, person.bio?.plainEnglish, person.bio?.plainEnglishBio);
 
+    if (oneLineBio) bioItems.push(["One-line bio", oneLineBio]);
     if (officialBio) bioItems.push(["Official bio", officialBio]);
     if (shortBio) bioItems.push(["Short bio", shortBio]);
+    if (standardBio) bioItems.push(["Standard bio", standardBio]);
+    if (longBio) bioItems.push(["Long bio", longBio]);
     if (plainEnglishBio) bioItems.push(["Plain-English bio", plainEnglishBio]);
 
     return renderSection({
@@ -272,9 +282,13 @@
 
   function renderHeadshotAndMedia(person) {
     const mediaItems = U.flattenObject({
-      "Headshot URL": U.getFirstValue(person.headshotUrl, person.headshot, person.media?.headshotUrl, person.media?.headshot),
+      "Headshot URL": U.getFirstValue(person.headshotUrl, person.photoUrl, person.headshot?.primaryUrl, person.headshot, person.media?.headshotUrl, person.media?.headshot),
+      "Headshot source": U.getFirstValue(person.headshot?.source, person.media?.headshotSource),
+      "Alt text": U.getFirstValue(person.headshot?.altText, person.media?.altText),
+      "Usage note": U.getFirstValue(person.headshot?.usageNote, person.media?.usageNote),
       "Image search URL": U.getFirstValue(person.imageSearchUrl, person.media?.imageSearchUrl),
-      "YouTube channel": U.getFirstValue(person.youtubeChannelUrl, person.media?.youtubeChannelUrl, person.social?.youtube),
+      "YouTube channel": U.getFirstValue(person.youtubeChannelUrl, person.media?.youtubeChannelUrl, person.social?.youtube, person.officialLinks?.youtubeChannelTitle),
+      "YouTube channel ID": U.getFirstValue(person.youtubeChannelId, person.officialLinks?.youtubeChannelId),
       "B-roll notes": U.getFirstValue(person.brollNotes, person.media?.brollNotes)
     });
 
@@ -289,15 +303,32 @@
 
   function renderOfficialLinksAndContact(person) {
     const links = U.normalizeLinks([
-      ["Official website", U.getFirstValue(person.officialWebsite, person.links?.officialWebsite, person.official?.website)],
+      ["Official website", U.getFirstValue(person.officialWebsite, person.officialLinks?.officialWebsite, person.links?.officialWebsite, person.official?.website)],
+      ["Contact form", U.getFirstValue(person.officialLinks?.contactForm, person.contactForm, person.links?.contactForm)],
       ["Campaign website", U.getFirstValue(person.campaignWebsite, person.links?.campaignWebsite, person.campaign?.website)],
       ["Congress.gov profile", U.getFirstValue(person.congressGovUrl, person.links?.congressGov)],
       ["Ballotpedia", U.getFirstValue(person.ballotpediaUrl, person.links?.ballotpedia)],
       ["Wikipedia", U.getFirstValue(person.wikipediaUrl, person.links?.wikipedia)],
+      ["PolicyNote search", U.getFirstValue(person.officialLinks?.policyNoteSearch, person.links?.policyNoteSearch)],
       ["X / Twitter", U.getFirstValue(person.twitterUrl, person.xUrl, person.links?.twitter, person.social?.twitter, person.social?.x)],
       ["Facebook", U.getFirstValue(person.facebookUrl, person.links?.facebook, person.social?.facebook)],
       ["Instagram", U.getFirstValue(person.instagramUrl, person.links?.instagram, person.social?.instagram)],
       ["YouTube", U.getFirstValue(person.youtubeUrl, person.links?.youtube, person.social?.youtube)]
+    ]);
+
+    const phoneItems = U.normalizeArray(person.phones).map((item) => [
+      item.label || "Phone",
+      item.value || item
+    ]);
+
+    const officeItems = U.normalizeArray(person.offices).map((item) => [
+      item.label || "Office",
+      item.value || item
+    ]);
+
+    const handleItems = U.normalizeArray(person.webHandles).map((item) => [
+      item.label || "Web handle",
+      item.value || item
     ]);
 
     const contactItems = U.flattenObject({
@@ -306,6 +337,13 @@
       "Office address": U.getFirstValue(person.officeAddress, person.contact?.officeAddress)
     });
 
+    const combinedContactItems = [
+      ...contactItems,
+      ...phoneItems,
+      ...officeItems,
+      ...handleItems
+    ];
+
     return renderSection({
       title: "Official Links and Contact",
       subtitle: "Verified official links, campaign links, and public contact details.",
@@ -313,7 +351,7 @@
       status: S.getSectionStatus(person, "Official Links and Contact"),
       body: `
         ${links.length ? renderLinksGrid(links) : renderEmpty("No official links have been added yet.")}
-        ${contactItems.length ? `<div style="height: 12px"></div>${renderKeyValueGrid(contactItems, true)}` : ""}
+        ${combinedContactItems.length ? `<div style="height: 12px"></div>${renderKeyValueGrid(combinedContactItems, true)}` : ""}
       `
     });
   }
@@ -352,6 +390,83 @@
           </div>
         </div>
       `
+    });
+  }
+
+  function renderDataQualityNotes(person) {
+    const notes = S.getDataQualityNotes(person);
+
+    return renderSection({
+      title: "Data Quality Notes",
+      subtitle: "Known gaps, cautions, assumptions, and research notes.",
+      open: false,
+      status: S.getSectionStatus(person, "Data Quality Notes"),
+      body: notes.length ? renderGenericList(notes) : renderEmpty("No data quality notes have been added yet.")
+    });
+  }
+
+  function renderSourceTracking(person) {
+    const grouped = S.getGroupedSourceTrackingItems(person);
+    const summary = S.getSourceTrackingSummary(person);
+
+    const highValueEndpointRows = summary.highValueEndpoints.slice(0, 6).map((item) => [
+      U.humanizeKey(item.label),
+      item.value
+    ]);
+
+    const sourceSummaryHtml = renderKeyValueGrid([
+      ["Total source records", summary.total],
+      ["API / official endpoints", summary.officialOrApiCount],
+      ["Proof status records", summary.proofStatusCount],
+      ["Manual source notes", summary.manualCount]
+    ]);
+
+    const highValueHtml = highValueEndpointRows.length
+      ? `
+        <div style="height: 12px"></div>
+        <div class="info-label">Key endpoints</div>
+        ${renderKeyValueGrid(highValueEndpointRows, true)}
+      `
+      : "";
+
+    const manualHtml = grouped.manual.length
+      ? `
+        <div style="height: 14px"></div>
+        <div class="info-label">Manual source notes</div>
+        ${renderGenericList(grouped.manual)}
+      `
+      : "";
+
+    const proofHtml = grouped.proofStatus.length
+      ? `
+        <div style="height: 14px"></div>
+        <div class="info-label">Proof status</div>
+        ${renderGenericList(grouped.proofStatus)}
+      `
+      : "";
+
+    const endpointHtml = grouped.endpoints.length
+      ? `
+        <div style="height: 14px"></div>
+        <div class="info-label">All API / official endpoints</div>
+        ${renderGenericList(grouped.endpoints)}
+      `
+      : "";
+
+    return renderSection({
+      title: "Source Tracking",
+      subtitle: "Compact source summary. Open for full endpoint and proof trail.",
+      open: false,
+      status: S.getSectionStatus(person, "Source Tracking"),
+      body: summary.total
+        ? `
+          ${sourceSummaryHtml}
+          ${highValueHtml}
+          ${manualHtml}
+          ${proofHtml}
+          ${endpointHtml}
+        `
+        : renderEmpty("No source tracking items have been added yet.")
     });
   }
 
@@ -503,7 +618,7 @@
 
             if (typeof item === "object" && item !== null) {
               const title = U.getFirstValue(item.name, item.title, item.committee, item.label, "Item");
-              const description = U.getFirstValue(item.role, item.description, item.notes, item.value, "");
+              const description = U.getFirstValue(item.role, item.description, item.notes, item.value, item.source, "");
 
               return `
                 <div class="compact-chip">
@@ -538,13 +653,19 @@
             }
 
             if (typeof item === "object" && item !== null) {
-              const title = U.getFirstValue(item.name, item.title, item.committee, item.label, "Item");
-              const description = U.getFirstValue(item.role, item.description, item.notes, item.value, "");
+              const title = U.getFirstValue(item.label, item.name, item.title, item.key, item.type, "Item");
+              const description = U.getFirstValue(item.value, item.description, item.notes, item.status, item.source, "");
+
+              const descriptionHtml = U.isUrl(description)
+                ? `<p><a href="${U.escapeAttribute(description)}" target="_blank" rel="noopener noreferrer">${U.escapeHtml(description)}</a></p>`
+                : description
+                  ? `<p>${U.escapeHtml(description)}</p>`
+                  : "";
 
               return `
                 <div class="list-item">
-                  <strong>${U.escapeHtml(title)}</strong>
-                  ${description ? `<p>${U.escapeHtml(description)}</p>` : ""}
+                  <strong>${U.escapeHtml(U.humanizeKey(title))}</strong>
+                  ${descriptionHtml}
                 </div>
               `;
             }

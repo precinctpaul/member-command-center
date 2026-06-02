@@ -7,7 +7,9 @@
     "Bio Library",
     "Headshot and Media Asset",
     "Official Links and Contact",
-    "Committees and Caucuses"
+    "Committees and Caucuses",
+    "Data Quality Notes",
+    "Source Tracking"
   ];
 
   const ADVANCED_SECTIONS = [
@@ -34,6 +36,8 @@
     const raw = String(
       U.getFirstValue(
         person.officeType,
+        person.office?.type,
+        person.identity?.officeType,
         person.level,
         person.governmentLevel,
         person.chamber,
@@ -46,10 +50,13 @@
       U.getFirstValue(
         person.bioguideId,
         person.ids?.bioguideId,
+        person.sourceIdentity?.bioguideId,
         person.fecCandidateId,
         person.ids?.fecCandidateId,
+        person.sourceIdentity?.fecCandidateId,
         person.fecPrincipalCommitteeId,
-        person.ids?.fecPrincipalCommitteeId
+        person.ids?.fecPrincipalCommitteeId,
+        person.sourceIdentity?.fecPrincipalCommitteeId
       )
     );
 
@@ -111,13 +118,25 @@
 
   function normalizeCompletion(person) {
     const explicitStatus = String(
-      U.getFirstValue(person.completionStatus, person.status, person.profileStatus, "")
+      U.getFirstValue(
+        person.completionStatus,
+        person.status?.completionStatus,
+        person.status,
+        person.profileStatus,
+        ""
+      )
     )
       .trim()
       .toLowerCase();
 
     const explicitScore = Number(
-      U.getFirstValue(person.completionScore, person.completionPercent, person.profileCompletion, NaN)
+      U.getFirstValue(
+        person.completionScore,
+        person.status?.completionScore,
+        person.completionPercent,
+        person.profileCompletionScore,
+        NaN
+      )
     );
 
     if (explicitStatus) {
@@ -145,7 +164,7 @@
         };
       }
 
-      if (explicitStatus.includes("partial")) {
+      if (explicitStatus.includes("partial") || explicitStatus.includes("scaffold")) {
         return {
           normalized: "partial",
           label: "Partial",
@@ -175,17 +194,19 @@
 
   function calculateCompletionScore(person) {
     const checks = [
-      person.name || person.fullName,
-      person.title || person.office,
-      person.party,
-      person.state || person.district,
+      person.name || person.fullName || person.identity?.fullName,
+      person.title || person.office?.title || person.currentOffice,
+      person.party || person.identity?.party,
+      person.state || person.district || person.office?.state || person.office?.district,
       person.officialBio || person.shortBio || person.bio,
-      person.headshotUrl || person.headshot || person.media?.headshotUrl,
-      person.officialWebsite || person.links?.officialWebsite,
-      person.bioguideId || person.ids?.bioguideId || person.fecCandidateId || person.ids?.fecCandidateId,
+      person.headshotUrl || person.headshot || person.media?.headshotUrl || person.media?.headshot,
+      person.officialWebsite || person.officialLinks?.officialWebsite || person.links?.officialWebsite,
+      person.bioguideId || person.sourceIdentity?.bioguideId || person.fecCandidateId || person.sourceIdentity?.fecCandidateId,
       person.committees || person.committeeMemberships,
       person.caucuses,
-      person.campaignFinance || person.finance || person.campaignFinanceSnapshot
+      person.campaignFinance || person.finance || person.campaignFinanceSnapshot,
+      person.dataQualityNotes || person.quality?.notes,
+      person.sourceTracking || person.sources || person.sourceEndpoints || person.proofStatus
     ];
 
     const completed = checks.filter((item) => U.hasContent(item)).length;
@@ -197,21 +218,27 @@
       "Race Context and Opponent Data": ["raceContext", "opponents", "electionContext"],
       "Fact-Check Index": ["factChecks", "factCheckIndex"],
       "Media Tracking and Public Commentary": ["mediaTracking", "publicCommentary"],
-      "YouTube Proof Videos": ["youtubeProofVideos", "youtubeVideos", "videos"],
+      "YouTube Proof Videos": ["youtubeProofVideos", "youtubeVideos", "videos", "mediaTracking.proofVideos"],
       "Web Clippings and Public Mentions": ["webClippings", "publicMentions"],
       "Deep Campaign Finance": ["deepCampaignFinance", "campaignFinance", "finance"],
       "Legislative Mechanics and Floor Records": ["legislativeMechanics", "floorRecords"],
       "Floor Debates and Verbal Records": ["floorDebates", "verbalRecords"],
       "Political Geography and Electoral Venues": ["politicalGeography", "electoralVenues"],
       "Power Mapping and Staff Networks": ["powerMapping", "staffNetworks"],
-      "Real-Time Alerts Infrastructure": ["alerts", "realTimeAlerts"],
+      "Real-Time Alerts Infrastructure": ["alerts", "realTimeAlerts", "alertingInfrastructure"],
       "Campaign Finance Snapshot": ["campaignFinanceSnapshot", "financeSnapshot"],
-      "Connection Status": ["connectionStatus", "connections"],
-      "Verified Source Endpoints": ["verifiedSourceEndpoints", "sourceEndpoints", "sources"]
+      "Connection Status": ["connectionStatus", "connections", "proofStatus"],
+      "Verified Source Endpoints": ["verifiedSourceEndpoints", "sourceEndpoints"]
     };
 
     const candidateKeys = keyMap[sectionTitle] || [];
-    return candidateKeys.map((key) => person[key]).find((item) => U.hasContent(item));
+
+    for (const key of candidateKeys) {
+      const value = getByPath(person, key);
+      if (U.hasContent(value)) return value;
+    }
+
+    return undefined;
   }
 
   function getSectionStatus(person, sectionTitle) {
@@ -230,15 +257,26 @@
       const values = [
         person.bioguideId,
         person.ids?.bioguideId,
+        person.identifiers?.bioguideId,
+        person.sourceIdentity?.bioguideId,
         person.fecCandidateId,
         person.ids?.fecCandidateId,
+        person.identifiers?.fecCandidateId,
+        person.sourceIdentity?.fecCandidateId,
         person.fecCommitteeId,
         person.fecPrincipalCommitteeId,
+        person.ids?.fecCommitteeId,
+        person.ids?.fecPrincipalCommitteeId,
+        person.sourceIdentity?.fecPrincipalCommitteeId,
         person.policyNotePersonId,
+        person.sourceIdentity?.policyNotePersonId,
         person.policyNoteEntityId,
+        person.sourceIdentity?.policyNoteEntityId,
         person.googleKgMid,
         person.googleKnowledgeGraphMid,
-        person.youtubeChannelId
+        person.sourceIdentity?.googleKnowledgeGraphMid,
+        person.youtubeChannelId,
+        person.officialLinks?.youtubeChannelId
       ].filter(U.hasContent);
 
       if (values.length >= 4) return { normalized: "ready", label: "Ready" };
@@ -251,9 +289,12 @@
         person.officialBio,
         person.bio?.official,
         person.bio?.officialBio,
+        person.bio?.oneLine,
         person.shortBio,
         person.bio?.short,
         person.bio?.shortBio,
+        person.bio?.standard,
+        person.bio?.long,
         person.plainEnglishBio,
         person.bio?.plainEnglish,
         person.bio?.plainEnglishBio
@@ -267,15 +308,20 @@
     if (sectionTitle === "Headshot and Media Asset") {
       const values = [
         person.headshotUrl,
+        person.photoUrl,
         person.headshot,
+        person.headshot?.primaryUrl,
         person.media?.headshotUrl,
         person.media?.headshot,
         person.imageSearchUrl,
         person.media?.imageSearchUrl,
         person.youtubeChannelUrl,
+        person.officialLinks?.youtubeChannelId,
+        person.officialLinks?.youtubeChannelTitle,
         person.media?.youtubeChannelUrl,
         person.social?.youtube,
         person.brollNotes,
+        person.headshot?.usageNote,
         person.media?.brollNotes
       ].filter(U.hasContent);
 
@@ -287,11 +333,13 @@
     if (sectionTitle === "Official Links and Contact") {
       const values = [
         person.officialWebsite,
+        person.officialLinks?.officialWebsite,
         person.links?.officialWebsite,
         person.campaignWebsite,
         person.links?.campaignWebsite,
         person.congressGovUrl,
         person.links?.congressGov,
+        person.officialLinks?.contactForm,
         person.ballotpediaUrl,
         person.wikipediaUrl,
         person.twitterUrl,
@@ -304,7 +352,10 @@
         person.officeAddress,
         person.contact?.phone,
         person.contact?.email,
-        person.contact?.officeAddress
+        person.contact?.officeAddress,
+        person.phones,
+        person.offices,
+        person.webHandles
       ].filter(U.hasContent);
 
       if (values.length >= 4) return { normalized: "ready", label: "Ready" };
@@ -328,6 +379,23 @@
       return { normalized: "empty", label: "Empty" };
     }
 
+    if (sectionTitle === "Data Quality Notes") {
+      const notes = getDataQualityNotes(person);
+
+      if (notes.length >= 3) return { normalized: "ready", label: "Ready" };
+      if (notes.length >= 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (sectionTitle === "Source Tracking") {
+      const grouped = getGroupedSourceTrackingItems(person);
+      const total = grouped.manual.length + grouped.endpoints.length + grouped.proofStatus.length;
+
+      if (total >= 5) return { normalized: "ready", label: "Ready" };
+      if (total >= 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
     const content = getAdvancedSectionRawValue(person, sectionTitle);
 
     if (sectionTitle === "Campaign Finance Snapshot") {
@@ -336,7 +404,9 @@
       if (
         U.hasContent(person.fecCandidateId) ||
         U.hasContent(person.fecPrincipalCommitteeId) ||
-        U.hasContent(person.fecCommitteeId)
+        U.hasContent(person.fecCommitteeId) ||
+        U.hasContent(person.sourceIdentity?.fecCandidateId) ||
+        U.hasContent(person.sourceIdentity?.fecPrincipalCommitteeId)
       ) {
         return { normalized: "api", label: "API ready" };
       }
@@ -354,6 +424,152 @@
     }
 
     return { normalized: "empty", label: "Empty" };
+  }
+
+  function getDataQualityNotes(person) {
+    const explicitNotes = U.normalizeArray(U.getFirstValue(person.dataQualityNotes, person.quality?.notes));
+    const generatedNotes = [];
+
+    if (!U.hasContent(person.headshot?.primaryUrl) && !U.hasContent(person.headshotUrl) && !U.hasContent(person.photoUrl)) {
+      generatedNotes.push({
+        label: "Missing headshot",
+        value: "No official or campaign-approved headshot URL is currently available."
+      });
+    }
+
+    if (person.officeTypeNormalized === "state") {
+      generatedNotes.push({
+        label: "State-level profile",
+        value: "Do not assume federal IDs, Congress.gov records, or OpenFEC coverage apply."
+      });
+    }
+
+    if (!U.hasContent(person.officialLinks?.officialWebsite) && !U.hasContent(person.officialWebsite)) {
+      generatedNotes.push({
+        label: "Official website missing",
+        value: "Add and verify the official government website."
+      });
+    }
+
+    if (!U.hasContent(person.committees) && !U.hasContent(person.committeeMemberships)) {
+      generatedNotes.push({
+        label: "Committee data missing",
+        value: "Committee and caucus data has not been populated."
+      });
+    }
+
+    if (person.profileCompletion && typeof person.profileCompletion === "object") {
+      generatedNotes.push({
+        label: "Completion map available",
+        value: "This profile includes field-level completion notes in profileCompletion."
+      });
+    }
+
+    return [...explicitNotes, ...generatedNotes].filter(U.hasContent);
+  }
+
+  function getSourceTrackingItems(person) {
+    const grouped = getGroupedSourceTrackingItems(person);
+    return [...grouped.manual, ...grouped.endpoints, ...grouped.proofStatus];
+  }
+
+  function getGroupedSourceTrackingItems(person) {
+    const manual = U.normalizeArray(U.getFirstValue(person.sourceTracking, person.sources))
+      .filter(U.hasContent)
+      .map((item) => ({
+        ...normalizeSourceItem(item),
+        group: "manual"
+      }));
+
+    const endpoints = person.sourceEndpoints && typeof person.sourceEndpoints === "object"
+      ? Object.entries(person.sourceEndpoints)
+          .filter(([, value]) => U.hasContent(value))
+          .map(([label, value]) => ({
+            label,
+            value,
+            type: "endpoint",
+            group: "endpoints"
+          }))
+      : [];
+
+    const proofStatus = person.proofStatus && typeof person.proofStatus === "object"
+      ? Object.entries(person.proofStatus)
+          .filter(([, value]) => U.hasContent(value))
+          .map(([label, value]) => ({
+            label,
+            value,
+            type: "proofStatus",
+            group: "proofStatus"
+          }))
+      : [];
+
+    return {
+      manual,
+      endpoints,
+      proofStatus
+    };
+  }
+
+  function getSourceTrackingSummary(person) {
+    const grouped = getGroupedSourceTrackingItems(person);
+
+    const total = grouped.manual.length + grouped.endpoints.length + grouped.proofStatus.length;
+
+    const officialOrApiCount = grouped.endpoints.length;
+    const proofStatusCount = grouped.proofStatus.length;
+    const manualCount = grouped.manual.length;
+
+    const highValueLabels = [
+      "congressSponsoredLegislation",
+      "congressCosponsoredLegislation",
+      "fecReceipts",
+      "fecDisbursements",
+      "fecIndependentExpenditures",
+      "policyNoteSearch",
+      "googleFactCheckSearch",
+      "youtubeSearch",
+      "govInfoPackages",
+      "googleCustomSearch"
+    ];
+
+    const highValueEndpoints = grouped.endpoints.filter((item) =>
+      highValueLabels.includes(item.label)
+    );
+
+    return {
+      total,
+      officialOrApiCount,
+      proofStatusCount,
+      manualCount,
+      highValueEndpoints
+    };
+  }
+
+  function normalizeSourceItem(item) {
+    if (typeof item === "string") {
+      return {
+        label: item,
+        value: item,
+        type: "manual"
+      };
+    }
+
+    if (item && typeof item === "object") {
+      return {
+        label: U.getFirstValue(item.label, item.name, item.title, item.key, "Source"),
+        value: U.getFirstValue(item.value, item.sourceUrl, item.url, item.status, item.description, ""),
+        type: U.getFirstValue(item.type, "manual"),
+        sourceName: U.getFirstValue(item.sourceName, item.source, ""),
+        lastChecked: U.getFirstValue(item.lastChecked, ""),
+        confidence: U.getFirstValue(item.confidence, "")
+      };
+    }
+
+    return {
+      label: "Source",
+      value: String(item),
+      type: "manual"
+    };
   }
 
   function mergeStatuses(statuses) {
@@ -374,6 +590,15 @@
     return { normalized: "empty", label: "Empty" };
   }
 
+  function getByPath(object, path) {
+    return String(path)
+      .split(".")
+      .reduce((current, key) => {
+        if (!current || typeof current !== "object") return undefined;
+        return current[key];
+      }, object);
+  }
+
   window.MCCStatus = {
     CORE_SECTIONS,
     ADVANCED_SECTIONS,
@@ -385,6 +610,10 @@
     calculateCompletionScore,
     getAdvancedSectionRawValue,
     getSectionStatus,
+    getDataQualityNotes,
+    getSourceTrackingItems,
+    getGroupedSourceTrackingItems,
+    getSourceTrackingSummary,
     mergeStatuses
   };
 })();
