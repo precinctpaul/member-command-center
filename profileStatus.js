@@ -1,0 +1,390 @@
+(function () {
+  const U = window.MCCUtils;
+
+  const CORE_SECTIONS = [
+    "Profile Completion",
+    "Universal Reference",
+    "Bio Library",
+    "Headshot and Media Asset",
+    "Official Links and Contact",
+    "Committees and Caucuses"
+  ];
+
+  const ADVANCED_SECTIONS = [
+    "Race Context and Opponent Data",
+    "Fact-Check Index",
+    "Media Tracking and Public Commentary",
+    "YouTube Proof Videos",
+    "Web Clippings and Public Mentions",
+    "Deep Campaign Finance",
+    "Legislative Mechanics and Floor Records",
+    "Floor Debates and Verbal Records",
+    "Political Geography and Electoral Venues",
+    "Power Mapping and Staff Networks",
+    "Real-Time Alerts Infrastructure",
+    "Green Easy Win API Integrations",
+    "Campaign Finance Snapshot",
+    "Connection Status",
+    "Verified Source Endpoints"
+  ];
+
+  const ALL_SECTIONS = [...CORE_SECTIONS, ...ADVANCED_SECTIONS];
+
+  function normalizeOfficeType(person) {
+    const raw = String(
+      U.getFirstValue(
+        person.officeType,
+        person.level,
+        person.governmentLevel,
+        person.chamber,
+        person.office,
+        ""
+      )
+    ).toLowerCase();
+
+    const hasFederalId = Boolean(
+      U.getFirstValue(
+        person.bioguideId,
+        person.ids?.bioguideId,
+        person.fecCandidateId,
+        person.ids?.fecCandidateId,
+        person.fecPrincipalCommitteeId,
+        person.ids?.fecPrincipalCommitteeId
+      )
+    );
+
+    if (
+      raw.includes("federal") ||
+      raw.includes("congress") ||
+      raw.includes("house") ||
+      raw.includes("senate") ||
+      raw.includes("representative") ||
+      raw.includes("u.s.") ||
+      raw.includes("us ") ||
+      hasFederalId
+    ) {
+      return "federal";
+    }
+
+    if (
+      raw.includes("state") ||
+      raw.includes("assembly") ||
+      raw.includes("delegate") ||
+      raw.includes("governor") ||
+      raw.includes("legislature")
+    ) {
+      return "state";
+    }
+
+    return "state";
+  }
+
+  function normalizeParty(rawParty) {
+    const value = String(rawParty || "").trim().toLowerCase();
+
+    if (["d", "dem", "democrat", "democratic", "democratic party"].includes(value)) {
+      return "democratic";
+    }
+
+    if (["r", "rep", "republican", "republican party", "gop"].includes(value)) {
+      return "republican";
+    }
+
+    if (["i", "ind", "independent", "unaffiliated"].includes(value)) {
+      return "independent";
+    }
+
+    if (!value) {
+      return "other";
+    }
+
+    return "other";
+  }
+
+  function partyLabel(normalized, rawParty) {
+    if (normalized === "democratic") return "Democratic";
+    if (normalized === "republican") return "Republican";
+    if (normalized === "independent") return "Independent";
+    if (rawParty) return String(rawParty);
+    return "Other";
+  }
+
+  function normalizeCompletion(person) {
+    const explicitStatus = String(
+      U.getFirstValue(person.completionStatus, person.status, person.profileStatus, "")
+    )
+      .trim()
+      .toLowerCase();
+
+    const explicitScore = Number(
+      U.getFirstValue(person.completionScore, person.completionPercent, person.profileCompletion, NaN)
+    );
+
+    if (explicitStatus) {
+      if (explicitStatus.includes("not")) {
+        return {
+          normalized: "not-started",
+          label: "Not started",
+          score: Number.isFinite(explicitScore) ? U.clampNumber(explicitScore, 0, 100) : 0
+        };
+      }
+
+      if (explicitStatus.includes("complete") && !explicitStatus.includes("incomplete")) {
+        return {
+          normalized: "complete",
+          label: "Complete",
+          score: Number.isFinite(explicitScore) ? U.clampNumber(explicitScore, 0, 100) : 100
+        };
+      }
+
+      if (explicitStatus.includes("missing")) {
+        return {
+          normalized: "missing",
+          label: "Missing",
+          score: Number.isFinite(explicitScore) ? U.clampNumber(explicitScore, 0, 100) : 20
+        };
+      }
+
+      if (explicitStatus.includes("partial")) {
+        return {
+          normalized: "partial",
+          label: "Partial",
+          score: Number.isFinite(explicitScore) ? U.clampNumber(explicitScore, 0, 100) : 55
+        };
+      }
+    }
+
+    if (Number.isFinite(explicitScore)) {
+      const score = U.clampNumber(explicitScore, 0, 100);
+
+      if (score >= 90) return { normalized: "complete", label: "Complete", score };
+      if (score >= 35) return { normalized: "partial", label: "Partial", score };
+      if (score > 0) return { normalized: "missing", label: "Missing", score };
+
+      return { normalized: "not-started", label: "Not started", score };
+    }
+
+    const score = calculateCompletionScore(person);
+
+    if (score >= 90) return { normalized: "complete", label: "Complete", score };
+    if (score >= 35) return { normalized: "partial", label: "Partial", score };
+    if (score > 0) return { normalized: "missing", label: "Missing", score };
+
+    return { normalized: "not-started", label: "Not started", score };
+  }
+
+  function calculateCompletionScore(person) {
+    const checks = [
+      person.name || person.fullName,
+      person.title || person.office,
+      person.party,
+      person.state || person.district,
+      person.officialBio || person.shortBio || person.bio,
+      person.headshotUrl || person.headshot || person.media?.headshotUrl,
+      person.officialWebsite || person.links?.officialWebsite,
+      person.bioguideId || person.ids?.bioguideId || person.fecCandidateId || person.ids?.fecCandidateId,
+      person.committees || person.committeeMemberships,
+      person.caucuses,
+      person.campaignFinance || person.finance || person.campaignFinanceSnapshot
+    ];
+
+    const completed = checks.filter((item) => U.hasContent(item)).length;
+    return Math.round((completed / checks.length) * 100);
+  }
+
+  function getAdvancedSectionRawValue(person, sectionTitle) {
+    const keyMap = {
+      "Race Context and Opponent Data": ["raceContext", "opponents", "electionContext"],
+      "Fact-Check Index": ["factChecks", "factCheckIndex"],
+      "Media Tracking and Public Commentary": ["mediaTracking", "publicCommentary"],
+      "YouTube Proof Videos": ["youtubeProofVideos", "youtubeVideos", "videos"],
+      "Web Clippings and Public Mentions": ["webClippings", "publicMentions"],
+      "Deep Campaign Finance": ["deepCampaignFinance", "campaignFinance", "finance"],
+      "Legislative Mechanics and Floor Records": ["legislativeMechanics", "floorRecords"],
+      "Floor Debates and Verbal Records": ["floorDebates", "verbalRecords"],
+      "Political Geography and Electoral Venues": ["politicalGeography", "electoralVenues"],
+      "Power Mapping and Staff Networks": ["powerMapping", "staffNetworks"],
+      "Real-Time Alerts Infrastructure": ["alerts", "realTimeAlerts"],
+      "Campaign Finance Snapshot": ["campaignFinanceSnapshot", "financeSnapshot"],
+      "Connection Status": ["connectionStatus", "connections"],
+      "Verified Source Endpoints": ["verifiedSourceEndpoints", "sourceEndpoints", "sources"]
+    };
+
+    const candidateKeys = keyMap[sectionTitle] || [];
+    return candidateKeys.map((key) => person[key]).find((item) => U.hasContent(item));
+  }
+
+  function getSectionStatus(person, sectionTitle) {
+    if (sectionTitle === "Profile Completion") {
+      if (person.completionNormalized === "complete") return { normalized: "ready", label: "Ready" };
+      if (person.completionNormalized === "partial") return { normalized: "partial", label: "Partial" };
+      if (person.completionNormalized === "missing") return { normalized: "missing", label: "Missing" };
+      return { normalized: "empty", label: "Not started" };
+    }
+
+    if (sectionTitle === "Green Easy Win API Integrations") {
+      return { normalized: "api", label: "API" };
+    }
+
+    if (sectionTitle === "Universal Reference") {
+      const values = [
+        person.bioguideId,
+        person.ids?.bioguideId,
+        person.fecCandidateId,
+        person.ids?.fecCandidateId,
+        person.fecCommitteeId,
+        person.fecPrincipalCommitteeId,
+        person.policyNotePersonId,
+        person.policyNoteEntityId,
+        person.googleKgMid,
+        person.googleKnowledgeGraphMid,
+        person.youtubeChannelId
+      ].filter(U.hasContent);
+
+      if (values.length >= 4) return { normalized: "ready", label: "Ready" };
+      if (values.length >= 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (sectionTitle === "Bio Library") {
+      const values = [
+        person.officialBio,
+        person.bio?.official,
+        person.bio?.officialBio,
+        person.shortBio,
+        person.bio?.short,
+        person.bio?.shortBio,
+        person.plainEnglishBio,
+        person.bio?.plainEnglish,
+        person.bio?.plainEnglishBio
+      ].filter(U.hasContent);
+
+      if (values.length >= 2) return { normalized: "ready", label: "Ready" };
+      if (values.length === 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (sectionTitle === "Headshot and Media Asset") {
+      const values = [
+        person.headshotUrl,
+        person.headshot,
+        person.media?.headshotUrl,
+        person.media?.headshot,
+        person.imageSearchUrl,
+        person.media?.imageSearchUrl,
+        person.youtubeChannelUrl,
+        person.media?.youtubeChannelUrl,
+        person.social?.youtube,
+        person.brollNotes,
+        person.media?.brollNotes
+      ].filter(U.hasContent);
+
+      if (values.length >= 2) return { normalized: "ready", label: "Ready" };
+      if (values.length === 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (sectionTitle === "Official Links and Contact") {
+      const values = [
+        person.officialWebsite,
+        person.links?.officialWebsite,
+        person.campaignWebsite,
+        person.links?.campaignWebsite,
+        person.congressGovUrl,
+        person.links?.congressGov,
+        person.ballotpediaUrl,
+        person.wikipediaUrl,
+        person.twitterUrl,
+        person.xUrl,
+        person.facebookUrl,
+        person.instagramUrl,
+        person.youtubeUrl,
+        person.phone,
+        person.email,
+        person.officeAddress,
+        person.contact?.phone,
+        person.contact?.email,
+        person.contact?.officeAddress
+      ].filter(U.hasContent);
+
+      if (values.length >= 4) return { normalized: "ready", label: "Ready" };
+      if (values.length >= 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (sectionTitle === "Committees and Caucuses") {
+      const committees = U.normalizeArray(
+        U.getFirstValue(person.committees, person.committeeMemberships, person.legislative?.committees)
+      );
+
+      const caucuses = U.normalizeArray(
+        U.getFirstValue(person.caucuses, person.legislative?.caucuses)
+      );
+
+      const total = committees.length + caucuses.length;
+
+      if (total >= 3) return { normalized: "ready", label: "Ready" };
+      if (total >= 1) return { normalized: "partial", label: "Partial" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    const content = getAdvancedSectionRawValue(person, sectionTitle);
+
+    if (sectionTitle === "Campaign Finance Snapshot") {
+      if (U.hasContent(content)) return { normalized: "ready", label: "Ready" };
+
+      if (
+        U.hasContent(person.fecCandidateId) ||
+        U.hasContent(person.fecPrincipalCommitteeId) ||
+        U.hasContent(person.fecCommitteeId)
+      ) {
+        return { normalized: "api", label: "API ready" };
+      }
+
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (sectionTitle === "Connection Status" || sectionTitle === "Verified Source Endpoints") {
+      if (U.hasContent(content)) return { normalized: "ready", label: "Ready" };
+      return { normalized: "empty", label: "Empty" };
+    }
+
+    if (U.hasContent(content)) {
+      return { normalized: "partial", label: "Partial" };
+    }
+
+    return { normalized: "empty", label: "Empty" };
+  }
+
+  function mergeStatuses(statuses) {
+    const normalizedValues = statuses.map((status) => status.normalized);
+
+    if (normalizedValues.every((value) => value === "ready")) {
+      return { normalized: "ready", label: "Ready" };
+    }
+
+    if (normalizedValues.some((value) => value === "ready" || value === "partial")) {
+      return { normalized: "partial", label: "Partial" };
+    }
+
+    if (normalizedValues.some((value) => value === "api")) {
+      return { normalized: "api", label: "API" };
+    }
+
+    return { normalized: "empty", label: "Empty" };
+  }
+
+  window.MCCStatus = {
+    CORE_SECTIONS,
+    ADVANCED_SECTIONS,
+    ALL_SECTIONS,
+    normalizeOfficeType,
+    normalizeParty,
+    partyLabel,
+    normalizeCompletion,
+    calculateCompletionScore,
+    getAdvancedSectionRawValue,
+    getSectionStatus,
+    mergeStatuses
+  };
+})();

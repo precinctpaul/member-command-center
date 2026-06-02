@@ -6,34 +6,88 @@
   <title>Member Command Center</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <main class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Member Command Center</p>
-        <h1>Verified Profile Intelligence</h1>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="app-kicker">Proof Build v0.6</div>
+        <h1>Member Command Center</h1>
+        <p>Political intelligence dashboard for elected officials.</p>
       </div>
-      <div class="status-pill">Proof Build v0.4</div>
-    </header>
 
-    <section class="layout">
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <h2>People</h2>
-          <p>JSON-backed reference profiles</p>
+      <div class="sidebar-controls" aria-label="Profile search and filters">
+        <label class="control-label" for="profileSearch">Search by name</label>
+        <input
+          id="profileSearch"
+          class="search-input"
+          type="search"
+          placeholder="Search Jake, Buffy..."
+          autocomplete="off"
+        />
+
+        <label class="control-label" for="officeTypeFilter">Office type</label>
+        <select id="officeTypeFilter" class="filter-select">
+          <option value="all">All</option>
+          <option value="federal">Federal</option>
+          <option value="state">State</option>
+        </select>
+
+        <label class="control-label" for="partyFilter">Party</label>
+        <select id="partyFilter" class="filter-select">
+          <option value="all">All</option>
+          <option value="democratic">Democratic</option>
+          <option value="republican">Republican</option>
+          <option value="independent">Independent</option>
+          <option value="other">Other</option>
+        </select>
+
+        <label class="control-label" for="completionFilter">Completion</label>
+        <select id="completionFilter" class="filter-select">
+          <option value="all">All</option>
+          <option value="complete">Complete</option>
+          <option value="partial">Partial</option>
+          <option value="missing">Missing</option>
+          <option value="not-started">Not started</option>
+        </select>
+
+        <button id="clearFiltersButton" class="secondary-button" type="button">
+          Clear filters
+        </button>
+
+        <div id="filterSummary" class="filter-summary">
+          Loading profiles...
         </div>
+      </div>
 
-        <div id="peopleList" class="people-list"></div>
-      </aside>
+      <nav id="profileList" class="profile-list" aria-label="Profiles"></nav>
+    </aside>
 
-      <section class="profile-panel">
-        <div id="profileRoot"></div>
-      </section>
-    </section>
-  </main>
+    <main class="main-content">
+      <div id="loadingState" class="state-card">
+        <h2>Loading profile data...</h2>
+        <p>Reading <code>data/people.json</code> from localhost.</p>
+      </div>
+
+      <div id="errorState" class="state-card error-state hidden">
+        <h2>Profile data failed to load</h2>
+        <p id="errorMessage"></p>
+        <p class="small-note">
+          This app must be served from localhost because profile data is loaded with fetch.
+        </p>
+      </div>
+
+      <article id="profileView" class="profile-view hidden" aria-live="polite"></article>
+    </main>
+  </div>
 
   <script src="apiService.js"></script>
-  <script src="app.js"></script>
   <script src="greenEasyWins.js"></script>
+
+  <script src="profileUtils.js"></script>
+  <script src="profileStatus.js"></script>
+  <script src="profileFilters.js"></script>
+  <script src="renderProfile.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
