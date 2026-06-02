@@ -126,6 +126,415 @@ const bioFields = [
   }
 ];
 
+const raceContextFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "electionCycle",
+    label: "Election Cycle"
+  },
+  {
+    key: "office",
+    label: "Office"
+  },
+  {
+    key: "district",
+    label: "District"
+  },
+  {
+    key: "incumbentStatus",
+    label: "Incumbent Status"
+  },
+  {
+    key: "reelectionYear",
+    label: "Reelection Year"
+  },
+  {
+    key: "openSeatStatus",
+    label: "Open Seat Status",
+    wide: true
+  },
+  {
+    key: "declaredChallengers",
+    label: "Declared Challengers"
+  },
+  {
+    key: "filingDeadline",
+    label: "Filing Deadline"
+  },
+  {
+    key: "electionRulesSource",
+    label: "Election Rules Source"
+  },
+  {
+    key: "opponentDataSource",
+    label: "Opponent Data Source",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const factCheckFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "googleFactCheckQuery",
+    label: "Google Fact Check Query"
+  },
+  {
+    key: "latestProofResult",
+    label: "Latest Proof Result",
+    wide: true
+  },
+  {
+    key: "sourceApi",
+    label: "Source API"
+  },
+  {
+    key: "intendedUse",
+    label: "Intended Use",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const mediaTrackingFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "youtubeChannelTitle",
+    label: "YouTube Channel Title"
+  },
+  {
+    key: "youtubeChannelId",
+    label: "YouTube Channel ID"
+  },
+  {
+    key: "youtubeSearchResultsReturned",
+    label: "YouTube Search Results Returned",
+    format: "number"
+  },
+  {
+    key: "officialChannelPublishedAt",
+    label: "Official Channel Published"
+  },
+  {
+    key: "publicCommentaryStatus",
+    label: "Public Commentary Status"
+  },
+  {
+    key: "sentimentStatus",
+    label: "Sentiment Status",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const webClippingFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "sourceApi",
+    label: "Source API"
+  },
+  {
+    key: "queryPattern",
+    label: "Query Pattern"
+  },
+  {
+    key: "currentStatus",
+    label: "Current Status"
+  },
+  {
+    key: "intendedUse",
+    label: "Intended Use",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const deepFinanceFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "receiptsEndpoint",
+    label: "Receipts Endpoint"
+  },
+  {
+    key: "disbursementsEndpoint",
+    label: "Disbursements Endpoint"
+  },
+  {
+    key: "independentExpendituresEndpoint",
+    label: "Independent Expenditures Endpoint"
+  },
+  {
+    key: "receiptsAvailable",
+    label: "Receipts Available",
+    format: "number"
+  },
+  {
+    key: "disbursementsAvailable",
+    label: "Disbursements Available",
+    format: "number"
+  },
+  {
+    key: "independentExpendituresAvailable",
+    label: "Independent Expenditures Available",
+    format: "number"
+  },
+  {
+    key: "donorFieldsToTrack",
+    label: "Donor Fields To Track",
+    wide: true
+  },
+  {
+    key: "spendingFieldsToTrack",
+    label: "Spending Fields To Track",
+    wide: true
+  },
+  {
+    key: "outsideMoneyFieldsToTrack",
+    label: "Outside Money Fields To Track",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const legislativeMechanicsFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "bioguideId",
+    label: "Bioguide ID"
+  },
+  {
+    key: "sponsoredLegislationCount",
+    label: "Sponsored Legislation Count",
+    format: "number"
+  },
+  {
+    key: "cosponsoredLegislationStatus",
+    label: "Cosponsored Legislation Status"
+  },
+  {
+    key: "votingRecordStatus",
+    label: "Voting Record Status"
+  },
+  {
+    key: "sponsoredLegislationEndpoint",
+    label: "Sponsored Legislation Endpoint",
+    wide: true
+  },
+  {
+    key: "cosponsoredLegislationEndpoint",
+    label: "Cosponsored Legislation Endpoint",
+    wide: true
+  },
+  {
+    key: "votingRecordEndpointStatus",
+    label: "Voting Record Endpoint Status",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const verbalRecordFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "sourceApi",
+    label: "Source API"
+  },
+  {
+    key: "primarySource",
+    label: "Primary Source"
+  },
+  {
+    key: "currentStatus",
+    label: "Current Status"
+  },
+  {
+    key: "intendedUse",
+    label: "Intended Use",
+    wide: true
+  },
+  {
+    key: "parserRequirement",
+    label: "Parser Requirement",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const geographyFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "district",
+    label: "District"
+  },
+  {
+    key: "state",
+    label: "State"
+  },
+  {
+    key: "googleCivicStatus",
+    label: "Google Civic Status",
+    wide: true
+  },
+  {
+    key: "electionAdministrationBody",
+    label: "Election Administration Body"
+  },
+  {
+    key: "electionInfoUrl",
+    label: "Election Info URL",
+    wide: true
+  },
+  {
+    key: "voterRegistrationUrl",
+    label: "Voter Registration URL",
+    wide: true
+  },
+  {
+    key: "voterRegistrationConfirmationUrl",
+    label: "Registration Confirmation URL",
+    wide: true
+  },
+  {
+    key: "absenteeVotingInfoUrl",
+    label: "Absentee Voting Info URL",
+    wide: true
+  },
+  {
+    key: "votingLocationFinderUrl",
+    label: "Voting Location Finder URL",
+    wide: true
+  },
+  {
+    key: "ballotInfoUrl",
+    label: "Ballot Info URL",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const powerMappingFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "sourceApi",
+    label: "Source API"
+  },
+  {
+    key: "staffDirectoryStatus",
+    label: "Staff Directory Status"
+  },
+  {
+    key: "stakeholderDirectoryStatus",
+    label: "Stakeholder Directory Status"
+  },
+  {
+    key: "committeeGatekeeperStatus",
+    label: "Committee Gatekeeper Status"
+  },
+  {
+    key: "intendedUse",
+    label: "Intended Use",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
+const alertingFields = [
+  {
+    key: "moduleStatus",
+    label: "Module Status"
+  },
+  {
+    key: "currentStatus",
+    label: "Current Status"
+  },
+  {
+    key: "dataSourceType",
+    label: "Data Source Type"
+  },
+  {
+    key: "alertBehavior",
+    label: "Alert Behavior"
+  },
+  {
+    key: "schedulerRequirement",
+    label: "Scheduler Requirement",
+    wide: true
+  },
+  {
+    key: "suggestedPollingTargets",
+    label: "Suggested Polling Targets",
+    wide: true
+  },
+  {
+    key: "implementationNote",
+    label: "Implementation Note",
+    wide: true
+  }
+];
+
 const financeSnapshotFields = [
   {
     key: "committeeName",
@@ -205,7 +614,9 @@ function formatMissing(value) {
 function labelizeKey(key) {
   return key
     .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (character) => character.toUpperCase());
+    .replace(/^./, (character) => character.toUpperCase())
+    .replace("Youtube", "YouTube")
+    .replace("Gov", "Gov");
 }
 
 function renderPeopleList(selectedId) {
@@ -253,6 +664,20 @@ function renderFieldGrid(fields, sourceObject) {
       `;
     })
     .join("");
+}
+
+function renderModuleCard(title, status, fields, sourceObject) {
+  return `
+    <section class="card secondary-card">
+      <div class="card-header">
+        <h3>${escapeHtml(title)}</h3>
+        <div class="source-status">${escapeHtml(status)}</div>
+      </div>
+      <div class="identity-grid">
+        ${renderFieldGrid(fields, sourceObject || {})}
+      </div>
+    </section>
+  `;
 }
 
 function renderSourceIdentityHub(person) {
@@ -448,6 +873,38 @@ function renderCampaignFinanceSnapshot(person) {
   `;
 }
 
+function renderYouTubeProofVideos(person) {
+  const mediaTracking = person.mediaTracking || {};
+  const videos = mediaTracking.proofVideos || [];
+
+  if (!videos.length) {
+    return "";
+  }
+
+  const rows = videos
+    .map((video) => {
+      return `
+        <div class="list-row">
+          <span>${escapeHtml(video.videoId)}</span>
+          <strong>${escapeHtml(video.title)}</strong>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <section class="card secondary-card">
+      <div class="card-header">
+        <h3>YouTube Proof Videos</h3>
+        <div class="source-status">Video IDs</div>
+      </div>
+      <div class="list-block">
+        ${rows}
+      </div>
+    </section>
+  `;
+}
+
 function renderCommittees(person) {
   const committees = person.committees || [];
 
@@ -561,6 +1018,19 @@ function renderProfile(person) {
         ${renderHeadshotCard(person)}
         ${renderOfficialLinksAndContact(person)}
         ${renderCommittees(person)}
+
+        ${renderModuleCard("Race Context and Opponent Data", "Scaffold", raceContextFields, person.raceContext)}
+        ${renderModuleCard("Fact-Check Index", "Fact Check", factCheckFields, person.factCheckIndex)}
+        ${renderModuleCard("Media Tracking and Public Commentary", "Media", mediaTrackingFields, person.mediaTracking)}
+        ${renderYouTubeProofVideos(person)}
+        ${renderModuleCard("Web Clippings and Public Mentions", "Search", webClippingFields, person.webClippings)}
+        ${renderModuleCard("Deep Campaign Finance", "OpenFEC", deepFinanceFields, person.deepCampaignFinance)}
+        ${renderModuleCard("Legislative Mechanics and Floor Records", "Congress.gov", legislativeMechanicsFields, person.legislativeMechanics)}
+        ${renderModuleCard("Floor Debates and Verbal Records", "GovInfo Parser Needed", verbalRecordFields, person.verbalRecords)}
+        ${renderModuleCard("Political Geography and Electoral Venues", "Google Civic", geographyFields, person.politicalGeography)}
+        ${renderModuleCard("Power Mapping and Staff Networks", "PolicyNote", powerMappingFields, person.powerMapping)}
+        ${renderModuleCard("Real-Time Alerts Infrastructure", "Polling Required", alertingFields, person.alertingInfrastructure)}
+
         ${renderSourceIdentityHub(person)}
         ${renderCampaignFinanceSnapshot(person)}
         ${renderProofStatus(person)}
