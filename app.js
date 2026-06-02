@@ -7,6 +7,7 @@
   const F = window.MCCFilters;
   const R = window.MCCRender;
   const B = window.MCCBuilder;
+  const M = window.MCCRosterMatrix;
 
   const state = {
     people: [],
@@ -30,6 +31,7 @@
     });
 
     bindNewProfileButton();
+    bindRosterMatrixButton();
 
     try {
       const response = await fetch(PEOPLE_URL, { cache: "no-store" });
@@ -74,10 +76,26 @@
     });
   }
 
+  function bindRosterMatrixButton() {
+    const rosterMatrixButton = document.getElementById("rosterMatrixButton");
+
+    if (!rosterMatrixButton) return;
+
+    rosterMatrixButton.addEventListener("click", () => {
+      state.mode = "roster";
+
+      if (!state.activePersonId && state.filteredPeople.length > 0) {
+        state.activePersonId = state.filteredPeople[0].id;
+      }
+
+      renderApp();
+    });
+  }
+
   function applyFilters() {
     state.filteredPeople = F.getFilteredPeople(state.people, state.filters);
 
-    if (state.mode !== "builder") {
+    if (state.mode === "profile") {
       if (
         state.filteredPeople.length > 0 &&
         !state.filteredPeople.some((person) => person.id === state.activePersonId)
@@ -125,6 +143,34 @@
           previewGeneratedProfile(rawProfile);
         }
       });
+
+      return;
+    }
+
+    if (state.mode === "roster") {
+      if (M && typeof M.renderRosterMatrixView === "function") {
+        M.renderRosterMatrixView({
+          people: state.people.filter((person) => !person.isTemporaryPreview),
+          filteredPeople: state.filteredPeople.filter((person) => !person.isTemporaryPreview),
+          activePersonId: state.activePersonId,
+          onOpenProfile: (profileId) => {
+            state.mode = "profile";
+            state.activePersonId = profileId;
+            clearUiFilters();
+            state.filters = {
+              search: "",
+              officeType: "all",
+              party: "all",
+              completion: "all"
+            };
+            applyFilters();
+          },
+          onApplyProfileFilter: (nextFilters) => {
+            state.mode = "profile";
+            applyUiFilters(nextFilters);
+          }
+        });
+      }
 
       return;
     }
@@ -200,6 +246,10 @@
       completion: "all"
     };
 
+    clearUiFilters();
+  }
+
+  function clearUiFilters() {
     const profileSearch = document.getElementById("profileSearch");
     const officeTypeFilter = document.getElementById("officeTypeFilter");
     const partyFilter = document.getElementById("partyFilter");
@@ -209,6 +259,30 @@
     if (officeTypeFilter) officeTypeFilter.value = "all";
     if (partyFilter) partyFilter.value = "all";
     if (completionFilter) completionFilter.value = "all";
+  }
+
+  function applyUiFilters(nextFilters) {
+    const profileSearch = document.getElementById("profileSearch");
+    const officeTypeFilter = document.getElementById("officeTypeFilter");
+    const partyFilter = document.getElementById("partyFilter");
+    const completionFilter = document.getElementById("completionFilter");
+
+    const mergedFilters = {
+      search: "",
+      officeType: "all",
+      party: "all",
+      completion: "all",
+      ...(nextFilters || {})
+    };
+
+    state.filters = mergedFilters;
+
+    if (profileSearch) profileSearch.value = mergedFilters.search;
+    if (officeTypeFilter) officeTypeFilter.value = mergedFilters.officeType;
+    if (partyFilter) partyFilter.value = mergedFilters.party;
+    if (completionFilter) completionFilter.value = mergedFilters.completion;
+
+    applyFilters();
   }
 
   function normalizePeoplePayload(data) {

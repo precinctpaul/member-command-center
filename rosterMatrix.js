@@ -1,60 +1,123 @@
 (function () {
   const U = window.MCCUtils;
 
-  if (!window.MCCRender || typeof window.MCCRender.renderProfileView !== "function") {
-    console.warn("MCC roster matrix could not find MCCRender.renderProfileView.");
-    return;
-  }
-
-  const originalRenderProfileView = window.MCCRender.renderProfileView;
-
-  window.MCCRender.renderProfileView = function enhancedRenderProfileView(person) {
-    originalRenderProfileView(person);
-
-    window.setTimeout(() => {
-      mountRosterMatrix(person);
-    }, 0);
-  };
-
-  function mountRosterMatrix(activePersonFromRender) {
-    const app = window.MCCApp;
-    if (!app || !app.state || !Array.isArray(app.state.people)) return;
-
+  function renderRosterMatrixView({ people, filteredPeople, activePersonId, onOpenProfile, onApplyProfileFilter }) {
     const profileView = document.getElementById("profileView");
-    if (!profileView || profileView.classList.contains("hidden")) return;
+    if (!profileView) return;
 
-    const existing = document.getElementById("rosterIntelligenceMatrix");
-    if (existing) existing.remove();
+    const allPeople = Array.isArray(people) ? people : [];
+    const visiblePeople = Array.isArray(filteredPeople) ? filteredPeople : allPeople;
+    const matrix = buildRosterMatrix(allPeople);
+    const activePerson = allPeople.find((person) => person.id === activePersonId) || allPeople[0] || null;
 
-    const people = app.state.people.filter((person) => !person.isTemporaryPreview);
-    if (!people.length) return;
+    profileView.innerHTML = `
+      <section class="profile-hero">
+        <div class="headshot-wrap">
+          <div class="headshot-placeholder">
+            <div class="headshot-placeholder-initials">RM</div>
+            <div class="headshot-placeholder-label">Roster</div>
+          </div>
+        </div>
 
-    const matrix = buildRosterMatrix(people);
-    const activePerson =
-      activePersonFromRender ||
-      people.find((person) => person.id === app.state.activePersonId) ||
-      people[0];
+        <div class="hero-content">
+          <div class="hero-kicker">Command View</div>
+          <h2 class="profile-name">Roster Intelligence Matrix</h2>
+          <div class="profile-title">
+            Cross-profile readiness, gaps, and next actions across the full roster.
+          </div>
 
-    const section = document.createElement("section");
-    section.id = "rosterIntelligenceMatrix";
-    section.className = "section open";
-    section.innerHTML = renderRosterMatrix({
+          <div class="hero-meta">
+            <span class="badge federal">${U.escapeHtml(matrix.summary.total)} profiles</span>
+            <span class="badge ready">${U.escapeHtml(matrix.summary.financeReady)} finance ready</span>
+            <span class="badge ready">${U.escapeHtml(matrix.summary.legislationReady)} legislation ready</span>
+            <span class="badge ready">${U.escapeHtml(matrix.summary.mediaReady)} media ready</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section open">
+        <button class="section-header" type="button">
+          <span class="section-title">
+            <strong>Roster Intelligence Matrix</strong>
+            <span>This is an organization-level view.  It is not attached to any single candidate profile.</span>
+          </span>
+          <span class="status-pill ready">${U.escapeHtml(matrix.summary.total)} profiles</span>
+          <span class="chevron">›</span>
+        </button>
+
+        <div class="section-body">
+          <div class="grid-three">
+            ${renderMetricCard("Total profiles", matrix.summary.total)}
+            ${renderMetricCard("Federal", matrix.summary.federal)}
+            ${renderMetricCard("State", matrix.summary.state)}
+            ${renderMetricCard("Finance ready", matrix.summary.financeReady)}
+            ${renderMetricCard("Legislation ready", matrix.summary.legislationReady)}
+            ${renderMetricCard("Media ready", matrix.summary.mediaReady)}
+            ${renderMetricCard("Missing FEC IDs", matrix.summary.missingFec)}
+            ${renderMetricCard("Missing Bioguide", matrix.summary.missingBioguide)}
+            ${renderMetricCard("Missing YouTube", matrix.summary.missingYouTube)}
+          </div>
+
+          <div style="height: 14px"></div>
+
+          <div class="grid-three">
+            <button class="secondary-button" type="button" data-roster-filter="all">
+              Show all profiles
+            </button>
+            <button class="secondary-button" type="button" data-roster-filter="federal">
+              Federal only
+            </button>
+            <button class="secondary-button" type="button" data-roster-filter="state">
+              State only
+            </button>
+            <button class="secondary-button" type="button" data-roster-filter="missing-fec">
+              Missing FEC IDs
+            </button>
+            <button class="secondary-button" type="button" data-roster-filter="missing-bioguide">
+              Missing Bioguide
+            </button>
+            <button class="secondary-button" type="button" data-roster-filter="missing-youtube">
+              Missing YouTube
+            </button>
+          </div>
+
+          <div style="height: 14px"></div>
+
+          <div class="grid-two">
+            <div class="info-card">
+              <div class="info-label">Currently active profile</div>
+              <div class="info-value">${U.escapeHtml(activePerson ? activePerson.name : "None")}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">Highest-value next move</div>
+              <div class="info-value">${U.escapeHtml(getRosterWideRecommendation(matrix))}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section open">
+        <button class="section-header" type="button">
+          <span class="section-title">
+            <strong>Compact Matrix</strong>
+            <span>One row per profile.  Use this to decide where to work next.</span>
+          </span>
+          <span class="status-pill partial">${U.escapeHtml(visiblePeople.length)} visible</span>
+          <span class="chevron">›</span>
+        </button>
+
+        <div class="section-body">
+          ${renderCompactMatrix(matrix.rows)}
+        </div>
+      </section>
+    `;
+
+    bindRosterMatrixActions({
       matrix,
-      activePerson
+      onOpenProfile,
+      onApplyProfileFilter
     });
-
-    const intelligenceOverview = document.getElementById("intelligenceOverview");
-    const hero = profileView.querySelector(".profile-hero");
-
-    if (intelligenceOverview) {
-      intelligenceOverview.insertAdjacentElement("afterend", section);
-    } else if (hero) {
-      hero.insertAdjacentElement("afterend", section);
-    } else {
-      profileView.prepend(section);
-    }
-
-    bindRosterMatrixActions();
   }
 
   function buildRosterMatrix(people) {
@@ -115,79 +178,6 @@
     };
   }
 
-  function renderRosterMatrix({ matrix, activePerson }) {
-    const summary = matrix.summary;
-    const rows = matrix.rows;
-
-    return `
-      <button class="section-header" type="button">
-        <span class="section-title">
-          <strong>Roster Intelligence Matrix</strong>
-          <span>Cross-profile command view for readiness, gaps, and next actions.</span>
-        </span>
-        <span class="status-pill ready">${U.escapeHtml(summary.total)} profiles</span>
-        <span class="chevron">›</span>
-      </button>
-
-      <div class="section-body">
-        <div class="grid-three">
-          ${renderMetricCard("Total profiles", summary.total)}
-          ${renderMetricCard("Federal", summary.federal)}
-          ${renderMetricCard("State", summary.state)}
-          ${renderMetricCard("Finance ready", summary.financeReady)}
-          ${renderMetricCard("Legislation ready", summary.legislationReady)}
-          ${renderMetricCard("Media ready", summary.mediaReady)}
-          ${renderMetricCard("Missing FEC IDs", summary.missingFec)}
-          ${renderMetricCard("Missing Bioguide", summary.missingBioguide)}
-          ${renderMetricCard("Missing YouTube", summary.missingYouTube)}
-        </div>
-
-        <div style="height: 14px"></div>
-
-        <div class="grid-three">
-          <button class="secondary-button" type="button" data-roster-filter="all">
-            Show all
-          </button>
-          <button class="secondary-button" type="button" data-roster-filter="federal">
-            Federal only
-          </button>
-          <button class="secondary-button" type="button" data-roster-filter="state">
-            State only
-          </button>
-          <button class="secondary-button" type="button" data-roster-filter="missing-fec">
-            Missing FEC IDs
-          </button>
-          <button class="secondary-button" type="button" data-roster-filter="missing-bioguide">
-            Missing Bioguide
-          </button>
-          <button class="secondary-button" type="button" data-roster-filter="missing-youtube">
-            Missing YouTube
-          </button>
-        </div>
-
-        <div style="height: 14px"></div>
-
-        <div class="grid-two">
-          <div class="info-card">
-            <div class="info-label">Active profile</div>
-            <div class="info-value">${U.escapeHtml(activePerson.name || activePerson.displayName || "Unknown")}</div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-label">Highest-value next move</div>
-            <div class="info-value">${U.escapeHtml(getRosterWideRecommendation(matrix))}</div>
-          </div>
-        </div>
-
-        <div style="height: 14px"></div>
-
-        <div class="list">
-          ${rows.map(renderMatrixRow).join("")}
-        </div>
-      </div>
-    `;
-  }
-
   function renderMetricCard(label, value) {
     return `
       <div class="info-card">
@@ -197,7 +187,23 @@
     `;
   }
 
-  function renderMatrixRow(row) {
+  function renderCompactMatrix(rows) {
+    if (!rows.length) {
+      return `
+        <div class="empty">
+          No profiles are available for the roster matrix.
+        </div>
+      `;
+    }
+
+    return `
+      <div class="list">
+        ${rows.map(renderCompactRow).join("")}
+      </div>
+    `;
+  }
+
+  function renderCompactRow(row) {
     return `
       <div class="list-item">
         <div class="copy-row" style="align-items: flex-start; gap: 12px;">
@@ -206,18 +212,19 @@
             <p>
               ${U.escapeHtml(row.title)}
               ${row.state || row.district ? ` · ${U.escapeHtml([row.state, row.district].filter(Boolean).join(" / "))}` : ""}
+              · ${U.escapeHtml(row.completionScore)}%
             </p>
           </div>
 
           <button class="copy-button" type="button" data-open-profile="${U.escapeAttribute(row.id)}">
-            Open
+            Open Profile
           </button>
         </div>
 
         <div style="height: 10px"></div>
 
         <div class="grid-three">
-          ${renderStatusMini("Office", row.officeTypeLabel, statusClassFromOffice(row.officeType))}
+          ${renderStatusMini("Type", row.officeTypeLabel, statusClassFromOffice(row.officeType))}
           ${renderStatusMini("Finance", row.finance.label, row.finance.status)}
           ${renderStatusMini("Legislation", row.legislation.label, row.legislation.status)}
           ${renderStatusMini("Media", row.media.label, row.media.status)}
@@ -228,7 +235,7 @@
         <div style="height: 10px"></div>
 
         <div class="info-card">
-          <div class="info-label">Recommended next step</div>
+          <div class="info-label">Next step</div>
           <div class="info-value">${U.escapeHtml(row.nextStep)}</div>
         </div>
       </div>
@@ -248,24 +255,14 @@
     `;
   }
 
-  function bindRosterMatrixActions() {
-    const matrix = document.getElementById("rosterIntelligenceMatrix");
+  function bindRosterMatrixActions({ matrix, onOpenProfile, onApplyProfileFilter }) {
+    document.querySelectorAll("#profileView .section-header").forEach((header) => {
+      if (header.dataset.bound === "true") return;
+      header.dataset.bound = "true";
 
-    if (matrix) {
-      const header = matrix.querySelector(".section-header");
-      if (header) {
-        header.addEventListener("click", () => {
-          matrix.classList.toggle("open");
-        });
-      }
-    }
-
-    document.querySelectorAll("[data-roster-filter]").forEach((button) => {
-      if (button.dataset.bound === "true") return;
-      button.dataset.bound = "true";
-
-      button.addEventListener("click", () => {
-        applyRosterFilter(button.getAttribute("data-roster-filter"));
+      header.addEventListener("click", () => {
+        const section = header.closest(".section");
+        if (section) section.classList.toggle("open");
       });
     });
 
@@ -274,126 +271,89 @@
       button.dataset.bound = "true";
 
       button.addEventListener("click", () => {
-        openProfile(button.getAttribute("data-open-profile"));
+        const profileId = button.getAttribute("data-open-profile");
+        if (profileId && typeof onOpenProfile === "function") {
+          onOpenProfile(profileId);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-roster-filter]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
+      button.dataset.bound = "true";
+
+      button.addEventListener("click", () => {
+        const filterName = button.getAttribute("data-roster-filter");
+        applyRosterFilter({
+          filterName,
+          matrix,
+          onOpenProfile,
+          onApplyProfileFilter
+        });
       });
     });
   }
 
-  function applyRosterFilter(filterName) {
-    const app = window.MCCApp;
-    if (!app || !app.state) return;
-
-    const profileSearch = document.getElementById("profileSearch");
-    const officeTypeFilter = document.getElementById("officeTypeFilter");
-    const partyFilter = document.getElementById("partyFilter");
-    const completionFilter = document.getElementById("completionFilter");
-
-    if (profileSearch) profileSearch.value = "";
-    if (officeTypeFilter) officeTypeFilter.value = "all";
-    if (partyFilter) partyFilter.value = "all";
-    if (completionFilter) completionFilter.value = "all";
-
-    app.state.filters = {
-      search: "",
-      officeType: "all",
-      party: "all",
-      completion: "all"
-    };
+  function applyRosterFilter({ filterName, matrix, onOpenProfile, onApplyProfileFilter }) {
+    if (filterName === "all") {
+      if (typeof onApplyProfileFilter === "function") {
+        onApplyProfileFilter({
+          search: "",
+          officeType: "all",
+          party: "all",
+          completion: "all"
+        });
+      }
+      return;
+    }
 
     if (filterName === "federal") {
-      setFilterValues({ officeType: "federal" });
+      if (typeof onApplyProfileFilter === "function") {
+        onApplyProfileFilter({
+          search: "",
+          officeType: "federal",
+          party: "all",
+          completion: "all"
+        });
+      }
       return;
     }
 
     if (filterName === "state") {
-      setFilterValues({ officeType: "state" });
+      if (typeof onApplyProfileFilter === "function") {
+        onApplyProfileFilter({
+          search: "",
+          officeType: "state",
+          party: "all",
+          completion: "all"
+        });
+      }
       return;
     }
 
+    const row = findFirstMatrixMatch(matrix, filterName);
+
+    if (row && typeof onOpenProfile === "function") {
+      onOpenProfile(row.id);
+    }
+  }
+
+  function findFirstMatrixMatch(matrix, filterName) {
+    if (!matrix || !Array.isArray(matrix.rows)) return null;
+
     if (filterName === "missing-fec") {
-      openFirstMatchingProfile((person) => assessFinance(person).reason === "missing-fec");
-      return;
+      return matrix.rows.find((row) => row.finance.reason === "missing-fec") || null;
     }
 
     if (filterName === "missing-bioguide") {
-      openFirstMatchingProfile((person) => assessLegislation(person).reason === "missing-bioguide");
-      return;
+      return matrix.rows.find((row) => row.legislation.reason === "missing-bioguide") || null;
     }
 
     if (filterName === "missing-youtube") {
-      openFirstMatchingProfile((person) => assessMedia(person).reason === "missing-youtube");
-      return;
+      return matrix.rows.find((row) => row.media.reason === "missing-youtube") || null;
     }
 
-    app.applyFilters();
-  }
-
-  function setFilterValues({ officeType }) {
-    const app = window.MCCApp;
-    const officeTypeFilter = document.getElementById("officeTypeFilter");
-
-    if (!app || !app.state) return;
-
-    if (officeTypeFilter) officeTypeFilter.value = officeType || "all";
-
-    app.state.filters = {
-      search: "",
-      officeType: officeType || "all",
-      party: "all",
-      completion: "all"
-    };
-
-    app.applyFilters();
-  }
-
-  function openFirstMatchingProfile(predicate) {
-    const app = window.MCCApp;
-    if (!app || !app.state || !Array.isArray(app.state.people)) return;
-
-    const match = app.state.people
-      .filter((person) => !person.isTemporaryPreview)
-      .find(predicate);
-
-    if (match) {
-      openProfile(match.id);
-    }
-  }
-
-  function openProfile(profileId) {
-    const app = window.MCCApp;
-    if (!app || !profileId) return;
-
-    app.state.mode = "profile";
-    app.state.activePersonId = profileId;
-
-    const profileSearch = document.getElementById("profileSearch");
-    const officeTypeFilter = document.getElementById("officeTypeFilter");
-    const partyFilter = document.getElementById("partyFilter");
-    const completionFilter = document.getElementById("completionFilter");
-
-    if (profileSearch) profileSearch.value = "";
-    if (officeTypeFilter) officeTypeFilter.value = "all";
-    if (partyFilter) partyFilter.value = "all";
-    if (completionFilter) completionFilter.value = "all";
-
-    app.state.filters = {
-      search: "",
-      officeType: "all",
-      party: "all",
-      completion: "all"
-    };
-
-    app.applyFilters();
-
-    window.setTimeout(() => {
-      const profileView = document.getElementById("profileView");
-      if (profileView) {
-        profileView.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }
-    }, 50);
+    return null;
   }
 
   function assessFinance(person) {
@@ -640,7 +600,7 @@
   }
 
   window.MCCRosterMatrix = {
-    mountRosterMatrix,
+    renderRosterMatrixView,
     buildRosterMatrix
   };
 })();
