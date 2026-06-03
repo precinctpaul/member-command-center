@@ -3,6 +3,7 @@
   const DEFAULT_CONGRESS = "119";
   const DEFAULT_FEC_CYCLE = "2026";
   const DEFAULT_CONGRESS_LIMIT = "10";
+  const DEFAULT_YOUTUBE_MAX_RESULTS = "5";
   const FRESH_HOURS = 24;
   const STALE_HOURS = 72;
 
@@ -32,10 +33,10 @@
       moduleName: "youtube_media",
       title: "YouTube Media",
       shortTitle: "YouTube",
-      subtitle: "Video proof, channel stats, and public media activity.",
-      active: false,
+      subtitle: "Channel stats, latest uploads, and proof video links.",
+      active: true,
       buttonId: "runYouTubeFromControlPanelButton",
-      buttonLabel: "Planned"
+      buttonLabel: "Run YouTube"
     }
   ];
 
@@ -123,7 +124,7 @@
               return renderRunnerCard({
                 ...definition,
                 ready: definition.active && capability.ready,
-                readyLabel: definition.active ? capability.label : "Backend runner planned but not wired yet"
+                readyLabel: capability.label
               });
             }).join("")}
           </div>
@@ -236,21 +237,9 @@
       });
     }
 
-    const runOpenFecButton = document.getElementById("runOpenFecFromControlPanelButton");
-    if (runOpenFecButton) {
-      runOpenFecButton.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        await runSingleSource(person, "openfec");
-      });
-    }
-
-    const runCongressButton = document.getElementById("runCongressFromControlPanelButton");
-    if (runCongressButton) {
-      runCongressButton.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        await runSingleSource(person, "congress");
-      });
-    }
+    bindRunnerButton("runOpenFecFromControlPanelButton", person, "openfec");
+    bindRunnerButton("runCongressFromControlPanelButton", person, "congress");
+    bindRunnerButton("runYouTubeFromControlPanelButton", person, "youtube");
 
     const runAllButton = document.getElementById("runAllReadySourcesButton");
     if (runAllButton) {
@@ -282,14 +271,17 @@
         window.open(`/api/runs/latest?profile_id=${encodeURIComponent(profileId)}`, "_blank", "noopener,noreferrer");
       });
     }
+  }
 
-    const youtubeButton = document.getElementById("runYouTubeFromControlPanelButton");
-    if (youtubeButton) {
-      youtubeButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        setSourceRunnerStatus("YouTube is intentionally marked as planned.  It should stay disabled until a backend YouTube runner exists.", "warning");
-      });
-    }
+  function bindRunnerButton(buttonId, person, sourceName) {
+    const button = document.getElementById(buttonId);
+
+    if (!button) return;
+
+    button.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await runSingleSource(person, sourceName);
+    });
   }
 
   async function runAllReadySources(person) {
@@ -409,7 +401,7 @@
       if (showStatus) {
         setSourceRunnerStatus(buildHealthStatusSentence(health), health.failed > 0 ? "error" : "success");
       } else if (!runs.length) {
-        setSourceRunnerStatus("No saved source runs found yet.  Run OpenFEC or Congress.gov to create one.", "warning");
+        setSourceRunnerStatus("No saved source runs found yet.  Run OpenFEC, Congress.gov, or YouTube to create one.", "warning");
       } else {
         setSourceRunnerStatus(buildHealthStatusSentence(health), health.failed > 0 ? "error" : "success");
       }
@@ -781,6 +773,19 @@
       ];
     }
 
+    if (run.module_name === "youtube_media") {
+      return [
+        ["Profile ID", run.profile_id],
+        ["Freshness", freshness.detail],
+        ["Channel", summary.channel_title],
+        ["Videos", summary.video_count],
+        ["Views", formatCount(summary.view_count)],
+        ["Subscribers", summary.hidden_subscriber_count ? "Hidden" : formatCount(summary.subscriber_count)],
+        ["Latest upload", summary.latest_upload_date],
+        ["Proof links", Array.isArray(summary.proof_video_links) ? summary.proof_video_links.length : 0]
+      ];
+    }
+
     return [
       ["Profile ID", run.profile_id],
       ["Freshness", freshness.detail],
@@ -813,6 +818,17 @@
       };
     }
 
+    if (sourceName === "youtube") {
+      return {
+        label: "YouTube Media",
+        moduleName: "youtube_media",
+        endpoint: (profileId) => `/api/run/youtube/${encodeURIComponent(profileId)}`,
+        payload: () => ({
+          max_results: DEFAULT_YOUTUBE_MAX_RESULTS
+        })
+      };
+    }
+
     return null;
   }
 
@@ -820,9 +836,11 @@
     const isFederal = person.officeTypeNormalized === "federal";
     const fecIds = getFecIds(person);
     const bioguideId = getBioguideId(person);
+    const youtubeIdentity = getYoutubeIdentity(person);
 
     const openfecReady = isFederal && Boolean(fecIds.candidateId || fecIds.committeeId);
     const congressReady = isFederal && Boolean(bioguideId);
+    const youtubeReady = Boolean(youtubeIdentity.channelId || youtubeIdentity.channelUrl || youtubeIdentity.searchName);
 
     return {
       openfec: {
@@ -842,8 +860,10 @@
             : "Federal-only runner"
       },
       youtube: {
-        ready: false,
-        label: "Backend runner planned but not wired yet"
+        ready: youtubeReady,
+        label: youtubeReady
+          ? "Channel ID, channel URL, or searchable profile name available"
+          : "Missing YouTube channel ID, channel URL, and searchable profile name"
       }
     };
   }
@@ -892,6 +912,40 @@
     ) || "";
   }
 
+  function getYoutubeIdentity(person) {
+    const searchName = U.getFirstValue(
+      person.displayName,
+      person.name,
+      person.fullName,
+      person.identity?.fullName
+    ) || "";
+
+    return {
+      channelId: U.getFirstValue(
+        person.youtubeChannelId,
+        person.ids?.youtubeChannelId,
+        person.identifiers?.youtubeChannelId,
+        person.sourceIdentity?.youtubeChannelId,
+        person.officialLinks?.youtubeChannelId,
+        person.media?.youtubeChannelId,
+        person.youtubeProofVideos?.channelId
+      ) || "",
+      channelUrl: U.getFirstValue(
+        person.youtubeChannelUrl,
+        person.youtubeUrl,
+        person.officialLinks?.youtube,
+        person.officialLinks?.youtubeUrl,
+        person.officialLinks?.youtubeChannelUrl,
+        person.links?.youtube,
+        person.links?.youtubeUrl,
+        person.media?.youtubeChannelUrl,
+        person.youtubeProofVideos?.channelUrl,
+        person.social?.youtube
+      ) || "",
+      searchName
+    };
+  }
+
   function setSourceRunnerStatus(message, type) {
     const status = document.getElementById("sourceRunnerStatus");
     if (!status) return;
@@ -916,11 +970,6 @@
       if (!definition || !definition.active) {
         button.disabled = true;
         button.textContent = defaultLabel;
-        return;
-      }
-
-      if (button.id === "viewLatestSourceRunsJsonButton") {
-        button.disabled = false;
         return;
       }
 
@@ -1021,6 +1070,20 @@
       currency: "USD",
       maximumFractionDigits: 0
     }).format(number);
+  }
+
+  function formatCount(value) {
+    if (value === null || value === undefined || value === "") {
+      return "Not returned";
+    }
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      return String(value);
+    }
+
+    return new Intl.NumberFormat("en-US").format(number);
   }
 
   function formatDisplayValue(value) {

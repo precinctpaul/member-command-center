@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 import congress_client
 import db
 import openfec_client
+import youtube_client
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -281,7 +282,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.6B"
+    server_version = "MemberCommandCenterBackend/1.6E"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -292,7 +293,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.6B",
+                    "version": "v1.6E",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -302,7 +303,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                     "server_side_runners": {
                         "openfec_finance": True,
                         "congress_legislation": True,
-                        "youtube_media": False,
+                        "youtube_media": True,
                     },
                 }
             )
@@ -387,6 +388,10 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
 
         if parsed.path.startswith("/api/run/congress/"):
             self.handle_congress_run(parsed.path)
+            return
+
+        if parsed.path.startswith("/api/run/youtube/"):
+            self.handle_youtube_run(parsed.path)
             return
 
         if parsed.path == "/api/runs":
@@ -587,6 +592,99 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
+    def handle_youtube_run(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/run/youtube/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        try:
+            payload = self.read_json_body()
+        except json.JSONDecodeError as error:
+            self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        max_results_raw = str(first_payload_value(payload, "max_results", "maxResults", default="5")).strip() or "5"
+        api_key = os.environ.get("YOUTUBE_API_KEY", "").strip()
+
+        try:
+            max_results = max(1, min(int(max_results_raw), 25))
+        except ValueError:
+            max_results = 5
+
+        if not api_key:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": "YOUTUBE_API_KEY is not configured in server/.env.",
+                    "profile_id": profile_id,
+                    "module_name": "youtube_media",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": f"No cached profile was found for '{profile_id}'.",
+                    "profile_id": profile_id,
+                    "module_name": "youtube_media",
+                },
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        try:
+            run_payload = youtube_client.build_youtube_media_run_payload(
+                profile_id=profile_id,
+                person=person,
+                api_key=api_key,
+                max_results=max_results,
+            )
+            saved = db.save_intelligence_run(run_payload)
+
+            self.send_json(
+                {
+                    "ok": True,
+                    "message": "YouTube media run completed and saved.",
+                    "run": saved,
+                    "display": {
+                        "profile_id": saved["profile_id"],
+                        "module_name": saved["module_name"],
+                        "run_status": saved["run_status"],
+                        "summary": saved["summary"],
+                        "diagnostics": saved["diagnostics"],
+                    },
+                },
+                status=HTTPStatus.CREATED,
+            )
+        except youtube_client.YouTubeProfileError as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "youtube_media",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        except Exception as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "youtube_media",
+                },
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT)
         self.send_cors_headers()
@@ -673,6 +771,7 @@ def main() -> None:
     print(f"  http://{host}:{port}/api/runs/latest", flush=True)
     print(f"  POST http://{host}:{port}/api/run/openfec/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/congress/<profile_id>", flush=True)
+    print(f"  POST http://{host}:{port}/api/run/youtube/<profile_id>", flush=True)
     print("", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     print("", flush=True)
