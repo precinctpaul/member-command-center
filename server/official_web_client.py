@@ -4,14 +4,56 @@ import ssl
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 
 DEFAULT_TIMEOUT_SECONDS = 10
-USER_AGENT = "MemberCommandCenter/1.6F"
+USER_AGENT = "MemberCommandCenter/1.6F.1"
+
+BLOCKED_SOURCE_HOSTS = {
+    "data.policynote.com",
+    "api.policynote.com",
+}
+
+PUBLIC_LABEL_TERMS = [
+    "official website",
+    "website",
+    "campaign website",
+    "contact form",
+    "facebook",
+    "instagram",
+    "x",
+    "twitter",
+    "threads",
+    "tiktok",
+    "youtube",
+    "vimeo",
+    "linkedin",
+    "donation",
+    "donate",
+    "actblue",
+]
+
+SOURCE_SYSTEM_LABEL_TERMS = [
+    "api",
+    "endpoint",
+    "source",
+    "sourceurl",
+    "source_url",
+    "search",
+    "policynote",
+    "knowledgegraph",
+    "knowledge graph",
+    "congress api",
+    "openfec",
+    "fec api",
+    "google custom search",
+    "custom search",
+    "query",
+]
 
 
 class OfficialWebProfileError(ValueError):
@@ -130,6 +172,96 @@ def classify_url(label: str, url: str) -> str:
         return "official"
 
     return "web"
+
+
+def label_is_explicit_public_url(label: str) -> bool:
+    lower_label = str(label or "").lower()
+
+    return any(term in lower_label for term in PUBLIC_LABEL_TERMS)
+
+
+def label_looks_source_system(label: str) -> bool:
+    lower_label = str(label or "").lower()
+
+    return any(term in lower_label for term in SOURCE_SYSTEM_LABEL_TERMS)
+
+
+def is_source_system_url(record: Dict[str, str]) -> Tuple[bool, str]:
+    label = str(record.get("label") or "")
+    url = normalize_url(record.get("url"))
+
+    if not url:
+        return True, "empty or invalid URL"
+
+    if url.startswith("mailto:") or url.startswith("tel:"):
+        return False, ""
+
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    path = parsed.path.lower()
+    query_values = parse_qs(parsed.query)
+    query_keys = {key.lower() for key in query_values.keys()}
+
+    if host in BLOCKED_SOURCE_HOSTS:
+        return True, f"blocked source-system host: {host}"
+
+    if host.startswith("api."):
+        return True, f"API host excluded: {host}"
+
+    if ".api." in host:
+        return True, f"API host excluded: {host}"
+
+    if re.search(r"/v\d+(/|$)", path):
+        return True, "versioned API path excluded"
+
+    if "/api/" in path or path.endswith("/api"):
+        return True, "API path excluded"
+
+    if label_looks_source_system(label) and not label_is_explicit_public_url(label):
+        return True, "source-system label excluded"
+
+    if "/search" in path and not label_is_explicit_public_url(label):
+        return True, "search endpoint excluded"
+
+    source_query_keys = {
+        "api_key",
+        "apikey",
+        "key",
+        "token",
+        "access_token",
+        "format",
+        "q",
+        "query",
+        "name",
+        "bioguideid",
+        "candidate_id",
+        "committee_id",
+    }
+
+    if query_keys.intersection(source_query_keys) and not label_is_explicit_public_url(label):
+        return True, "query-based API/search URL excluded"
+
+    return False, ""
+
+
+def split_public_and_source_urls(records: List[Dict[str, str]]) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
+    public_records: List[Dict[str, str]] = []
+    skipped_records: List[Dict[str, str]] = []
+
+    for record in records:
+        should_skip, reason = is_source_system_url(record)
+
+        if should_skip:
+            skipped_records.append(
+                {
+                    **record,
+                    "skip_reason": reason,
+                }
+            )
+        else:
+            public_records.append(record)
+
+    return public_records, skipped_records
 
 
 def collect_urls_from_mapping(mapping: Dict[str, Any], prefix: str = "") -> List[Dict[str, str]]:
@@ -396,7 +528,11 @@ def determine_run_status(checked_urls: List[Dict[str, Any]]) -> str:
     return "failed"
 
 
-def build_summary(checked_urls: List[Dict[str, Any]], timeout_seconds: int) -> Dict[str, Any]:
+def build_summary(
+    checked_urls: List[Dict[str, Any]],
+    skipped_source_urls: List[Dict[str, str]],
+    timeout_seconds: int,
+) -> Dict[str, Any]:
     reachable = [item for item in checked_urls if item.get("ok")]
     failed = [item for item in checked_urls if not item.get("ok")]
     redirected = [item for item in checked_urls if item.get("redirected")]
@@ -411,6 +547,7 @@ def build_summary(checked_urls: List[Dict[str, Any]], timeout_seconds: int) -> D
         "reachable_count": len(reachable),
         "failed_count": len(failed),
         "redirected_count": len(redirected),
+        "skipped_source_url_count": len(skipped_source_urls),
         "timeout_seconds": timeout_seconds,
         "category_counts": count_by_category(checked_urls),
         "official_url_count": len(official_urls),
@@ -423,12 +560,20 @@ def build_summary(checked_urls: List[Dict[str, Any]], timeout_seconds: int) -> D
         "reachable_urls": reachable,
         "failed_urls": failed,
         "redirected_urls": redirected,
+        "skipped_source_urls": skipped_source_urls,
     }
 
 
-def build_diagnostics(candidate_urls: List[Dict[str, str]], checked_urls: List[Dict[str, Any]]) -> Dict[str, Any]:
+def build_diagnostics(
+    candidate_urls: List[Dict[str, str]],
+    public_urls: List[Dict[str, str]],
+    skipped_source_urls: List[Dict[str, str]],
+    checked_urls: List[Dict[str, Any]],
+) -> Dict[str, Any]:
     return {
         "candidate_urls_found": len(candidate_urls),
+        "public_urls_checked": len(public_urls),
+        "skipped_source_urls": len(skipped_source_urls),
         "urls_checked": len(checked_urls),
         "reachable_count": sum(1 for item in checked_urls if item.get("ok")),
         "failed_count": sum(1 for item in checked_urls if not item.get("ok")),
@@ -436,9 +581,16 @@ def build_diagnostics(candidate_urls: List[Dict[str, str]], checked_urls: List[D
     }
 
 
-def build_raw(candidate_urls: List[Dict[str, str]], checked_urls: List[Dict[str, Any]]) -> Dict[str, Any]:
+def build_raw(
+    candidate_urls: List[Dict[str, str]],
+    public_urls: List[Dict[str, str]],
+    skipped_source_urls: List[Dict[str, str]],
+    checked_urls: List[Dict[str, Any]],
+) -> Dict[str, Any]:
     return {
         "candidate_urls": candidate_urls,
+        "public_urls_checked": public_urls,
+        "skipped_source_urls": skipped_source_urls,
         "checked_urls": checked_urls,
     }
 
@@ -455,12 +607,18 @@ def build_official_web_contact_run_payload(
         raise OfficialWebProfileError("profile_id is required.")
 
     candidate_urls = collect_candidate_urls(person)
+    public_urls, skipped_source_urls = split_public_and_source_urls(candidate_urls)
 
     if not candidate_urls:
         raise OfficialWebProfileError("No official, campaign, contact, social, or media URLs were found on this profile.")
 
+    if not public_urls:
+        raise OfficialWebProfileError(
+            "Only source-system/API URLs were found.  No public official, campaign, contact, social, or media URLs were available to verify."
+        )
+
     started_at = utc_now_iso()
-    checked_urls = [check_url(record, clean_timeout_seconds) for record in candidate_urls]
+    checked_urls = [check_url(record, clean_timeout_seconds) for record in public_urls]
     completed_at = utc_now_iso()
 
     return {
@@ -472,7 +630,7 @@ def build_official_web_contact_run_payload(
         "completed_at": completed_at,
         "source_name": "Official Web + Contact Verification",
         "source_url": "",
-        "summary": build_summary(checked_urls, clean_timeout_seconds),
-        "diagnostics": build_diagnostics(candidate_urls, checked_urls),
-        "raw": build_raw(candidate_urls, checked_urls),
+        "summary": build_summary(checked_urls, skipped_source_urls, clean_timeout_seconds),
+        "diagnostics": build_diagnostics(candidate_urls, public_urls, skipped_source_urls, checked_urls),
+        "raw": build_raw(candidate_urls, public_urls, skipped_source_urls, checked_urls),
     }
