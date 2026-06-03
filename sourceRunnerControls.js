@@ -4,6 +4,7 @@
   const DEFAULT_FEC_CYCLE = "2026";
   const DEFAULT_CONGRESS_LIMIT = "10";
   const DEFAULT_YOUTUBE_MAX_RESULTS = "5";
+  const DEFAULT_OFFICIAL_WEB_TIMEOUT_SECONDS = "10";
   const FRESH_HOURS = 24;
   const STALE_HOURS = 72;
 
@@ -37,6 +38,16 @@
       active: true,
       buttonId: "runYouTubeFromControlPanelButton",
       buttonLabel: "Run YouTube"
+    },
+    {
+      key: "officialWeb",
+      moduleName: "official_web_contact",
+      title: "Official Web + Contact",
+      shortTitle: "Web/contact",
+      subtitle: "Official websites, campaign links, contact forms, social links, redirects, and endpoint health.",
+      active: true,
+      buttonId: "runOfficialWebFromControlPanelButton",
+      buttonLabel: "Run Web Check"
     }
   ];
 
@@ -240,6 +251,7 @@
     bindRunnerButton("runOpenFecFromControlPanelButton", person, "openfec");
     bindRunnerButton("runCongressFromControlPanelButton", person, "congress");
     bindRunnerButton("runYouTubeFromControlPanelButton", person, "youtube");
+    bindRunnerButton("runOfficialWebFromControlPanelButton", person, "officialWeb");
 
     const runAllButton = document.getElementById("runAllReadySourcesButton");
     if (runAllButton) {
@@ -401,7 +413,7 @@
       if (showStatus) {
         setSourceRunnerStatus(buildHealthStatusSentence(health), health.failed > 0 ? "error" : "success");
       } else if (!runs.length) {
-        setSourceRunnerStatus("No saved source runs found yet.  Run OpenFEC, Congress.gov, or YouTube to create one.", "warning");
+        setSourceRunnerStatus("No saved source runs found yet.  Run OpenFEC, Congress.gov, YouTube, or Web Check to create one.", "warning");
       } else {
         setSourceRunnerStatus(buildHealthStatusSentence(health), health.failed > 0 ? "error" : "success");
       }
@@ -786,6 +798,21 @@
       ];
     }
 
+    if (run.module_name === "official_web_contact") {
+      return [
+        ["Profile ID", run.profile_id],
+        ["Freshness", freshness.detail],
+        ["URLs checked", summary.urls_checked],
+        ["Reachable", summary.reachable_count],
+        ["Failed", summary.failed_count],
+        ["Redirected", summary.redirected_count],
+        ["Official URLs", summary.official_url_count],
+        ["Campaign URLs", summary.campaign_url_count],
+        ["Contact URLs", summary.contact_url_count],
+        ["Social URLs", summary.social_url_count]
+      ];
+    }
+
     return [
       ["Profile ID", run.profile_id],
       ["Freshness", freshness.detail],
@@ -829,6 +856,17 @@
       };
     }
 
+    if (sourceName === "officialWeb") {
+      return {
+        label: "Official Web + Contact",
+        moduleName: "official_web_contact",
+        endpoint: (profileId) => `/api/run/official-web/${encodeURIComponent(profileId)}`,
+        payload: () => ({
+          timeout_seconds: DEFAULT_OFFICIAL_WEB_TIMEOUT_SECONDS
+        })
+      };
+    }
+
     return null;
   }
 
@@ -837,6 +875,7 @@
     const fecIds = getFecIds(person);
     const bioguideId = getBioguideId(person);
     const youtubeIdentity = getYoutubeIdentity(person);
+    const officialWebReady = getOfficialWebReady(person);
 
     const openfecReady = isFederal && Boolean(fecIds.candidateId || fecIds.committeeId);
     const congressReady = isFederal && Boolean(bioguideId);
@@ -864,6 +903,12 @@
         label: youtubeReady
           ? "Channel ID, channel URL, or searchable profile name available"
           : "Missing YouTube channel ID, channel URL, and searchable profile name"
+      },
+      officialWeb: {
+        ready: officialWebReady.ready,
+        label: officialWebReady.ready
+          ? `${officialWebReady.count} official, campaign, contact, social, or media URL${officialWebReady.count === 1 ? "" : "s"} found`
+          : "No official, campaign, contact, social, or media URLs found"
       }
     };
   }
@@ -943,6 +988,52 @@
         person.social?.youtube
       ) || "",
       searchName
+    };
+  }
+
+  function getOfficialWebReady(person) {
+    const fields = [
+      person.officialWebsite,
+      person.officialWebsiteUrl,
+      person.website,
+      person.websiteUrl,
+      person.campaignWebsite,
+      person.campaignWebsiteUrl,
+      person.contactForm,
+      person.contactFormUrl,
+      person.donateUrl,
+      person.actBlueUrl,
+      person.facebookUrl,
+      person.instagramUrl,
+      person.xUrl,
+      person.twitterUrl,
+      person.threadsUrl,
+      person.tiktokUrl,
+      person.youtubeUrl,
+      person.youtubeChannelUrl,
+      person.vimeoUrl,
+      person.linkedinUrl,
+      person.officialLinks,
+      person.officialLinksAndContact,
+      person.links,
+      person.social,
+      person.socialLinks,
+      person.media,
+      person.web,
+      person.contact,
+      person.raceContext
+    ];
+
+    const count = fields.filter((value) => {
+      if (!value) return false;
+      if (typeof value === "string") return value.trim() !== "";
+      if (typeof value === "object") return Object.keys(value).length > 0;
+      return false;
+    }).length;
+
+    return {
+      ready: count > 0,
+      count
     };
   }
 
