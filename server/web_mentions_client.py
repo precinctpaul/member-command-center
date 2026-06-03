@@ -15,6 +15,15 @@ DEFAULT_TIMEOUT_SECONDS = 25
 DEFAULT_MAX_RESULTS = 20
 DEFAULT_MAX_FEEDS = 3
 
+SOURCE_SYSTEM_DOMAINS = {
+    "data.policynote.com",
+    "api.policynote.com",
+    "api.congress.gov",
+    "api.open.fec.gov",
+    "www.googleapis.com",
+    "googleapis.com",
+}
+
 
 class WebMentionsProfileError(ValueError):
     pass
@@ -81,26 +90,97 @@ def get_office_context(person: Dict[str, Any]) -> str:
     return " ".join([part for part in [title, state, district] if part]).strip()
 
 
-def get_domain(url: str) -> str:
-    parsed = urlparse(str(url or "").strip())
-    host = parsed.netloc.lower()
+def looks_like_url(value: Any) -> bool:
+    text = str(value or "").strip()
 
-    if host.startswith("www."):
-        host = host[4:]
+    if not text:
+        return False
+
+    if text.startswith("@"):
+        return False
+
+    if any(character.isspace() for character in text):
+        return False
+
+    if re.match(r"^https?://", text, flags=re.IGNORECASE):
+        return True
+
+    if text.lower().startswith("www."):
+        return True
+
+    if "." not in text:
+        return False
+
+    if "/" in text and not text.lower().startswith("www."):
+        return False
+
+    return True
+
+
+def normalize_domain(domain: str) -> str:
+    clean_domain = str(domain or "").strip().lower()
+
+    if clean_domain.startswith("www."):
+        clean_domain = clean_domain[4:]
+
+    clean_domain = clean_domain.strip(".")
+
+    return clean_domain
+
+
+def is_valid_domain(domain: str) -> bool:
+    clean_domain = normalize_domain(domain)
+
+    if not clean_domain:
+        return False
+
+    if clean_domain in SOURCE_SYSTEM_DOMAINS:
+        return False
+
+    if "." not in clean_domain:
+        return False
+
+    if clean_domain.startswith(".") or clean_domain.endswith("."):
+        return False
+
+    if any(character.isspace() for character in clean_domain):
+        return False
+
+    if re.fullmatch(r"\d+(\.\d+)*", clean_domain):
+        return False
+
+    if not re.fullmatch(r"[a-z0-9.-]+\.[a-z]{2,63}", clean_domain):
+        return False
+
+    return True
+
+
+def get_domain(url: str) -> str:
+    text = str(url or "").strip()
+
+    if not text:
+        return ""
+
+    if not re.match(r"^https?://", text, flags=re.IGNORECASE):
+        text = f"https://{text}"
+
+    parsed = urlparse(text)
+    host = normalize_domain(parsed.netloc)
+
+    if not is_valid_domain(host):
+        return ""
 
     return host
 
 
 def add_mapping_domain(value: str, domains: set) -> None:
-    text = value.strip()
+    text = str(value or "").strip()
 
-    if not text or text.startswith("@") or " " in text:
+    if not looks_like_url(text):
         return
 
-    if not re.match(r"^https?://", text, flags=re.IGNORECASE):
-        text = f"https://{text}"
-
     domain = get_domain(text)
+
     if domain:
         domains.add(domain)
 
@@ -135,6 +215,7 @@ def collect_self_owned_domains(person: Dict[str, Any]) -> List[str]:
         "youtubeUrl",
     ]:
         value = person.get(key)
+
         if isinstance(value, str):
             add_mapping_domain(value, domains)
 
@@ -150,6 +231,7 @@ def collect_self_owned_domains(person: Dict[str, Any]) -> List[str]:
         "raceContext",
     ]:
         value = person.get(object_key)
+
         if isinstance(value, dict):
             collect_domains_from_mapping(value, domains)
 
@@ -157,23 +239,25 @@ def collect_self_owned_domains(person: Dict[str, Any]) -> List[str]:
 
 
 def is_self_owned_domain(domain: str, self_domains: List[str]) -> bool:
-    clean_domain = str(domain or "").lower().strip()
+    clean_domain = normalize_domain(domain)
 
     if not clean_domain:
         return False
 
     for self_domain in self_domains:
-        if clean_domain == self_domain:
+        clean_self_domain = normalize_domain(self_domain)
+
+        if clean_domain == clean_self_domain:
             return True
 
-        if clean_domain.endswith(f".{self_domain}"):
+        if clean_domain.endswith(f".{clean_self_domain}"):
             return True
 
     return False
 
 
 def is_obvious_owned_or_social_domain(domain: str, self_domains: List[str]) -> bool:
-    clean_domain = str(domain or "").lower().strip()
+    clean_domain = normalize_domain(domain)
 
     social_domains = [
         "facebook.com",
@@ -230,7 +314,7 @@ def fetch_rss(url: str) -> str:
         url,
         headers={
             "Accept": "application/rss+xml, application/xml, text/xml, */*",
-            "User-Agent": "MemberCommandCenter/1.6G-alt",
+            "User-Agent": "MemberCommandCenter/1.6G.1",
         },
         method="GET",
     )
@@ -252,6 +336,17 @@ def clean_text(value: Any) -> str:
     return text.strip()
 
 
+def normalize_title_for_dedupe(value: Any) -> str:
+    title = clean_text(value).lower()
+
+    title = re.sub(r"\s+[-|–—]\s+[^-|–—]+$", "", title)
+    title = re.sub(r"[“”\"'‘’]", "", title)
+    title = re.sub(r"[^a-z0-9]+", " ", title)
+    title = re.sub(r"\s+", " ", title)
+
+    return title.strip()
+
+
 def parse_date(value: str) -> str:
     raw = str(value or "").strip()
 
@@ -260,8 +355,10 @@ def parse_date(value: str) -> str:
 
     try:
         parsed = parsedate_to_datetime(raw)
+
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=timezone.utc)
+
         return parsed.astimezone(timezone.utc).isoformat(timespec="seconds")
     except Exception:
         return raw
@@ -361,20 +458,46 @@ def build_narrative_hook(title: str, domain: str, mention_type: str) -> str:
     return f"General public mention from {clean_domain}: {clean_title}"
 
 
+def build_result_dedupe_keys(result: Dict[str, Any]) -> List[str]:
+    title = normalize_title_for_dedupe(result.get("title"))
+    domain = normalize_domain(str(result.get("domain") or ""))
+    source_name = clean_text(result.get("source_name")).lower()
+    published_date = str(result.get("published_date") or "")[:10]
+    url = str(result.get("url") or "").strip().lower()
+
+    keys = []
+
+    if domain and title:
+        keys.append(f"domain_title:{domain}:{title}")
+
+    if source_name and title:
+        keys.append(f"source_title:{source_name}:{title}")
+
+    if domain and title and published_date:
+        keys.append(f"domain_title_date:{domain}:{title}:{published_date}")
+
+    if url:
+        keys.append(f"url:{url}")
+
+    return keys
+
+
 def dedupe_results(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     seen = set()
     deduped = []
 
     for result in results:
-        title = str(result.get("title") or "").strip().lower()
-        domain = str(result.get("domain") or "").strip().lower()
-        url = str(result.get("url") or "").strip().lower()
-        key = url or f"{domain}:{title}"
+        keys = build_result_dedupe_keys(result)
 
-        if not key or key in seen:
+        if not keys:
             continue
 
-        seen.add(key)
+        if any(key in seen for key in keys):
+            continue
+
+        for key in keys:
+            seen.add(key)
+
         deduped.append(result)
 
     return deduped
@@ -384,7 +507,7 @@ def filter_external_results(results: List[Dict[str, Any]], self_domains: List[st
     filtered = []
 
     for result in results:
-        domain = str(result.get("domain") or "").strip().lower()
+        domain = normalize_domain(str(result.get("domain") or ""))
 
         if is_obvious_owned_or_social_domain(domain, self_domains):
             continue
@@ -437,6 +560,7 @@ def build_summary(
 
     for result in external_results:
         domain = result.get("domain")
+
         if domain and domain not in domains:
             domains.append(domain)
 
@@ -472,6 +596,8 @@ def build_diagnostics(
 ) -> Dict[str, Any]:
     return {
         "source_strategy": "google_news_rss",
+        "dedupe_strategy": "domain_plus_normalized_title",
+        "self_owned_domain_strategy": "strict_url_domain_only",
         "queries": queries,
         "feeds_attempted_count": len(feeds_attempted),
         "feeds_attempted": feeds_attempted,
