@@ -11,6 +11,7 @@ import congress_client
 import db
 import official_web_client
 import openfec_client
+import web_mentions_client
 import youtube_client
 
 
@@ -283,7 +284,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.6F"
+    server_version = "MemberCommandCenterBackend/1.6G-alt"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -294,7 +295,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.6F",
+                    "version": "v1.6G-alt",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -306,6 +307,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                         "congress_legislation": True,
                         "youtube_media": True,
                         "official_web_contact": True,
+                        "web_mentions": True,
                     },
                 }
             )
@@ -398,6 +400,10 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
 
         if parsed.path.startswith("/api/run/official-web/"):
             self.handle_official_web_run(parsed.path)
+            return
+
+        if parsed.path.startswith("/api/run/web-mentions/"):
+            self.handle_web_mentions_run(parsed.path)
             return
 
         if parsed.path == "/api/runs":
@@ -770,6 +776,92 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
+    def handle_web_mentions_run(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/run/web-mentions/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        try:
+            payload = self.read_json_body()
+        except json.JSONDecodeError as error:
+            self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        max_results_raw = str(first_payload_value(payload, "max_results", "maxResults", default="20")).strip() or "20"
+        max_feeds_raw = str(first_payload_value(payload, "max_feeds", "maxFeeds", default="3")).strip() or "3"
+
+        try:
+            max_results = max(1, min(int(max_results_raw), 50))
+        except ValueError:
+            max_results = 20
+
+        try:
+            max_feeds = max(1, min(int(max_feeds_raw), 5))
+        except ValueError:
+            max_feeds = 3
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": f"No cached profile was found for '{profile_id}'.",
+                    "profile_id": profile_id,
+                    "module_name": "web_mentions",
+                },
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        try:
+            run_payload = web_mentions_client.build_web_mentions_run_payload(
+                profile_id=profile_id,
+                person=person,
+                max_results=max_results,
+                max_feeds=max_feeds,
+            )
+            saved = db.save_intelligence_run(run_payload)
+
+            self.send_json(
+                {
+                    "ok": True,
+                    "message": "Web mentions run completed and saved.",
+                    "run": saved,
+                    "display": {
+                        "profile_id": saved["profile_id"],
+                        "module_name": saved["module_name"],
+                        "run_status": saved["run_status"],
+                        "summary": saved["summary"],
+                        "diagnostics": saved["diagnostics"],
+                    },
+                },
+                status=HTTPStatus.CREATED,
+            )
+        except web_mentions_client.WebMentionsProfileError as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "web_mentions",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        except Exception as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "web_mentions",
+                },
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT)
         self.send_cors_headers()
@@ -858,6 +950,7 @@ def main() -> None:
     print(f"  POST http://{host}:{port}/api/run/congress/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/youtube/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/official-web/<profile_id>", flush=True)
+    print(f"  POST http://{host}:{port}/api/run/web-mentions/<profile_id>", flush=True)
     print("", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     print("", flush=True)
