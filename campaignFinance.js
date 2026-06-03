@@ -1,8 +1,5 @@
 (function () {
-  const OPENFEC_API_BASE = "https://api.open.fec.gov/v1";
-  const OPENFEC_KEY_STORAGE_KEY = "mcc_openfec_api_key";
   const DEFAULT_CYCLE = "2026";
-
   const U = window.MCCUtils;
 
   if (!window.MCCRender || typeof window.MCCRender.renderProfileView !== "function") {
@@ -28,11 +25,11 @@
 
     sectionBody.innerHTML = renderCampaignFinancePanel(person);
     bindCampaignFinanceEvents(person);
+    fetchLatestSavedOpenFecRun(person);
   }
 
   function renderCampaignFinancePanel(person) {
     const ids = getFecIds(person);
-    const savedKey = getSavedApiKey();
     const isFederal = person.officeTypeNormalized === "federal";
 
     if (!isFederal) {
@@ -70,48 +67,37 @@
 
         <div class="grid-three">
           <div class="info-card">
-            <label class="info-label" for="openFecApiKey">OpenFEC API key</label>
-            <input
-              id="openFecApiKey"
-              class="search-input"
-              type="password"
-              placeholder="Paste OpenFEC API key for local testing"
-              value="${U.escapeAttribute(savedKey)}"
-              autocomplete="off"
-            />
+            <div class="info-label">Execution mode</div>
+            <div class="info-value">Server-side OpenFEC runner</div>
           </div>
 
           <div class="info-card">
-            <div class="info-label">Local key storage</div>
-            <div class="info-value">
-              ${savedKey ? "Saved in this browser localStorage." : "No key saved yet."}
-            </div>
+            <div class="info-label">API key location</div>
+            <div class="info-value">server/.env only</div>
           </div>
 
           <div class="info-card">
-            <div class="info-label">Security note</div>
-            <div class="info-value">
-              Local-only testing.  Production needs a backend/proxy so keys are not exposed in browser JavaScript.
-            </div>
+            <div class="info-label">Persistence</div>
+            <div class="info-value">Saves to intelligence_runs</div>
           </div>
         </div>
 
         <div class="grid-three">
-          <button id="saveOpenFecKeyButton" class="secondary-button" type="button">
-            Save Key
-          </button>
-
-          <button id="clearOpenFecKeyButton" class="secondary-button" type="button">
-            Clear Key
-          </button>
-
           <button id="fetchOpenFecSnapshotButton" class="secondary-button" type="button">
             Fetch OpenFEC Snapshot
+          </button>
+
+          <button id="refreshSavedOpenFecRunButton" class="secondary-button" type="button">
+            Refresh Saved Run
+          </button>
+
+          <button id="openFecRunsButton" class="secondary-button" type="button">
+            View Latest Runs JSON
           </button>
         </div>
 
         <div id="openFecStatus" class="empty">
-          Ready.  Enter an OpenFEC key, confirm IDs, then fetch the snapshot.
+          Ready.  Click Fetch OpenFEC Snapshot to run the backend source fetch and save a real intelligence run.
         </div>
 
         <div id="openFecResults">
@@ -152,53 +138,38 @@
   }
 
   function bindCampaignFinanceEvents(person) {
-    const saveButton = document.getElementById("saveOpenFecKeyButton");
-    const clearButton = document.getElementById("clearOpenFecKeyButton");
     const fetchButton = document.getElementById("fetchOpenFecSnapshotButton");
-
-    if (saveButton) {
-      saveButton.addEventListener("click", () => {
-        const keyInput = document.getElementById("openFecApiKey");
-        const key = keyInput ? keyInput.value.trim() : "";
-
-        if (!key) {
-          setStatus("Enter a key before saving.", "warning");
-          return;
-        }
-
-        localStorage.setItem(OPENFEC_KEY_STORAGE_KEY, key);
-        setStatus("OpenFEC key saved locally in this browser.", "success");
-      });
-    }
-
-    if (clearButton) {
-      clearButton.addEventListener("click", () => {
-        localStorage.removeItem(OPENFEC_KEY_STORAGE_KEY);
-
-        const keyInput = document.getElementById("openFecApiKey");
-        if (keyInput) keyInput.value = "";
-
-        setStatus("OpenFEC key cleared from localStorage.", "success");
-      });
-    }
+    const refreshButton = document.getElementById("refreshSavedOpenFecRunButton");
+    const runsButton = document.getElementById("openFecRunsButton");
 
     if (fetchButton) {
       fetchButton.addEventListener("click", async () => {
         await fetchAndRenderOpenFecSnapshot(person);
       });
     }
+
+    if (refreshButton) {
+      refreshButton.addEventListener("click", async () => {
+        await fetchLatestSavedOpenFecRun(person, true);
+      });
+    }
+
+    if (runsButton) {
+      runsButton.addEventListener("click", () => {
+        const profileId = getProfileId(person);
+        window.open(`/api/runs/latest?profile_id=${encodeURIComponent(profileId)}`, "_blank", "noopener,noreferrer");
+      });
+    }
   }
 
   async function fetchAndRenderOpenFecSnapshot(person) {
     const ids = getFecIds(person);
-    const keyInput = document.getElementById("openFecApiKey");
     const cycleSelect = document.getElementById("openFecCycle");
-
-    const apiKey = keyInput ? keyInput.value.trim() : "";
     const cycle = cycleSelect ? cycleSelect.value : DEFAULT_CYCLE;
+    const profileId = getProfileId(person);
 
-    if (!apiKey) {
-      setStatus("OpenFEC API key is required for this local test.", "warning");
+    if (!profileId) {
+      setStatus("This profile does not have a stable profile ID.", "warning");
       return;
     }
 
@@ -207,144 +178,124 @@
       return;
     }
 
-    localStorage.setItem(OPENFEC_KEY_STORAGE_KEY, apiKey);
-
-    setStatus("Fetching OpenFEC campaign finance snapshot...", "loading");
+    setStatus("Running server-side OpenFEC fetch and saving intelligence run...", "loading");
     setFetchButtonBusy(true);
 
     try {
-      const requests = {
-        candidateTotals: ids.candidateId
-          ? fetchOpenFecJson(`/candidate/${ids.candidateId}/totals/`, {
-              api_key: apiKey,
-              cycle,
-              sort: "-cycle",
-              per_page: "5"
-            })
-          : Promise.resolve(null),
+      const response = await fetch(`/api/run/openfec/${encodeURIComponent(profileId)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          cycle
+        })
+      });
 
-        committeeTotals: ids.committeeId
-          ? fetchOpenFecJson(`/committee/${ids.committeeId}/totals/`, {
-              api_key: apiKey,
-              cycle,
-              sort: "-cycle",
-              per_page: "5"
-            })
-          : Promise.resolve(null),
+      const payload = await response.json();
 
-        debts: ids.committeeId
-          ? fetchOpenFecJson("/schedules/schedule_d/", {
-              api_key: apiKey,
-              committee_id: ids.committeeId,
-              cycle,
-              per_page: "5",
-              sort_hide_null: "false",
-              sort: "-report_year"
-            })
-          : Promise.resolve(null),
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || `OpenFEC backend request failed with HTTP ${response.status}.`);
+      }
 
-        loans: ids.committeeId
-          ? fetchOpenFecJson("/schedules/schedule_c/", {
-              api_key: apiKey,
-              committee_id: ids.committeeId,
-              cycle,
-              per_page: "5",
-              sort_hide_null: "false",
-              sort: "-report_year"
-            })
-          : Promise.resolve(null),
-
-        filings: ids.committeeId
-          ? fetchOpenFecJson("/filings/", {
-              api_key: apiKey,
-              committee_id: ids.committeeId,
-              cycle,
-              per_page: "5",
-              sort: "-receipt_date"
-            })
-          : Promise.resolve(null)
-      };
-
-      const results = await settleRequests(requests);
-      renderOpenFecResults({ person, ids, cycle, results });
-      setStatus("OpenFEC snapshot fetched. Review the results below.", "success");
+      renderOpenFecRunResult(payload.run);
+      setStatus("OpenFEC run saved to intelligence_runs and rendered below.", "success");
     } catch (error) {
       console.error(error);
-      setStatus(error.message || "OpenFEC request failed.", "error");
+      setStatus(error.message || "OpenFEC backend request failed.", "error");
     } finally {
       setFetchButtonBusy(false);
     }
   }
 
-  async function settleRequests(requests) {
-    const entries = Object.entries(requests);
+  async function fetchLatestSavedOpenFecRun(person, showStatus) {
+    const profileId = getProfileId(person);
 
-    const settled = await Promise.all(
-      entries.map(async ([key, promise]) => {
-        try {
-          const value = await promise;
-          return [key, { ok: true, value }];
-        } catch (error) {
-          return [key, { ok: false, error }];
-        }
-      })
-    );
+    if (!profileId) return;
 
-    return Object.fromEntries(settled);
-  }
-
-  async function fetchOpenFecJson(path, params) {
-    const url = new URL(`${OPENFEC_API_BASE}${path}`);
-
-    Object.entries(params || {}).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && String(value).trim() !== "") {
-        url.searchParams.set(key, String(value));
+    try {
+      if (showStatus) {
+        setStatus("Loading latest saved OpenFEC run...", "loading");
       }
-    });
 
-    const response = await fetch(url.toString());
+      const url = `/api/runs/latest?profile_id=${encodeURIComponent(profileId)}`;
+      const response = await fetch(url);
+      const payload = await response.json();
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`OpenFEC ${path} failed with ${response.status}: ${text.slice(0, 180)}`);
+      if (!response.ok) {
+        throw new Error(payload.error || `Latest runs request failed with HTTP ${response.status}.`);
+      }
+
+      const runs = Array.isArray(payload.runs) ? payload.runs : [];
+      const openFecRun = runs.find((run) => run.module_name === "openfec_finance");
+
+      if (openFecRun) {
+        renderOpenFecRunResult(openFecRun);
+
+        if (showStatus) {
+          setStatus("Latest saved OpenFEC run loaded.", "success");
+        }
+
+        return;
+      }
+
+      if (showStatus) {
+        setStatus("No saved OpenFEC run found yet.  Click Fetch OpenFEC Snapshot to create one.", "warning");
+      }
+    } catch (error) {
+      console.error(error);
+
+      if (showStatus) {
+        setStatus(error.message || "Could not load latest saved OpenFEC run.", "error");
+      }
     }
-
-    return response.json();
   }
 
-  function renderOpenFecResults({ person, ids, cycle, results }) {
+  function renderOpenFecRunResult(run) {
     const container = document.getElementById("openFecResults");
     if (!container) return;
 
-    const candidateTotals = firstResult(results.candidateTotals);
-    const committeeTotals = firstResult(results.committeeTotals);
+    const summary = run.summary || {};
+    const diagnostics = run.diagnostics || {};
+    const filings = Array.isArray(summary.recent_filings) ? summary.recent_filings : [];
+    const debts = Array.isArray(summary.debt_preview) ? summary.debt_preview : [];
+    const loans = Array.isArray(summary.loan_preview) ? summary.loan_preview : [];
 
-    const debts = resultList(results.debts);
-    const loans = resultList(results.loans);
-    const filings = resultList(results.filings);
+    const summaryRows = [
+      ["Run status", run.run_status],
+      ["Saved at", run.completed_at || run.created_at],
+      ["Cycle", summary.cycle],
+      ["FEC Candidate ID", summary.candidate_id],
+      ["FEC Committee ID", summary.committee_id],
+      ["Total receipts", formatMoney(summary.total_receipts)],
+      ["Total disbursements", formatMoney(summary.total_disbursements)],
+      ["Cash on hand", formatMoney(summary.cash_on_hand)],
+      ["Candidate total receipts", formatMoney(summary.candidate_total_receipts)],
+      ["Candidate total disbursements", formatMoney(summary.candidate_total_disbursements)],
+      ["Candidate cash on hand", formatMoney(summary.candidate_cash_on_hand)],
+      ["Committee total receipts", formatMoney(summary.committee_total_receipts)],
+      ["Committee total disbursements", formatMoney(summary.committee_total_disbursements)],
+      ["Committee cash on hand", formatMoney(summary.committee_cash_on_hand)],
+      ["Committee debt", formatMoney(summary.committee_debt)],
+      ["Coverage end date", summary.coverage_end_date || "Not returned"],
+      ["Most recent filing", summary.latest_filing || "No recent filing returned"]
+    ];
 
-    const summaryRows = buildSummaryRows({
-      ids,
-      cycle,
-      candidateTotals,
-      committeeTotals,
-      debts,
-      loans,
-      filings
-    });
-
-    const diagnosticsRows = buildDiagnosticsRows(results);
+    const diagnosticsRows = Object.entries(diagnostics).map(([key, value]) => [
+      humanizeDiagnosticKey(key),
+      stringifyDisplayValue(value)
+    ]);
 
     container.innerHTML = `
-      <div class="info-label">Live OpenFEC summary</div>
+      <div class="info-label">Saved OpenFEC intelligence run</div>
       ${renderKeyValueGrid(summaryRows, true)}
 
       <div style="height: 14px"></div>
 
       <div class="grid-three">
-        ${renderMiniCountCard("Debt records found", debts.length)}
-        ${renderMiniCountCard("Loan records found", loans.length)}
-        ${renderMiniCountCard("Recent filings found", filings.length)}
+        ${renderMiniCountCard("Debt records found", summary.debt_records_returned || 0)}
+        ${renderMiniCountCard("Loan records found", summary.loan_records_returned || 0)}
+        ${renderMiniCountCard("Recent filings found", summary.recent_filings_returned || 0)}
       </div>
 
       <div style="height: 14px"></div>
@@ -363,43 +314,9 @@
       <div style="height: 14px"></div>
 
       <div class="empty">
-        These results are fetched live for local proof-of-concept use.  They are not written into <code>data/people.json</code>.  For production, this should move behind a backend/proxy and a persistent refresh workflow.
+        This result was fetched by the Python backend using <code>FEC_API_KEY</code> from <code>server/.env</code> and saved as module <code>openfec_finance</code> in <code>intelligence_runs</code>.
       </div>
     `;
-  }
-
-  function buildSummaryRows({ ids, cycle, candidateTotals, committeeTotals, debts, loans, filings }) {
-    return [
-      ["Cycle", cycle],
-      ["FEC Candidate ID", ids.candidateId || "Missing"],
-      ["FEC Committee ID", ids.committeeId || "Missing"],
-
-      ["Candidate total receipts", formatMoney(getNumber(candidateTotals, ["receipts", "total_receipts"]))],
-      ["Candidate total disbursements", formatMoney(getNumber(candidateTotals, ["disbursements", "total_disbursements"]))],
-      ["Candidate cash on hand", formatMoney(getNumber(candidateTotals, ["cash_on_hand_end_period", "cash_on_hand"]))],
-
-      ["Committee total receipts", formatMoney(getNumber(committeeTotals, ["receipts", "total_receipts"]))],
-      ["Committee total disbursements", formatMoney(getNumber(committeeTotals, ["disbursements", "total_disbursements"]))],
-      ["Committee cash on hand", formatMoney(getNumber(committeeTotals, ["cash_on_hand_end_period", "cash_on_hand"]))],
-
-      ["Committee debt", formatMoney(getNumber(committeeTotals, ["debts_owed_by_committee", "debt_owed_by_committee"]))],
-      ["Latest coverage end date", getFirstValueFromObjects([committeeTotals, candidateTotals], ["coverage_end_date", "coverage_end_date_full"]) || "Not returned"],
-      ["Most recent filing", getLatestFilingLabel(filings)],
-
-      ["Debt records flag", debts.length > 0 ? "Debt records returned" : "No debt records returned in sample"],
-      ["Loan records flag", loans.length > 0 ? "Loan records returned" : "No loan records returned in sample"]
-    ];
-  }
-
-  function buildDiagnosticsRows(results) {
-    return Object.entries(results).map(([key, result]) => {
-      if (result.ok) {
-        const count = resultList(result).length;
-        return [humanizeDiagnosticKey(key), `OK, ${count} result${count === 1 ? "" : "s"} returned`];
-      }
-
-      return [humanizeDiagnosticKey(key), result.error ? result.error.message : "Request failed"];
-    });
   }
 
   function renderMiniCountCard(label, count) {
@@ -415,7 +332,7 @@
     if (!filings.length) {
       return `
         <div class="info-label">Recent filings</div>
-        <div class="empty">No filings returned in this sample request.</div>
+        <div class="empty">No filings returned in this saved run.</div>
       `;
     }
 
@@ -443,11 +360,11 @@
   function renderDebtAndLoanPreview({ debts, loans }) {
     const debtHtml = debts.length
       ? debts.slice(0, 3).map((debt) => renderTransactionPreview(debt, "Debt")).join("")
-      : `<div class="empty">No debt rows returned in the sample.</div>`;
+      : `<div class="empty">No debt rows returned in the saved run.</div>`;
 
     const loanHtml = loans.length
       ? loans.slice(0, 3).map((loan) => renderTransactionPreview(loan, "Loan")).join("")
-      : `<div class="empty">No loan rows returned in the sample.</div>`;
+      : `<div class="empty">No loan rows returned in the saved run.</div>`;
 
     return `
       <div class="grid-two">
@@ -554,6 +471,19 @@
     });
   }
 
+  function getProfileId(person) {
+    return U.getFirstValue(
+      person.id,
+      person.slug,
+      person.profile_id,
+      person.profileId,
+      person.sourceIdentity?.profile_id,
+      person.sourceIdentity?.profileId,
+      person.sourceIdentity?.slug,
+      person.sourceIdentity?.bioguideId
+    ) || "";
+  }
+
   function getFecIds(person) {
     return {
       candidateId: U.getFirstValue(
@@ -574,10 +504,6 @@
     };
   }
 
-  function getSavedApiKey() {
-    return localStorage.getItem(OPENFEC_KEY_STORAGE_KEY) || "";
-  }
-
   function setStatus(message, type) {
     const status = document.getElementById("openFecStatus");
     if (!status) return;
@@ -596,30 +522,6 @@
 
     fetchButton.disabled = isBusy;
     fetchButton.textContent = isBusy ? "Fetching..." : "Fetch OpenFEC Snapshot";
-  }
-
-  function firstResult(settledResult) {
-    if (!settledResult || !settledResult.ok || !settledResult.value) return null;
-
-    const results = settledResult.value.results;
-
-    if (Array.isArray(results) && results.length) {
-      return results[0];
-    }
-
-    return null;
-  }
-
-  function resultList(settledResult) {
-    if (!settledResult || !settledResult.ok || !settledResult.value) return [];
-
-    const results = settledResult.value.results;
-
-    if (Array.isArray(results)) {
-      return results;
-    }
-
-    return [];
   }
 
   function getNumber(object, keys) {
@@ -654,26 +556,6 @@
     return "";
   }
 
-  function getFirstValueFromObjects(objects, keys) {
-    for (const object of objects) {
-      const value = getFirstValue(object, keys);
-      if (value) return value;
-    }
-
-    return "";
-  }
-
-  function getLatestFilingLabel(filings) {
-    if (!filings.length) return "No recent filing returned";
-
-    const filing = filings[0];
-
-    const reportType = getFirstValue(filing, ["report_type", "form_type", "report_type_full"]) || "Filing";
-    const receiptDate = getFirstValue(filing, ["receipt_date", "filing_date"]) || "date unknown";
-
-    return `${reportType}, ${receiptDate}`;
-  }
-
   function formatMoney(value) {
     if (value === null || value === undefined || value === "") {
       return "Not returned";
@@ -703,11 +585,13 @@
 
   function humanizeDiagnosticKey(value) {
     const labels = {
-      candidateTotals: "Candidate totals",
-      committeeTotals: "Committee totals",
-      debts: "Schedule D debts",
-      loans: "Schedule C loans",
-      filings: "Recent filings"
+      candidate_totals_status: "Candidate totals",
+      committee_totals_status: "Committee totals",
+      debts_status: "Schedule D debts",
+      loans_status: "Schedule C loans",
+      filings_status: "Recent filings",
+      attempted_requests: "Attempted requests",
+      successful_requests: "Successful requests"
     };
 
     return labels[value] || U.humanizeKey(value);
