@@ -4,10 +4,12 @@ import os
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any, Dict, List
-from urllib.parse import parse_qs, urlparse
+from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, unquote, urlparse
 
+import congress_client
 import db
+import openfec_client
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -199,8 +201,87 @@ def first_query_value(query: Dict[str, List[str]], key: str) -> str:
     return values[0] if values else ""
 
 
+def first_payload_value(payload: Dict[str, Any], *keys: str, default: Any = "") -> Any:
+    for key in keys:
+        value = payload.get(key)
+        if value is not None and str(value).strip() != "":
+            return value
+
+    return default
+
+
+def get_profile_identity_values(person: Dict[str, Any]) -> List[str]:
+    values = [
+        person.get("id"),
+        person.get("slug"),
+        person.get("profile_id"),
+        person.get("profileId"),
+        person.get("bioguideId"),
+    ]
+
+    source_identity = person.get("sourceIdentity")
+    if isinstance(source_identity, dict):
+        values.extend(
+            [
+                source_identity.get("id"),
+                source_identity.get("slug"),
+                source_identity.get("profile_id"),
+                source_identity.get("profileId"),
+                source_identity.get("bioguideId"),
+            ]
+        )
+
+    return [str(value).strip() for value in values if value is not None and str(value).strip()]
+
+
+def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
+    clean_profile_id = str(profile_id or "").strip()
+
+    if not clean_profile_id:
+        return None
+
+    people_cache = db.list_people_cache()
+
+    for cached_person in people_cache:
+        cached_profile_id = str(cached_person.get("profile_id") or "").strip()
+
+        if cached_profile_id == clean_profile_id:
+            person = cached_person.get("source_json") or {}
+            if isinstance(person, dict):
+                person.setdefault("id", cached_profile_id)
+                person.setdefault("profile_id", cached_profile_id)
+                person.setdefault("displayName", cached_person.get("display_name"))
+                return person
+
+        source_json = cached_person.get("source_json") or {}
+        if isinstance(source_json, dict):
+            identity_values = get_profile_identity_values(source_json)
+            if clean_profile_id in identity_values:
+                source_json.setdefault("id", cached_profile_id or clean_profile_id)
+                source_json.setdefault("profile_id", cached_profile_id or clean_profile_id)
+                source_json.setdefault("displayName", cached_person.get("display_name"))
+                return source_json
+
+    for index, person in enumerate(db.load_people_json()):
+        if not isinstance(person, dict):
+            continue
+
+        identity_values = get_profile_identity_values(person)
+
+        normalized = db.normalize_person_for_cache(person, index)
+        identity_values.append(str(normalized.get("profile_id") or "").strip())
+
+        if clean_profile_id in identity_values:
+            person.setdefault("id", normalized.get("profile_id") or clean_profile_id)
+            person.setdefault("profile_id", normalized.get("profile_id") or clean_profile_id)
+            person.setdefault("displayName", normalized.get("display_name"))
+            return person
+
+    return None
+
+
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.5"
+    server_version = "MemberCommandCenterBackend/1.6B"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -211,12 +292,17 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.5",
+                    "version": "v1.6B",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
                         "configured": api_key_status["configured_keys"],
                         "missing": api_key_status["missing_keys"],
+                    },
+                    "server_side_runners": {
+                        "openfec_finance": True,
+                        "congress_legislation": True,
+                        "youtube_media": False,
                     },
                 }
             )
@@ -295,6 +381,14 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if parsed.path.startswith("/api/run/openfec/"):
+            self.handle_openfec_run(parsed.path)
+            return
+
+        if parsed.path.startswith("/api/run/congress/"):
+            self.handle_congress_run(parsed.path)
+            return
+
         if parsed.path == "/api/runs":
             try:
                 payload = self.read_json_body()
@@ -309,6 +403,189 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             return
 
         self.send_json({"ok": False, "error": "Not found."}, status=HTTPStatus.NOT_FOUND)
+
+    def handle_openfec_run(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/run/openfec/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        try:
+            payload = self.read_json_body()
+        except json.JSONDecodeError as error:
+            self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        cycle = str(first_payload_value(payload, "cycle", "electionCycle", default="2026")).strip() or "2026"
+        api_key = os.environ.get("FEC_API_KEY", "").strip()
+
+        if not api_key:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": "FEC_API_KEY is not configured in server/.env.",
+                    "profile_id": profile_id,
+                    "module_name": "openfec_finance",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": f"No cached profile was found for '{profile_id}'.",
+                    "profile_id": profile_id,
+                    "module_name": "openfec_finance",
+                },
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        try:
+            run_payload = openfec_client.build_openfec_finance_run_payload(
+                profile_id=profile_id,
+                person=person,
+                api_key=api_key,
+                cycle=cycle,
+            )
+            saved = db.save_intelligence_run(run_payload)
+
+            self.send_json(
+                {
+                    "ok": True,
+                    "message": "OpenFEC finance run completed and saved.",
+                    "run": saved,
+                    "display": {
+                        "profile_id": saved["profile_id"],
+                        "module_name": saved["module_name"],
+                        "run_status": saved["run_status"],
+                        "summary": saved["summary"],
+                        "diagnostics": saved["diagnostics"],
+                    },
+                },
+                status=HTTPStatus.CREATED,
+            )
+        except openfec_client.OpenFecProfileError as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "openfec_finance",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        except Exception as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "openfec_finance",
+                },
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+    def handle_congress_run(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/run/congress/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        try:
+            payload = self.read_json_body()
+        except json.JSONDecodeError as error:
+            self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        congress = str(first_payload_value(payload, "congress", default="119")).strip() or "119"
+        limit_raw = str(first_payload_value(payload, "limit", default="10")).strip() or "10"
+        api_key = os.environ.get("CONGRESS_API_KEY", "").strip()
+
+        try:
+            limit = max(1, min(int(limit_raw), 50))
+        except ValueError:
+            limit = 10
+
+        if not api_key:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": "CONGRESS_API_KEY is not configured in server/.env.",
+                    "profile_id": profile_id,
+                    "module_name": "congress_legislation",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": f"No cached profile was found for '{profile_id}'.",
+                    "profile_id": profile_id,
+                    "module_name": "congress_legislation",
+                },
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        try:
+            run_payload = congress_client.build_congress_legislation_run_payload(
+                profile_id=profile_id,
+                person=person,
+                api_key=api_key,
+                congress=congress,
+                limit=limit,
+            )
+            saved = db.save_intelligence_run(run_payload)
+
+            self.send_json(
+                {
+                    "ok": True,
+                    "message": "Congress.gov legislation run completed and saved.",
+                    "run": saved,
+                    "display": {
+                        "profile_id": saved["profile_id"],
+                        "module_name": saved["module_name"],
+                        "run_status": saved["run_status"],
+                        "summary": saved["summary"],
+                        "diagnostics": saved["diagnostics"],
+                    },
+                },
+                status=HTTPStatus.CREATED,
+            )
+        except congress_client.CongressProfileError as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "congress_legislation",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        except Exception as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "congress_legislation",
+                },
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT)
@@ -394,6 +671,8 @@ def main() -> None:
     print(f"  http://{host}:{port}/api/config/status", flush=True)
     print(f"  http://{host}:{port}/api/database/status", flush=True)
     print(f"  http://{host}:{port}/api/runs/latest", flush=True)
+    print(f"  POST http://{host}:{port}/api/run/openfec/<profile_id>", flush=True)
+    print(f"  POST http://{host}:{port}/api/run/congress/<profile_id>", flush=True)
     print("", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     print("", flush=True)

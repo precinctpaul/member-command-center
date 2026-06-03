@@ -1,6 +1,4 @@
 (function () {
-  const CONGRESS_API_BASE = "https://api.congress.gov/v3";
-  const CONGRESS_KEY_STORAGE_KEY = "mcc_congress_api_key";
   const DEFAULT_CONGRESS = "119";
   const DEFAULT_LIMIT = "10";
 
@@ -29,11 +27,11 @@
 
     sectionBody.innerHTML = renderLegislativePanel(person);
     bindLegislativeEvents(person);
+    fetchLatestSavedCongressRun(person);
   }
 
   function renderLegislativePanel(person) {
     const bioguideId = getBioguideId(person);
-    const savedKey = getSavedApiKey();
     const isFederal = person.officeTypeNormalized === "federal";
 
     if (!isFederal) {
@@ -75,48 +73,37 @@
 
         <div class="grid-three">
           <div class="info-card">
-            <label class="info-label" for="congressGovApiKey">Congress.gov API key</label>
-            <input
-              id="congressGovApiKey"
-              class="search-input"
-              type="password"
-              placeholder="Paste Congress.gov API key for local testing"
-              value="${U.escapeAttribute(savedKey)}"
-              autocomplete="off"
-            />
+            <div class="info-label">Execution mode</div>
+            <div class="info-value">Server-side Congress.gov runner</div>
           </div>
 
           <div class="info-card">
-            <div class="info-label">Local key storage</div>
-            <div class="info-value">
-              ${savedKey ? "Saved in this browser localStorage." : "No key saved yet."}
-            </div>
+            <div class="info-label">API key location</div>
+            <div class="info-value">server/.env only</div>
           </div>
 
           <div class="info-card">
-            <div class="info-label">Security note</div>
-            <div class="info-value">
-              Local-only testing.  Production needs a backend/proxy so keys are not exposed in browser JavaScript.
-            </div>
+            <div class="info-label">Persistence</div>
+            <div class="info-value">Saves to intelligence_runs</div>
           </div>
         </div>
 
         <div class="grid-three">
-          <button id="saveCongressGovKeyButton" class="secondary-button" type="button">
-            Save Key
-          </button>
-
-          <button id="clearCongressGovKeyButton" class="secondary-button" type="button">
-            Clear Key
-          </button>
-
           <button id="fetchCongressGovSnapshotButton" class="secondary-button" type="button">
             Fetch Congress.gov Snapshot
+          </button>
+
+          <button id="refreshSavedCongressGovRunButton" class="secondary-button" type="button">
+            Refresh Saved Run
+          </button>
+
+          <button id="congressGovRunsButton" class="secondary-button" type="button">
+            View Latest Runs JSON
           </button>
         </div>
 
         <div id="congressGovStatus" class="empty">
-          Ready.  Enter a Congress.gov key, confirm Bioguide ID, then fetch the legislative snapshot.
+          Ready.  Click Fetch Congress.gov Snapshot to run the backend source fetch and save a real intelligence run.
         </div>
 
         <div id="congressGovResults">
@@ -155,55 +142,41 @@
   }
 
   function bindLegislativeEvents(person) {
-    const saveButton = document.getElementById("saveCongressGovKeyButton");
-    const clearButton = document.getElementById("clearCongressGovKeyButton");
     const fetchButton = document.getElementById("fetchCongressGovSnapshotButton");
-
-    if (saveButton) {
-      saveButton.addEventListener("click", () => {
-        const keyInput = document.getElementById("congressGovApiKey");
-        const key = keyInput ? keyInput.value.trim() : "";
-
-        if (!key) {
-          setStatus("Enter a key before saving.", "warning");
-          return;
-        }
-
-        localStorage.setItem(CONGRESS_KEY_STORAGE_KEY, key);
-        setStatus("Congress.gov key saved locally in this browser.", "success");
-      });
-    }
-
-    if (clearButton) {
-      clearButton.addEventListener("click", () => {
-        localStorage.removeItem(CONGRESS_KEY_STORAGE_KEY);
-
-        const keyInput = document.getElementById("congressGovApiKey");
-        if (keyInput) keyInput.value = "";
-
-        setStatus("Congress.gov key cleared from localStorage.", "success");
-      });
-    }
+    const refreshButton = document.getElementById("refreshSavedCongressGovRunButton");
+    const runsButton = document.getElementById("congressGovRunsButton");
 
     if (fetchButton) {
       fetchButton.addEventListener("click", async () => {
         await fetchAndRenderLegislativeSnapshot(person);
       });
     }
+
+    if (refreshButton) {
+      refreshButton.addEventListener("click", async () => {
+        await fetchLatestSavedCongressRun(person, true);
+      });
+    }
+
+    if (runsButton) {
+      runsButton.addEventListener("click", () => {
+        const profileId = getProfileId(person);
+        window.open(`/api/runs/latest?profile_id=${encodeURIComponent(profileId)}`, "_blank", "noopener,noreferrer");
+      });
+    }
   }
 
   async function fetchAndRenderLegislativeSnapshot(person) {
     const bioguideId = getBioguideId(person);
-    const keyInput = document.getElementById("congressGovApiKey");
     const congressSelect = document.getElementById("congressGovCongress");
     const limitSelect = document.getElementById("congressGovLimit");
 
-    const apiKey = keyInput ? keyInput.value.trim() : "";
     const congress = congressSelect ? congressSelect.value : DEFAULT_CONGRESS;
     const limit = limitSelect ? limitSelect.value : DEFAULT_LIMIT;
+    const profileId = getProfileId(person);
 
-    if (!apiKey) {
-      setStatus("Congress.gov API key is required for this local test.", "warning");
+    if (!profileId) {
+      setStatus("This profile does not have a stable profile ID.", "warning");
       return;
     }
 
@@ -212,189 +185,140 @@
       return;
     }
 
-    localStorage.setItem(CONGRESS_KEY_STORAGE_KEY, apiKey);
-
-    setStatus("Fetching Congress.gov legislative snapshot...", "loading");
+    setStatus("Running server-side Congress.gov fetch and saving intelligence run...", "loading");
     setFetchButtonBusy(true);
 
     try {
-      const requests = {
-        sponsoredLegislation: fetchCongressGovJson(`/member/${bioguideId}/sponsored-legislation`, {
-          api_key: apiKey,
-          format: "json",
-          limit,
-          offset: "0"
-        }),
-
-        cosponsoredLegislation: fetchCongressGovJson(`/member/${bioguideId}/cosponsored-legislation`, {
-          api_key: apiKey,
-          format: "json",
-          limit,
-          offset: "0"
-        }),
-
-        memberDetail: fetchCongressGovJson(`/member/${bioguideId}`, {
-          api_key: apiKey,
-          format: "json"
+      const response = await fetch(`/api/run/congress/${encodeURIComponent(profileId)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          congress,
+          limit
         })
-      };
-
-      const results = await settleRequests(requests);
-
-      await enrichLatestBills({
-        results,
-        apiKey,
-        congress,
-        limit: "3"
       });
 
-      renderCongressGovResults({
-        person,
-        bioguideId,
-        congress,
-        limit,
-        results
-      });
+      const payload = await response.json();
 
-      setStatus("Congress.gov snapshot fetched. Review the results below.", "success");
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || `Congress.gov backend request failed with HTTP ${response.status}.`);
+      }
+
+      renderCongressRunResult(payload.run);
+      setStatus("Congress.gov run saved to intelligence_runs and rendered below.", "success");
     } catch (error) {
       console.error(error);
-      setStatus(error.message || "Congress.gov request failed.", "error");
+      setStatus(error.message || "Congress.gov backend request failed.", "error");
     } finally {
       setFetchButtonBusy(false);
     }
   }
 
-  async function enrichLatestBills({ results, apiKey, congress, limit }) {
-    const sponsored = resultList(results.sponsoredLegislation);
-    const cosponsored = resultList(results.cosponsoredLegislation);
+  async function fetchLatestSavedCongressRun(person, showStatus) {
+    const profileId = getProfileId(person);
 
-    const targets = [
-      ...sponsored.slice(0, Number(limit)).map((bill) => ["sponsored", bill]),
-      ...cosponsored.slice(0, Number(limit)).map((bill) => ["cosponsored", bill])
-    ];
+    if (!profileId) return;
 
-    const enriched = await Promise.all(
-      targets.map(async ([type, bill]) => {
-        try {
-          const billRef = parseBillReference(bill, congress);
-          if (!billRef) return [type, bill, null];
-
-          const data = await fetchCongressGovJson(`/bill/${billRef.congress}/${billRef.billType}/${billRef.billNumber}`, {
-            api_key: apiKey,
-            format: "json"
-          });
-
-          return [type, bill, data];
-        } catch (error) {
-          return [type, bill, { error: error.message }];
-        }
-      })
-    );
-
-    results.enrichedBills = {
-      ok: true,
-      value: enriched
-    };
-  }
-
-  async function settleRequests(requests) {
-    const entries = Object.entries(requests);
-
-    const settled = await Promise.all(
-      entries.map(async ([key, promise]) => {
-        try {
-          const value = await promise;
-          return [key, { ok: true, value }];
-        } catch (error) {
-          return [key, { ok: false, error }];
-        }
-      })
-    );
-
-    return Object.fromEntries(settled);
-  }
-
-  async function fetchCongressGovJson(path, params) {
-    const url = new URL(`${CONGRESS_API_BASE}${path}`);
-
-    Object.entries(params || {}).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && String(value).trim() !== "") {
-        url.searchParams.set(key, String(value));
+    try {
+      if (showStatus) {
+        setStatus("Loading latest saved Congress.gov run...", "loading");
       }
-    });
 
-    const response = await fetch(url.toString());
+      const url = `/api/runs/latest?profile_id=${encodeURIComponent(profileId)}`;
+      const response = await fetch(url);
+      const payload = await response.json();
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Congress.gov ${path} failed with ${response.status}: ${text.slice(0, 180)}`);
+      if (!response.ok) {
+        throw new Error(payload.error || `Latest runs request failed with HTTP ${response.status}.`);
+      }
+
+      const runs = Array.isArray(payload.runs) ? payload.runs : [];
+      const congressRun = runs.find((run) => run.module_name === "congress_legislation");
+
+      if (congressRun) {
+        renderCongressRunResult(congressRun);
+
+        if (showStatus) {
+          setStatus("Latest saved Congress.gov run loaded.", "success");
+        }
+
+        return;
+      }
+
+      if (showStatus) {
+        setStatus("No saved Congress.gov run found yet.  Click Fetch Congress.gov Snapshot to create one.", "warning");
+      }
+    } catch (error) {
+      console.error(error);
+
+      if (showStatus) {
+        setStatus(error.message || "Could not load latest saved Congress.gov run.", "error");
+      }
     }
-
-    return response.json();
   }
 
-  function renderCongressGovResults({ person, bioguideId, congress, limit, results }) {
+  function renderCongressRunResult(run) {
     const container = document.getElementById("congressGovResults");
     if (!container) return;
 
-    const sponsored = resultList(results.sponsoredLegislation);
-    const cosponsored = resultList(results.cosponsoredLegislation);
-    const memberDetail = getMemberDetail(results.memberDetail);
-    const enrichedBills = getEnrichedBills(results.enrichedBills);
-
-    const latestSponsored = sponsored[0] || null;
-    const latestCosponsored = cosponsored[0] || null;
+    const summary = run.summary || {};
+    const diagnostics = run.diagnostics || {};
+    const sponsored = Array.isArray(summary.sponsored_legislation) ? summary.sponsored_legislation : [];
+    const cosponsored = Array.isArray(summary.cosponsored_legislation) ? summary.cosponsored_legislation : [];
+    const enrichedBills = Array.isArray(summary.enriched_bills) ? summary.enriched_bills : [];
+    const policyAreas = Array.isArray(summary.policy_areas_preview) ? summary.policy_areas_preview : [];
 
     const summaryRows = [
-      ["Bioguide ID", bioguideId],
-      ["Congress selector", congress],
-      ["Result limit", limit],
-      ["Member name", getFirstValue(memberDetail, ["directOrderName", "name", "invertedOrderName"]) || person.name || "Not returned"],
-      ["State / district", buildMemberDistrictLabel(memberDetail, person)],
-      ["Sponsored bills returned", sponsored.length],
-      ["Cosponsored bills returned", cosponsored.length],
-      ["Latest sponsored bill", getBillLabel(latestSponsored) || "Not returned"],
-      ["Latest cosponsored bill", getBillLabel(latestCosponsored) || "Not returned"],
-      ["Latest sponsored action", getBillLatestActionLabel(latestSponsored)],
-      ["Latest cosponsored action", getBillLatestActionLabel(latestCosponsored)]
+      ["Run status", run.run_status],
+      ["Saved at", run.completed_at || run.created_at],
+      ["Bioguide ID", summary.bioguide_id],
+      ["Congress", summary.congress],
+      ["Result limit", summary.limit],
+      ["Member name", summary.member_name],
+      ["State / district", summary.state_district],
+      ["Sponsored bills returned", summary.sponsored_returned],
+      ["Cosponsored bills returned", summary.cosponsored_returned],
+      ["Bills enriched", summary.enriched_bills_returned],
+      ["Latest sponsored bill", summary.latest_sponsored_bill],
+      ["Latest cosponsored bill", summary.latest_cosponsored_bill],
+      ["Latest sponsored action", summary.latest_sponsored_action],
+      ["Latest cosponsored action", summary.latest_cosponsored_action]
     ];
 
-    const diagnosticsRows = buildDiagnosticsRows(results);
+    const diagnosticsRows = Object.entries(diagnostics).map(([key, value]) => [
+      humanizeDiagnosticKey(key),
+      stringifyDisplayValue(value)
+    ]);
 
     container.innerHTML = `
-      <div class="info-label">Live Congress.gov summary</div>
+      <div class="info-label">Saved Congress.gov intelligence run</div>
       ${renderKeyValueGrid(summaryRows, true)}
 
       <div style="height: 14px"></div>
 
       <div class="grid-three">
-        ${renderMiniCountCard("Sponsored returned", sponsored.length)}
-        ${renderMiniCountCard("Cosponsored returned", cosponsored.length)}
-        ${renderMiniCountCard("Bills enriched", enrichedBills.length)}
+        ${renderMiniCountCard("Sponsored returned", summary.sponsored_returned || 0)}
+        ${renderMiniCountCard("Cosponsored returned", summary.cosponsored_returned || 0)}
+        ${renderMiniCountCard("Bills enriched", summary.enriched_bills_returned || 0)}
       </div>
 
       <div style="height: 14px"></div>
 
-      ${renderBillList({
-        label: "Latest sponsored legislation",
-        bills: sponsored,
-        enrichedBills,
-        type: "sponsored"
-      })}
+      ${renderPolicyAreas(policyAreas)}
 
       <div style="height: 14px"></div>
 
-      ${renderBillList({
-        label: "Latest cosponsored legislation",
-        bills: cosponsored,
-        enrichedBills,
-        type: "cosponsored"
-      })}
+      ${renderBillList("Sponsored legislation", sponsored)}
 
       <div style="height: 14px"></div>
 
-      ${renderPolicyAreaPreview(enrichedBills)}
+      ${renderBillList("Cosponsored legislation", cosponsored)}
+
+      <div style="height: 14px"></div>
+
+      ${renderEnrichedBills(enrichedBills)}
 
       <div style="height: 14px"></div>
 
@@ -404,38 +328,47 @@
       <div style="height: 14px"></div>
 
       <div class="empty">
-        These results are fetched live for local proof-of-concept use.  They are not written into <code>data/people.json</code>.  For production, this should move behind a backend/proxy and a persistent refresh workflow.
+        This result was fetched by the Python backend using <code>CONGRESS_API_KEY</code> from <code>server/.env</code> and saved as module <code>congress_legislation</code> in <code>intelligence_runs</code>.
       </div>
     `;
   }
 
-  function renderBillList({ label, bills, enrichedBills, type }) {
+  function renderPolicyAreas(policyAreas) {
+    if (!policyAreas.length) {
+      return `
+        <div class="info-label">Policy areas preview</div>
+        <div class="empty">No policy areas returned from enriched bill detail.</div>
+      `;
+    }
+
+    const tags = policyAreas.map((policyArea) => `
+      <span class="status-pill">${U.escapeHtml(policyArea)}</span>
+    `).join("");
+
+    return `
+      <div class="info-label">Policy areas preview</div>
+      <div class="tag-row">${tags}</div>
+    `;
+  }
+
+  function renderBillList(label, bills) {
     if (!bills.length) {
       return `
         <div class="info-label">${U.escapeHtml(label)}</div>
-        <div class="empty">No bills returned in this sample request.</div>
+        <div class="empty">No bills returned in this saved run.</div>
       `;
     }
 
     const rows = bills.slice(0, 10).map((bill) => {
-      const enriched = findEnrichedBill(enrichedBills, type, bill);
-      const enrichedDetail = getBillDetailFromEnrichment(enriched);
-
-      const billLabel = getBillLabel(bill);
-      const title = getFirstValue(bill, ["title"]) || getFirstValue(enrichedDetail, ["title"]) || "No title returned";
-      const introducedDate = getFirstValue(bill, ["introducedDate"]) || getFirstValue(enrichedDetail, ["introducedDate"]) || "";
-      const latestAction = getBillLatestActionLabel(bill) || getBillLatestActionLabel(enrichedDetail);
-      const policyArea = getPolicyArea(enrichedDetail);
-      const apiUrl = getFirstValue(bill, ["url"]) || "";
+      const billLabel = getBillLabel(bill) || "Bill";
+      const latestAction = getBillLatestActionLabel(bill);
+      const url = getFirstValue(bill, ["url"]);
 
       return `
         <div class="list-item">
-          <strong>${U.escapeHtml(billLabel || "Bill")}</strong>
-          <p>${U.escapeHtml(title)}</p>
-          ${introducedDate ? `<p>Introduced: ${U.escapeHtml(introducedDate)}</p>` : ""}
-          ${latestAction ? `<p>Latest action: ${U.escapeHtml(latestAction)}</p>` : ""}
-          ${policyArea ? `<p>Policy area: ${U.escapeHtml(policyArea)}</p>` : ""}
-          ${apiUrl ? `<p><a href="${U.escapeAttribute(apiUrl)}" target="_blank" rel="noopener noreferrer">${U.escapeHtml(apiUrl)}</a></p>` : ""}
+          <strong>${U.escapeHtml(billLabel)}</strong>
+          <p>${U.escapeHtml(latestAction)}</p>
+          ${url ? `<p><a href="${U.escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">${U.escapeHtml(url)}</a></p>` : ""}
         </div>
       `;
     }).join("");
@@ -446,44 +379,35 @@
     `;
   }
 
-  function renderPolicyAreaPreview(enrichedBills) {
-    const policyAreas = enrichedBills
-      .map((item) => getPolicyArea(getBillDetailFromEnrichment(item)))
-      .filter(Boolean);
-
-    const counts = policyAreas.reduce((accumulator, policyArea) => {
-      accumulator[policyArea] = (accumulator[policyArea] || 0) + 1;
-      return accumulator;
-    }, {});
-
-    const rows = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([policyArea, count]) => [policyArea, `${count} enriched bill${count === 1 ? "" : "s"}`]);
-
-    if (!rows.length) {
+  function renderEnrichedBills(enrichedBills) {
+    if (!enrichedBills.length) {
       return `
-        <div class="info-label">Policy area preview</div>
-        <div class="empty">No policy area data returned in the enriched sample.</div>
+        <div class="info-label">Enriched bill detail</div>
+        <div class="empty">No bill detail enrichment returned.</div>
       `;
     }
 
+    const rows = enrichedBills.slice(0, 6).map((row) => {
+      const bill = row.bill || {};
+      const detail = row.detail || {};
+      const detailBill = detail.bill || {};
+      const policyArea = detailBill.policyArea && detailBill.policyArea.name
+        ? detailBill.policyArea.name
+        : "Policy area not returned";
+
+      return `
+        <div class="list-item">
+          <strong>${U.escapeHtml(row.relationship_type || "bill")} · ${U.escapeHtml(getBillLabel(bill) || "Bill")}</strong>
+          <p>${U.escapeHtml(policyArea)}</p>
+          ${row.error ? `<p>${U.escapeHtml(row.error)}</p>` : ""}
+        </div>
+      `;
+    }).join("");
+
     return `
-      <div class="info-label">Policy area preview</div>
-      ${renderKeyValueGrid(rows, false)}
+      <div class="info-label">Enriched bill detail</div>
+      <div class="list">${rows}</div>
     `;
-  }
-
-  function buildDiagnosticsRows(results) {
-    return Object.entries(results)
-      .filter(([key]) => key !== "enrichedBills")
-      .map(([key, result]) => {
-        if (result.ok) {
-          const count = key === "memberDetail" ? 1 : resultList(result).length;
-          return [humanizeDiagnosticKey(key), `OK, ${count} result${count === 1 ? "" : "s"} returned`];
-        }
-
-        return [humanizeDiagnosticKey(key), result.error ? result.error.message : "Request failed"];
-      });
   }
 
   function renderMiniCountCard(label, count) {
@@ -553,6 +477,19 @@
     });
   }
 
+  function getProfileId(person) {
+    return U.getFirstValue(
+      person.id,
+      person.slug,
+      person.profile_id,
+      person.profileId,
+      person.sourceIdentity?.profile_id,
+      person.sourceIdentity?.profileId,
+      person.sourceIdentity?.slug,
+      person.sourceIdentity?.bioguideId
+    ) || "";
+  }
+
   function getBioguideId(person) {
     return U.getFirstValue(
       person.bioguideId,
@@ -561,10 +498,6 @@
       person.sourceIdentity?.bioguideId,
       person.legislativeMechanics?.bioguideId
     ) || "";
-  }
-
-  function getSavedApiKey() {
-    return localStorage.getItem(CONGRESS_KEY_STORAGE_KEY) || "";
   }
 
   function setStatus(message, type) {
@@ -587,175 +520,6 @@
     fetchButton.textContent = isBusy ? "Fetching..." : "Fetch Congress.gov Snapshot";
   }
 
-  function resultList(settledResult) {
-    if (!settledResult || !settledResult.ok || !settledResult.value) return [];
-
-    const value = settledResult.value;
-
-    if (Array.isArray(value.sponsoredLegislation)) return value.sponsoredLegislation;
-    if (Array.isArray(value.cosponsoredLegislation)) return value.cosponsoredLegislation;
-    if (Array.isArray(value.results)) return value.results;
-
-    return [];
-  }
-
-  function getMemberDetail(settledResult) {
-    if (!settledResult || !settledResult.ok || !settledResult.value) return {};
-
-    return settledResult.value.member || settledResult.value || {};
-  }
-
-  function getEnrichedBills(settledResult) {
-    if (!settledResult || !settledResult.ok || !settledResult.value) return [];
-
-    return settledResult.value.map(([type, originalBill, enriched]) => ({
-      type,
-      originalBill,
-      enriched
-    }));
-  }
-
-  function findEnrichedBill(enrichedBills, type, bill) {
-    const sourceRef = getBillComparableRef(bill);
-
-    return enrichedBills.find((item) => (
-      item.type === type &&
-      getBillComparableRef(item.originalBill) === sourceRef
-    ));
-  }
-
-  function getBillDetailFromEnrichment(enrichedItem) {
-    if (!enrichedItem || !enrichedItem.enriched || enrichedItem.enriched.error) return {};
-
-    return enrichedItem.enriched.bill || enrichedItem.enriched || {};
-  }
-
-  function parseBillReference(bill, fallbackCongress) {
-    if (!bill || typeof bill !== "object") return null;
-
-    const directCongress = getFirstValue(bill, ["congress"]) || fallbackCongress;
-    const directNumber = getFirstValue(bill, ["number", "billNumber"]);
-    const directType = getFirstValue(bill, ["type", "billType"]);
-
-    if (directCongress && directNumber && directType) {
-      return {
-        congress: directCongress,
-        billType: normalizeBillType(directType),
-        billNumber: directNumber
-      };
-    }
-
-    const url = getFirstValue(bill, ["url"]);
-
-    if (url) {
-      const match = url.match(/\/bill\/(\d+)\/([^/]+)\/(\d+)/i);
-
-      if (match) {
-        return {
-          congress: match[1],
-          billType: normalizeBillType(match[2]),
-          billNumber: match[3]
-        };
-      }
-    }
-
-    const citation = getFirstValue(bill, ["citation", "billNumber", "bill"]);
-
-    if (citation) {
-      const citationMatch = citation.match(/([a-z. ]+)\s*(\d+)/i);
-
-      if (citationMatch) {
-        return {
-          congress: directCongress,
-          billType: normalizeBillType(citationMatch[1]),
-          billNumber: citationMatch[2]
-        };
-      }
-    }
-
-    return null;
-  }
-
-  function normalizeBillType(value) {
-    const cleaned = String(value || "")
-      .toLowerCase()
-      .replace(/\./g, "")
-      .replace(/\s+/g, "");
-
-    const map = {
-      hr: "hr",
-      hres: "hres",
-      hjres: "hjres",
-      hconres: "hconres",
-      s: "s",
-      sres: "sres",
-      sjres: "sjres",
-      sconres: "sconres"
-    };
-
-    return map[cleaned] || cleaned;
-  }
-
-  function getBillComparableRef(bill) {
-    const ref = parseBillReference(bill, DEFAULT_CONGRESS);
-    if (!ref) return JSON.stringify(bill || {});
-
-    return `${ref.congress}-${ref.billType}-${ref.billNumber}`;
-  }
-
-  function getBillLabel(bill) {
-    if (!bill) return "";
-
-    const congress = getFirstValue(bill, ["congress"]);
-    const type = getFirstValue(bill, ["type", "billType"]);
-    const number = getFirstValue(bill, ["number", "billNumber"]);
-
-    if (type && number) {
-      return `${String(type).toUpperCase()} ${number}${congress ? `, ${congress}th` : ""}`;
-    }
-
-    const citation = getFirstValue(bill, ["citation", "bill", "title"]);
-    return citation || "";
-  }
-
-  function getBillLatestActionLabel(bill) {
-    if (!bill || typeof bill !== "object") return "Not returned";
-
-    const latestAction = bill.latestAction || {};
-    const actionDate = getFirstValue(latestAction, ["actionDate", "date"]) || getFirstValue(bill, ["latestActionDate", "actionDate"]);
-    const actionText = getFirstValue(latestAction, ["text", "actionText"]) || getFirstValue(bill, ["latestActionText"]);
-
-    if (actionDate && actionText) return `${actionDate}: ${actionText}`;
-    if (actionDate) return actionDate;
-    if (actionText) return actionText;
-
-    return "Not returned";
-  }
-
-  function getPolicyArea(billDetail) {
-    if (!billDetail || typeof billDetail !== "object") return "";
-
-    const policyArea = billDetail.policyArea;
-
-    if (typeof policyArea === "string") return policyArea;
-    if (policyArea && typeof policyArea === "object") {
-      return getFirstValue(policyArea, ["name"]);
-    }
-
-    return "";
-  }
-
-  function buildMemberDistrictLabel(memberDetail, person) {
-    const state = getFirstValue(memberDetail, ["state"]) || person.state || "";
-    const district = getFirstValue(memberDetail, ["district"]) || person.district || "";
-
-    if (state && district) return `${state}-${district}`;
-    if (state) return state;
-    if (district) return district;
-
-    return "Not returned";
-  }
-
   function getFirstValue(object, keys) {
     if (!object || typeof object !== "object") return "";
 
@@ -770,6 +534,36 @@
     return "";
   }
 
+  function getBillLabel(bill) {
+    if (!bill || typeof bill !== "object") return "";
+
+    const congress = getFirstValue(bill, ["congress"]);
+    const billType = getFirstValue(bill, ["type", "billType"]);
+    const number = getFirstValue(bill, ["number", "billNumber"]);
+    const title = getFirstValue(bill, ["title"]);
+
+    const prefix = [congress, billType ? billType.toUpperCase() : "", number].filter(Boolean).join(" ");
+
+    if (prefix && title) return `${prefix}: ${title}`;
+    return title || prefix;
+  }
+
+  function getBillLatestActionLabel(bill) {
+    if (!bill || typeof bill !== "object") return "Not returned";
+
+    const latestAction = bill.latestAction;
+
+    if (latestAction && typeof latestAction === "object") {
+      const actionDate = getFirstValue(latestAction, ["actionDate"]);
+      const actionText = getFirstValue(latestAction, ["text"]);
+
+      if (actionDate && actionText) return `${actionDate}: ${actionText}`;
+      return actionText || actionDate || "Not returned";
+    }
+
+    return "Not returned";
+  }
+
   function stringifyDisplayValue(value) {
     if (value === null || value === undefined) return "";
     if (typeof value === "string") return value;
@@ -781,9 +575,12 @@
 
   function humanizeDiagnosticKey(value) {
     const labels = {
-      sponsoredLegislation: "Sponsored legislation",
-      cosponsoredLegislation: "Cosponsored legislation",
-      memberDetail: "Member detail"
+      member_detail_status: "Member detail",
+      sponsored_legislation_status: "Sponsored legislation",
+      cosponsored_legislation_status: "Cosponsored legislation",
+      enriched_bills_status: "Enriched bills",
+      attempted_requests: "Attempted requests",
+      successful_requests: "Successful requests"
     };
 
     return labels[value] || U.humanizeKey(value);
