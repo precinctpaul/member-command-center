@@ -11,6 +11,7 @@ import congress_client
 import db
 import official_web_client
 import openfec_client
+import openstates_client
 import web_mentions_client
 import youtube_client
 
@@ -284,7 +285,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.6G-alt"
+    server_version = "MemberCommandCenterBackend/1.6H"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -295,7 +296,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.6G-alt",
+                    "version": "v1.6H",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -308,6 +309,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                         "youtube_media": True,
                         "official_web_contact": True,
                         "web_mentions": True,
+                        "openstates_legislation": True,
                     },
                 }
             )
@@ -404,6 +406,10 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
 
         if parsed.path.startswith("/api/run/web-mentions/"):
             self.handle_web_mentions_run(parsed.path)
+            return
+
+        if parsed.path.startswith("/api/run/openstates/"):
+            self.handle_openstates_run(parsed.path)
             return
 
         if parsed.path == "/api/runs":
@@ -862,6 +868,114 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
+    def handle_openstates_run(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/run/openstates/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        try:
+            payload = self.read_json_body()
+        except json.JSONDecodeError as error:
+            self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        api_key = os.environ.get("OPENSTATES_API_KEY", "").strip()
+
+        if not api_key:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": "OPENSTATES_API_KEY is not configured in server/.env.",
+                    "profile_id": profile_id,
+                    "module_name": "openstates_legislation",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+            return
+
+        bill_limit_raw = str(first_payload_value(payload, "bill_limit", "billLimit", default="10")).strip() or "10"
+        vote_limit_raw = str(first_payload_value(payload, "vote_limit", "voteLimit", default="10")).strip() or "10"
+        committee_limit_raw = str(first_payload_value(payload, "committee_limit", "committeeLimit", default="10")).strip() or "10"
+
+        try:
+            bill_limit = max(1, min(int(bill_limit_raw), 50))
+        except ValueError:
+            bill_limit = 10
+
+        try:
+            vote_limit = max(1, min(int(vote_limit_raw), 50))
+        except ValueError:
+            vote_limit = 10
+
+        try:
+            committee_limit = max(1, min(int(committee_limit_raw), 50))
+        except ValueError:
+            committee_limit = 10
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": f"No cached profile was found for '{profile_id}'.",
+                    "profile_id": profile_id,
+                    "module_name": "openstates_legislation",
+                },
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        try:
+            run_payload = openstates_client.build_openstates_legislation_run_payload(
+                profile_id=profile_id,
+                person=person,
+                api_key=api_key,
+                bill_limit=bill_limit,
+                vote_limit=vote_limit,
+                committee_limit=committee_limit,
+            )
+            saved = db.save_intelligence_run(run_payload)
+
+            self.send_json(
+                {
+                    "ok": True,
+                    "message": "OpenStates legislation run completed and saved.",
+                    "run": saved,
+                    "display": {
+                        "profile_id": saved["profile_id"],
+                        "module_name": saved["module_name"],
+                        "run_status": saved["run_status"],
+                        "summary": saved["summary"],
+                        "diagnostics": saved["diagnostics"],
+                    },
+                },
+                status=HTTPStatus.CREATED,
+            )
+        except openstates_client.OpenStatesProfileError as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "openstates_legislation",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        except Exception as error:
+            self.send_json(
+                {
+                    "ok": False,
+                    "error": str(error),
+                    "profile_id": profile_id,
+                    "module_name": "openstates_legislation",
+                },
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT)
         self.send_cors_headers()
@@ -951,6 +1065,7 @@ def main() -> None:
     print(f"  POST http://{host}:{port}/api/run/youtube/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/official-web/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/web-mentions/<profile_id>", flush=True)
+    print(f"  POST http://{host}:{port}/api/run/openstates/<profile_id>", flush=True)
     print("", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     print("", flush=True)
