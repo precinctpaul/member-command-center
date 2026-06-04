@@ -12,6 +12,7 @@ import db
 import official_web_client
 import openfec_client
 import openstates_client
+import race_context_client
 import web_mentions_client
 import youtube_client
 
@@ -285,7 +286,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.6H"
+    server_version = "MemberCommandCenterBackend/1.6I"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -296,7 +297,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.6H",
+                    "version": "v1.6I",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -310,6 +311,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                         "official_web_contact": True,
                         "web_mentions": True,
                         "openstates_legislation": True,
+                        "race_opponent_context": True,
                     },
                 }
             )
@@ -412,6 +414,10 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             self.handle_openstates_run(parsed.path)
             return
 
+        if parsed.path.startswith("/api/run/race-context/"):
+            self.handle_race_context_run(parsed.path)
+            return
+
         if parsed.path == "/api/runs":
             try:
                 payload = self.read_json_body()
@@ -445,75 +451,23 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         api_key = os.environ.get("FEC_API_KEY", "").strip()
 
         if not api_key:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": "FEC_API_KEY is not configured in server/.env.",
-                    "profile_id": profile_id,
-                    "module_name": "openfec_finance",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": "FEC_API_KEY is not configured in server/.env.", "profile_id": profile_id, "module_name": "openfec_finance"}, status=HTTPStatus.BAD_REQUEST)
             return
 
         person = find_person_for_profile_id(profile_id)
 
         if not person:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": f"No cached profile was found for '{profile_id}'.",
-                    "profile_id": profile_id,
-                    "module_name": "openfec_finance",
-                },
-                status=HTTPStatus.NOT_FOUND,
-            )
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "openfec_finance"}, status=HTTPStatus.NOT_FOUND)
             return
 
         try:
-            run_payload = openfec_client.build_openfec_finance_run_payload(
-                profile_id=profile_id,
-                person=person,
-                api_key=api_key,
-                cycle=cycle,
-            )
+            run_payload = openfec_client.build_openfec_finance_run_payload(profile_id=profile_id, person=person, api_key=api_key, cycle=cycle)
             saved = db.save_intelligence_run(run_payload)
-
-            self.send_json(
-                {
-                    "ok": True,
-                    "message": "OpenFEC finance run completed and saved.",
-                    "run": saved,
-                    "display": {
-                        "profile_id": saved["profile_id"],
-                        "module_name": saved["module_name"],
-                        "run_status": saved["run_status"],
-                        "summary": saved["summary"],
-                        "diagnostics": saved["diagnostics"],
-                    },
-                },
-                status=HTTPStatus.CREATED,
-            )
+            self.send_json({"ok": True, "message": "OpenFEC finance run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
         except openfec_client.OpenFecProfileError as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "openfec_finance",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "openfec_finance"}, status=HTTPStatus.BAD_REQUEST)
         except Exception as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "openfec_finance",
-                },
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "openfec_finance"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def handle_congress_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/congress/", "", 1).strip("/")
@@ -539,76 +493,23 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             limit = 10
 
         if not api_key:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": "CONGRESS_API_KEY is not configured in server/.env.",
-                    "profile_id": profile_id,
-                    "module_name": "congress_legislation",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": "CONGRESS_API_KEY is not configured in server/.env.", "profile_id": profile_id, "module_name": "congress_legislation"}, status=HTTPStatus.BAD_REQUEST)
             return
 
         person = find_person_for_profile_id(profile_id)
 
         if not person:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": f"No cached profile was found for '{profile_id}'.",
-                    "profile_id": profile_id,
-                    "module_name": "congress_legislation",
-                },
-                status=HTTPStatus.NOT_FOUND,
-            )
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "congress_legislation"}, status=HTTPStatus.NOT_FOUND)
             return
 
         try:
-            run_payload = congress_client.build_congress_legislation_run_payload(
-                profile_id=profile_id,
-                person=person,
-                api_key=api_key,
-                congress=congress,
-                limit=limit,
-            )
+            run_payload = congress_client.build_congress_legislation_run_payload(profile_id=profile_id, person=person, api_key=api_key, congress=congress, limit=limit)
             saved = db.save_intelligence_run(run_payload)
-
-            self.send_json(
-                {
-                    "ok": True,
-                    "message": "Congress.gov legislation run completed and saved.",
-                    "run": saved,
-                    "display": {
-                        "profile_id": saved["profile_id"],
-                        "module_name": saved["module_name"],
-                        "run_status": saved["run_status"],
-                        "summary": saved["summary"],
-                        "diagnostics": saved["diagnostics"],
-                    },
-                },
-                status=HTTPStatus.CREATED,
-            )
+            self.send_json({"ok": True, "message": "Congress.gov legislation run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
         except congress_client.CongressProfileError as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "congress_legislation",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "congress_legislation"}, status=HTTPStatus.BAD_REQUEST)
         except Exception as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "congress_legislation",
-                },
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "congress_legislation"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def handle_youtube_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/youtube/", "", 1).strip("/")
@@ -633,75 +534,23 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             max_results = 5
 
         if not api_key:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": "YOUTUBE_API_KEY is not configured in server/.env.",
-                    "profile_id": profile_id,
-                    "module_name": "youtube_media",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": "YOUTUBE_API_KEY is not configured in server/.env.", "profile_id": profile_id, "module_name": "youtube_media"}, status=HTTPStatus.BAD_REQUEST)
             return
 
         person = find_person_for_profile_id(profile_id)
 
         if not person:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": f"No cached profile was found for '{profile_id}'.",
-                    "profile_id": profile_id,
-                    "module_name": "youtube_media",
-                },
-                status=HTTPStatus.NOT_FOUND,
-            )
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "youtube_media"}, status=HTTPStatus.NOT_FOUND)
             return
 
         try:
-            run_payload = youtube_client.build_youtube_media_run_payload(
-                profile_id=profile_id,
-                person=person,
-                api_key=api_key,
-                max_results=max_results,
-            )
+            run_payload = youtube_client.build_youtube_media_run_payload(profile_id=profile_id, person=person, api_key=api_key, max_results=max_results)
             saved = db.save_intelligence_run(run_payload)
-
-            self.send_json(
-                {
-                    "ok": True,
-                    "message": "YouTube media run completed and saved.",
-                    "run": saved,
-                    "display": {
-                        "profile_id": saved["profile_id"],
-                        "module_name": saved["module_name"],
-                        "run_status": saved["run_status"],
-                        "summary": saved["summary"],
-                        "diagnostics": saved["diagnostics"],
-                    },
-                },
-                status=HTTPStatus.CREATED,
-            )
+            self.send_json({"ok": True, "message": "YouTube media run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
         except youtube_client.YouTubeProfileError as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "youtube_media",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "youtube_media"}, status=HTTPStatus.BAD_REQUEST)
         except Exception as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "youtube_media",
-                },
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "youtube_media"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def handle_official_web_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/official-web/", "", 1).strip("/")
@@ -727,60 +576,17 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         person = find_person_for_profile_id(profile_id)
 
         if not person:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": f"No cached profile was found for '{profile_id}'.",
-                    "profile_id": profile_id,
-                    "module_name": "official_web_contact",
-                },
-                status=HTTPStatus.NOT_FOUND,
-            )
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "official_web_contact"}, status=HTTPStatus.NOT_FOUND)
             return
 
         try:
-            run_payload = official_web_client.build_official_web_contact_run_payload(
-                profile_id=profile_id,
-                person=person,
-                timeout_seconds=timeout_seconds,
-            )
+            run_payload = official_web_client.build_official_web_contact_run_payload(profile_id=profile_id, person=person, timeout_seconds=timeout_seconds)
             saved = db.save_intelligence_run(run_payload)
-
-            self.send_json(
-                {
-                    "ok": True,
-                    "message": "Official web and contact verification run completed and saved.",
-                    "run": saved,
-                    "display": {
-                        "profile_id": saved["profile_id"],
-                        "module_name": saved["module_name"],
-                        "run_status": saved["run_status"],
-                        "summary": saved["summary"],
-                        "diagnostics": saved["diagnostics"],
-                    },
-                },
-                status=HTTPStatus.CREATED,
-            )
+            self.send_json({"ok": True, "message": "Official web and contact verification run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
         except official_web_client.OfficialWebProfileError as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "official_web_contact",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "official_web_contact"}, status=HTTPStatus.BAD_REQUEST)
         except Exception as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "official_web_contact",
-                },
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "official_web_contact"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def handle_web_mentions_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/web-mentions/", "", 1).strip("/")
@@ -812,61 +618,17 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         person = find_person_for_profile_id(profile_id)
 
         if not person:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": f"No cached profile was found for '{profile_id}'.",
-                    "profile_id": profile_id,
-                    "module_name": "web_mentions",
-                },
-                status=HTTPStatus.NOT_FOUND,
-            )
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "web_mentions"}, status=HTTPStatus.NOT_FOUND)
             return
 
         try:
-            run_payload = web_mentions_client.build_web_mentions_run_payload(
-                profile_id=profile_id,
-                person=person,
-                max_results=max_results,
-                max_feeds=max_feeds,
-            )
+            run_payload = web_mentions_client.build_web_mentions_run_payload(profile_id=profile_id, person=person, max_results=max_results, max_feeds=max_feeds)
             saved = db.save_intelligence_run(run_payload)
-
-            self.send_json(
-                {
-                    "ok": True,
-                    "message": "Web mentions run completed and saved.",
-                    "run": saved,
-                    "display": {
-                        "profile_id": saved["profile_id"],
-                        "module_name": saved["module_name"],
-                        "run_status": saved["run_status"],
-                        "summary": saved["summary"],
-                        "diagnostics": saved["diagnostics"],
-                    },
-                },
-                status=HTTPStatus.CREATED,
-            )
+            self.send_json({"ok": True, "message": "Web mentions run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
         except web_mentions_client.WebMentionsProfileError as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "web_mentions",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "web_mentions"}, status=HTTPStatus.BAD_REQUEST)
         except Exception as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "web_mentions",
-                },
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "web_mentions"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def handle_openstates_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/openstates/", "", 1).strip("/")
@@ -885,15 +647,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         api_key = os.environ.get("OPENSTATES_API_KEY", "").strip()
 
         if not api_key:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": "OPENSTATES_API_KEY is not configured in server/.env.",
-                    "profile_id": profile_id,
-                    "module_name": "openstates_legislation",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": "OPENSTATES_API_KEY is not configured in server/.env.", "profile_id": profile_id, "module_name": "openstates_legislation"}, status=HTTPStatus.BAD_REQUEST)
             return
 
         bill_limit_raw = str(first_payload_value(payload, "bill_limit", "billLimit", default="10")).strip() or "10"
@@ -918,63 +672,60 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         person = find_person_for_profile_id(profile_id)
 
         if not person:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": f"No cached profile was found for '{profile_id}'.",
-                    "profile_id": profile_id,
-                    "module_name": "openstates_legislation",
-                },
-                status=HTTPStatus.NOT_FOUND,
-            )
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "openstates_legislation"}, status=HTTPStatus.NOT_FOUND)
             return
 
         try:
-            run_payload = openstates_client.build_openstates_legislation_run_payload(
-                profile_id=profile_id,
-                person=person,
-                api_key=api_key,
-                bill_limit=bill_limit,
-                vote_limit=vote_limit,
-                committee_limit=committee_limit,
-            )
+            run_payload = openstates_client.build_openstates_legislation_run_payload(profile_id=profile_id, person=person, api_key=api_key, bill_limit=bill_limit, vote_limit=vote_limit, committee_limit=committee_limit)
             saved = db.save_intelligence_run(run_payload)
-
-            self.send_json(
-                {
-                    "ok": True,
-                    "message": "OpenStates legislation run completed and saved.",
-                    "run": saved,
-                    "display": {
-                        "profile_id": saved["profile_id"],
-                        "module_name": saved["module_name"],
-                        "run_status": saved["run_status"],
-                        "summary": saved["summary"],
-                        "diagnostics": saved["diagnostics"],
-                    },
-                },
-                status=HTTPStatus.CREATED,
-            )
+            self.send_json({"ok": True, "message": "OpenStates legislation run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
         except openstates_client.OpenStatesProfileError as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "openstates_legislation",
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "openstates_legislation"}, status=HTTPStatus.BAD_REQUEST)
         except Exception as error:
-            self.send_json(
-                {
-                    "ok": False,
-                    "error": str(error),
-                    "profile_id": profile_id,
-                    "module_name": "openstates_legislation",
-                },
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "openstates_legislation"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def handle_race_context_run(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/run/race-context/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        try:
+            payload = self.read_json_body()
+        except json.JSONDecodeError as error:
+            self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        api_key = os.environ.get("FEC_API_KEY", "").strip()
+
+        if not api_key:
+            self.send_json({"ok": False, "error": "FEC_API_KEY is not configured in server/.env.", "profile_id": profile_id, "module_name": "race_opponent_context"}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        cycle = str(first_payload_value(payload, "cycle", "electionCycle", default="2026")).strip() or "2026"
+        candidate_limit_raw = str(first_payload_value(payload, "candidate_limit", "candidateLimit", default="50")).strip() or "50"
+
+        try:
+            candidate_limit = max(1, min(int(candidate_limit_raw), 100))
+        except ValueError:
+            candidate_limit = 50
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'.", "profile_id": profile_id, "module_name": "race_opponent_context"}, status=HTTPStatus.NOT_FOUND)
+            return
+
+        try:
+            run_payload = race_context_client.build_race_opponent_context_run_payload(profile_id=profile_id, person=person, api_key=api_key, cycle=cycle, candidate_limit=candidate_limit)
+            saved = db.save_intelligence_run(run_payload)
+            self.send_json({"ok": True, "message": "Race and opponent context run completed and saved.", "run": saved, "display": {"profile_id": saved["profile_id"], "module_name": saved["module_name"], "run_status": saved["run_status"], "summary": saved["summary"], "diagnostics": saved["diagnostics"]}}, status=HTTPStatus.CREATED)
+        except race_context_client.RaceContextProfileError as error:
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "race_opponent_context"}, status=HTTPStatus.BAD_REQUEST)
+        except Exception as error:
+            self.send_json({"ok": False, "error": str(error), "profile_id": profile_id, "module_name": "race_opponent_context"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def do_OPTIONS(self) -> None:
         self.send_response(HTTPStatus.NO_CONTENT)
@@ -1066,6 +817,7 @@ def main() -> None:
     print(f"  POST http://{host}:{port}/api/run/official-web/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/web-mentions/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/openstates/<profile_id>", flush=True)
+    print(f"  POST http://{host}:{port}/api/run/race-context/<profile_id>", flush=True)
     print("", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     print("", flush=True)
