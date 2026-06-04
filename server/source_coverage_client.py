@@ -15,7 +15,7 @@ RUNNER_DEFINITIONS = [
         "label": "Congress.gov Legislation",
         "category": "federal_legislation",
         "depends_on": "federal_member_or_bioguide_profile",
-        "complete_when": "latest run completed and legislation summary exists",
+        "complete_when": "latest run completed and meaningful legislation data exists",
     },
     {
         "key": "youtube_media",
@@ -43,7 +43,7 @@ RUNNER_DEFINITIONS = [
         "label": "OpenStates State Legislation",
         "category": "state_legislation",
         "depends_on": "state_legislative_profile",
-        "complete_when": "latest run completed and OpenStates identity or bills exist",
+        "complete_when": "latest run completed and OpenStates identity plus bill data exist",
     },
     {
         "key": "race_opponent_context",
@@ -84,6 +84,45 @@ def nested_value(source: Dict[str, Any], *path: str) -> str:
 
 def normalize_lower(value: Any) -> str:
     return str(value or "").strip().lower()
+
+
+def safe_int(value: Any) -> int:
+    try:
+        if value is None or value == "":
+            return 0
+
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def has_any_value(mapping: Dict[str, Any], keys: List[str]) -> bool:
+    for key in keys:
+        value = mapping.get(key)
+
+        if value is None:
+            continue
+
+        if isinstance(value, (list, dict)) and len(value) > 0:
+            return True
+
+        if str(value).strip() != "":
+            return True
+
+    return False
+
+
+def has_any_collection(mapping: Dict[str, Any], keys: List[str]) -> bool:
+    for key in keys:
+        value = mapping.get(key)
+
+        if isinstance(value, list) and len(value) > 0:
+            return True
+
+        if isinstance(value, dict) and len(value) > 0:
+            return True
+
+    return False
 
 
 def get_profile_id(person: Dict[str, Any], fallback: str = "") -> str:
@@ -230,6 +269,16 @@ def get_diagnostics(run: Dict[str, Any]) -> Dict[str, Any]:
     return diagnostics if isinstance(diagnostics, dict) else {}
 
 
+def get_request_error_count(run: Optional[Dict[str, Any]]) -> int:
+    if not run:
+        return 0
+
+    summary = get_summary(run)
+    diagnostics = get_diagnostics(run)
+
+    return safe_int(summary.get("request_error_count") or diagnostics.get("request_error_count") or 0)
+
+
 def is_runner_applicable(runner_key: str, person: Dict[str, Any]) -> bool:
     if runner_key in {"openfec_finance", "congress_legislation"}:
         return is_federal_profile(person)
@@ -255,42 +304,115 @@ def get_not_applicable_reason(runner_key: str, person: Dict[str, Any]) -> str:
 
 def classify_completed_run_quality(runner_key: str, run: Dict[str, Any], person: Dict[str, Any]) -> str:
     summary = get_summary(run)
+    diagnostics = get_diagnostics(run)
+    request_error_count = get_request_error_count(run)
 
     if runner_key == "openfec_finance":
-        if summary:
+        has_finance_identity = has_any_value(summary, ["candidate_id", "fec_candidate_id", "committee_id", "fec_committee_id"])
+        has_finance_number = has_any_value(
+            summary,
+            [
+                "cash_on_hand_end_period",
+                "cash_on_hand",
+                "receipts",
+                "disbursements",
+                "total_receipts",
+                "total_disbursements",
+            ],
+        )
+
+        if has_finance_identity and has_finance_number and request_error_count == 0:
             return "complete"
+
+        if has_finance_identity or has_finance_number:
+            return "complete_with_warnings"
+
         return "partial"
 
     if runner_key == "congress_legislation":
-        if summary:
+        has_legislation_counts = has_any_value(
+            summary,
+            [
+                "bills_returned",
+                "sponsored_count",
+                "cosponsored_count",
+                "sponsored_bills_returned",
+                "cosponsored_bills_returned",
+                "actions_returned",
+            ],
+        )
+        has_legislation_collections = has_any_collection(
+            summary,
+            [
+                "bills",
+                "recent_bills",
+                "sponsored_bills",
+                "cosponsored_bills",
+                "actions",
+                "legislation",
+            ],
+        )
+        has_legislative_identity = has_any_value(summary, ["bioguide_id", "bioguideId", "member_id", "memberId"])
+
+        if (has_legislation_counts or has_legislation_collections) and request_error_count == 0:
             return "complete"
+
+        if has_legislation_counts or has_legislation_collections or has_legislative_identity:
+            return "complete_with_warnings"
+
         return "partial"
 
     if runner_key == "youtube_media":
-        if summary.get("channel_title") or summary.get("latest_videos") or summary.get("videos"):
+        has_channel = has_any_value(summary, ["channel_title", "channel_url", "channel_id"])
+        has_video_metric = has_any_value(summary, ["video_count", "view_count", "subscriber_count", "latest_upload_date"])
+        has_video_collection = has_any_collection(summary, ["latest_videos", "videos", "proof_video_links"])
+
+        if (has_channel or has_video_metric or has_video_collection) and request_error_count == 0:
             return "complete"
+
+        if has_channel or has_video_metric or has_video_collection:
+            return "complete_with_warnings"
+
         return "partial"
 
     if runner_key == "official_web_contact":
-        checked_count = int(summary.get("urls_checked") or summary.get("total_urls_checked") or 0)
-        healthy_count = int(summary.get("healthy_urls") or summary.get("working_urls") or 0)
+        checked_count = safe_int(summary.get("urls_checked") or summary.get("total_urls_checked") or 0)
+        healthy_count = safe_int(summary.get("healthy_urls") or summary.get("working_urls") or 0)
+        failed_urls = summary.get("failed_urls")
+        failed_count = len(failed_urls) if isinstance(failed_urls, list) else safe_int(summary.get("failed_urls") or 0)
 
-        if checked_count > 0 or healthy_count > 0 or summary:
+        if checked_count > 0 and request_error_count == 0 and failed_count == 0:
             return "complete"
+
+        if checked_count > 0 or healthy_count > 0 or failed_count > 0 or summary:
+            return "complete_with_warnings"
 
         return "partial"
 
     if runner_key == "web_mentions":
-        if int(summary.get("external_mentions_returned") or 0) > 0:
+        external_mentions = safe_int(summary.get("external_mentions_returned") or 0)
+        feed_errors = summary.get("feed_errors")
+        feed_error_count = len(feed_errors) if isinstance(feed_errors, list) else 0
+
+        if external_mentions > 0 and request_error_count == 0 and feed_error_count == 0:
             return "complete"
+
+        if external_mentions > 0:
+            return "complete_with_warnings"
+
         return "partial"
 
     if runner_key == "openstates_legislation":
         has_identity = bool(summary.get("openstates_person_id") or summary.get("openstates_url"))
-        has_bills = int(summary.get("bills_returned") or 0) > 0
+        has_bills = safe_int(summary.get("bills_returned") or 0) > 0
+        has_votes = safe_int(summary.get("votes_returned") or 0) > 0
+        has_committees = safe_int(summary.get("committees_returned") or 0) > 0
 
-        if has_identity and has_bills:
+        if has_identity and has_bills and request_error_count == 0:
             return "complete"
+
+        if has_identity and (has_bills or has_votes or has_committees):
+            return "complete_with_warnings"
 
         if has_identity:
             return "partial"
@@ -302,15 +424,24 @@ def classify_completed_run_quality(runner_key: str, run: Dict[str, Any], person:
         opponent_context_status = first_value(summary.get("opponent_context_status"))
         is_federal_fec_supported = bool(summary.get("is_federal_fec_supported"))
 
-        if is_federal_fec_supported and opponent_context_status == "source_backed":
+        if is_federal_fec_supported and opponent_context_status == "source_backed" and request_error_count == 0:
             return "complete"
+
+        if is_federal_fec_supported and opponent_context_status == "source_backed":
+            return "complete_with_warnings"
 
         if race_context_status in {"source_backed", "profile_scaffold"}:
             return "partial"
 
         return "partial"
 
-    return "complete"
+    if diagnostics or summary:
+        if request_error_count > 0:
+            return "complete_with_warnings"
+
+        return "complete"
+
+    return "partial"
 
 
 def classify_runner_status(runner_key: str, run: Optional[Dict[str, Any]], person: Dict[str, Any]) -> str:
@@ -338,6 +469,21 @@ def build_runner_action(runner_key: str, status: str, run: Optional[Dict[str, An
     if status == "complete":
         return "No immediate action."
 
+    if status == "complete_with_warnings":
+        if runner_key == "openstates_legislation":
+            return "Usable, but review OpenStates warnings.  Votes and committees may still need endpoint cleanup."
+
+        if runner_key == "congress_legislation":
+            return "Usable, but verify legislation counts or bill collections are present."
+
+        if runner_key == "official_web_contact":
+            return "Usable, but review failed or unverified URLs."
+
+        if runner_key == "web_mentions":
+            return "Usable, but review feed errors or partial clipping coverage."
+
+        return f"Usable, but review latest {runner_key} warnings."
+
     if status == "not_applicable":
         return get_not_applicable_reason(runner_key, person)
 
@@ -353,6 +499,7 @@ def build_runner_action(runner_key: str, status: str, run: Optional[Dict[str, An
     if runner_key == "race_opponent_context":
         if not is_federal_profile(person):
             return "Add state/local election filing source for non-federal race context."
+
         return "Review FEC-discovered candidates and mark true opponents vs false positives."
 
     if runner_key == "web_mentions":
@@ -377,6 +524,26 @@ def build_runner_notes(runner_key: str, status: str, run: Optional[Dict[str, Any
     summary = get_summary(run)
     diagnostics = get_diagnostics(run)
 
+    if status == "complete_with_warnings":
+        notes.append("Usable, but warnings remain.")
+
+    if runner_key == "congress_legislation":
+        bills_returned = summary.get("bills_returned")
+        sponsored_count = summary.get("sponsored_count")
+        cosponsored_count = summary.get("cosponsored_count")
+
+        if bills_returned is not None:
+            notes.append(f"Bills: {bills_returned}")
+
+        if sponsored_count is not None:
+            notes.append(f"Sponsored: {sponsored_count}")
+
+        if cosponsored_count is not None:
+            notes.append(f"Cosponsored: {cosponsored_count}")
+
+        if not notes:
+            notes.append("Legislation summary metrics are sparse.")
+
     if runner_key == "web_mentions":
         notes.append(f"External mentions: {summary.get('external_mentions_returned', 0)}")
 
@@ -389,7 +556,7 @@ def build_runner_notes(runner_key: str, status: str, run: Optional[Dict[str, Any
         notes.append(f"Candidate pool: {summary.get('candidate_pool_count', 0)}")
         notes.append(f"Source-backed opponents: {summary.get('source_backed_opponent_count', 0)}")
 
-    request_error_count = int(summary.get("request_error_count") or diagnostics.get("request_error_count") or 0)
+    request_error_count = safe_int(summary.get("request_error_count") or diagnostics.get("request_error_count") or 0)
 
     if request_error_count > 0:
         notes.append(f"Request errors: {request_error_count}")
@@ -413,7 +580,7 @@ def build_runner_row(definition: Dict[str, Any], run: Optional[Dict[str, Any]], 
         "latest_run_created_at": run.get("created_at") if run else "",
         "latest_run_completed_at": run.get("completed_at") if run else "",
         "summary_metrics": extract_summary_metrics(runner_key, summary),
-        "request_error_count": int(summary.get("request_error_count") or diagnostics.get("request_error_count") or 0),
+        "request_error_count": safe_int(summary.get("request_error_count") or diagnostics.get("request_error_count") or 0),
         "notes": build_runner_notes(runner_key, status, run),
         "next_action": build_runner_action(runner_key, status, run, person),
         "is_applicable": status != "not_applicable",
@@ -433,6 +600,17 @@ def extract_summary_metrics(runner_key: str, summary: Dict[str, Any]) -> Dict[st
             "bills_returned": summary.get("bills_returned"),
             "sponsored_count": summary.get("sponsored_count"),
             "cosponsored_count": summary.get("cosponsored_count"),
+            "has_legislation_collections": has_any_collection(
+                summary,
+                [
+                    "bills",
+                    "recent_bills",
+                    "sponsored_bills",
+                    "cosponsored_bills",
+                    "actions",
+                    "legislation",
+                ],
+            ),
         }
 
     if runner_key == "youtube_media":
@@ -478,6 +656,7 @@ def extract_summary_metrics(runner_key: str, summary: Dict[str, Any]) -> Dict[st
 def count_statuses(rows: List[Dict[str, Any]]) -> Dict[str, int]:
     counts = {
         "complete": 0,
+        "complete_with_warnings": 0,
         "partial": 0,
         "missing": 0,
         "failed": 0,
@@ -496,6 +675,7 @@ def count_statuses(rows: List[Dict[str, Any]]) -> Dict[str, int]:
 def calculate_completion_score(status_counts: Dict[str, int]) -> int:
     applicable_total = (
         status_counts.get("complete", 0)
+        + status_counts.get("complete_with_warnings", 0)
         + status_counts.get("partial", 0)
         + status_counts.get("missing", 0)
         + status_counts.get("failed", 0)
@@ -506,6 +686,7 @@ def calculate_completion_score(status_counts: Dict[str, int]) -> int:
 
     score = (
         status_counts.get("complete", 0) * 1.0
+        + status_counts.get("complete_with_warnings", 0) * 0.8
         + status_counts.get("partial", 0) * 0.5
     ) / applicable_total
 
@@ -517,6 +698,7 @@ def pick_next_best_action(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         "failed",
         "missing",
         "partial",
+        "complete_with_warnings",
     ]
 
     priority_modules = [
@@ -606,6 +788,7 @@ def build_all_profiles_coverage(cached_people: List[Dict[str, Any]], latest_runs
 
     aggregate_counts = {
         "complete": 0,
+        "complete_with_warnings": 0,
         "partial": 0,
         "missing": 0,
         "failed": 0,
