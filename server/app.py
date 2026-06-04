@@ -13,6 +13,7 @@ import official_web_client
 import openfec_client
 import openstates_client
 import race_context_client
+import source_coverage_client
 import web_mentions_client
 import youtube_client
 
@@ -23,126 +24,26 @@ DEFAULT_PORT = 8081
 
 
 API_KEY_DEFINITIONS: List[Dict[str, str]] = [
-    {
-        "key_name": "POLICYNOTE_API_KEY",
-        "service_name": "PolicyNote",
-        "category": "policy_legislative_data",
-        "required_for": "PolicyNote people/entity lookup and policy intelligence enrichment",
-    },
-    {
-        "key_name": "GEMINI_API_KEY",
-        "service_name": "Google Gemini",
-        "category": "ai",
-        "required_for": "AI summarization, extraction, classification, and drafting workflows",
-    },
-    {
-        "key_name": "CONGRESS_API_KEY",
-        "service_name": "Congress.gov",
-        "category": "federal_legislative",
-        "required_for": "Federal bills, sponsored legislation, cosponsored legislation, member data, and legislative actions",
-    },
-    {
-        "key_name": "OPENSTATES_API_KEY",
-        "service_name": "OpenStates",
-        "category": "state_legislative",
-        "required_for": "State legislators, bills, votes, committees, and jurisdiction-level legislative data",
-    },
-    {
-        "key_name": "GOVINFO_API_KEY",
-        "service_name": "GovInfo",
-        "category": "federal_documents",
-        "required_for": "Federal documents, packages, committee prints, Congressional Record, and official publications",
-    },
-    {
-        "key_name": "LEGISCAN_API_KEY",
-        "service_name": "LegiScan",
-        "category": "state_legislative",
-        "required_for": "State bill tracking, legislative status, sponsors, and vote/event metadata",
-    },
-    {
-        "key_name": "FEC_API_KEY",
-        "service_name": "OpenFEC",
-        "category": "campaign_finance",
-        "required_for": "Federal campaign finance, committee totals, filings, debts, loans, spending, and receipts",
-    },
-    {
-        "key_name": "GOOGLE_CIVIC_API_KEY",
-        "service_name": "Google Civic Information API",
-        "category": "civic_election",
-        "required_for": "Election information, representatives, polling places, and civic geography lookups",
-    },
-    {
-        "key_name": "GOOGLE_FACT_CHECK_API_KEY",
-        "service_name": "Google Fact Check Tools API",
-        "category": "fact_checking",
-        "required_for": "Fact-check claim search and public claim verification tracking",
-    },
-    {
-        "key_name": "GOOGLE_CUSTOM_SEARCH_API_KEY",
-        "service_name": "Google Custom Search API",
-        "category": "web_search",
-        "required_for": "Public mentions, web clippings, article discovery, image search, and open web monitoring",
-    },
-    {
-        "key_name": "GOOGLE_KNOWLEDGE_GRAPH_API_KEY",
-        "service_name": "Google Knowledge Graph API",
-        "category": "identity",
-        "required_for": "Entity disambiguation, knowledge graph IDs, and public identity enrichment",
-    },
-    {
-        "key_name": "GOOGLE_CUSTOM_SEARCH_ENGINE_ID",
-        "service_name": "Google Custom Search Engine",
-        "category": "web_search",
-        "required_for": "Configured custom search engine ID used with Google Custom Search",
-    },
-    {
-        "key_name": "YOUTUBE_API_KEY",
-        "service_name": "YouTube Data API",
-        "category": "media_video",
-        "required_for": "YouTube channel stats, latest videos, channel discovery, and video proof monitoring",
-    },
-    {
-        "key_name": "VIMEO_CHANNEL_URL",
-        "service_name": "Vimeo",
-        "category": "media_video",
-        "required_for": "Vimeo channel/source URL for sync and video inventory workflows",
-    },
-    {
-        "key_name": "VIMEO_ACCESS_TOKEN",
-        "service_name": "Vimeo API",
-        "category": "media_video",
-        "required_for": "Authenticated Vimeo API access",
-    },
-    {
-        "key_name": "VIMEO_USER_ID",
-        "service_name": "Vimeo API",
-        "category": "media_video",
-        "required_for": "Vimeo user-level sync and account identification",
-    },
-    {
-        "key_name": "VIMEO_SYNC_ON_START",
-        "service_name": "Vimeo Sync",
-        "category": "media_video",
-        "required_for": "Local setting to determine whether Vimeo sync should run when backend starts",
-    },
-    {
-        "key_name": "MODECK_API_KEY",
-        "service_name": "MoDeck",
-        "category": "creative_automation",
-        "required_for": "MoDeck render/package automation",
-    },
-    {
-        "key_name": "MODECK_API_BASE_URL",
-        "service_name": "MoDeck",
-        "category": "creative_automation",
-        "required_for": "MoDeck API base URL",
-    },
-    {
-        "key_name": "MODECK_DEFAULT_DECK",
-        "service_name": "MoDeck",
-        "category": "creative_automation",
-        "required_for": "Default MoDeck deck/template target",
-    },
+    {"key_name": "POLICYNOTE_API_KEY", "service_name": "PolicyNote", "category": "policy_legislative_data", "required_for": "PolicyNote people/entity lookup and policy intelligence enrichment"},
+    {"key_name": "GEMINI_API_KEY", "service_name": "Google Gemini", "category": "ai", "required_for": "AI summarization, extraction, classification, and drafting workflows"},
+    {"key_name": "CONGRESS_API_KEY", "service_name": "Congress.gov", "category": "federal_legislative", "required_for": "Federal bills, sponsored legislation, cosponsored legislation, member data, and legislative actions"},
+    {"key_name": "OPENSTATES_API_KEY", "service_name": "OpenStates", "category": "state_legislative", "required_for": "State legislators, bills, votes, committees, and jurisdiction-level legislative data"},
+    {"key_name": "GOVINFO_API_KEY", "service_name": "GovInfo", "category": "federal_documents", "required_for": "Federal documents, packages, committee prints, Congressional Record, and official publications"},
+    {"key_name": "LEGISCAN_API_KEY", "service_name": "LegiScan", "category": "state_legislative", "required_for": "State bill tracking, legislative status, sponsors, and vote/event metadata"},
+    {"key_name": "FEC_API_KEY", "service_name": "OpenFEC", "category": "campaign_finance", "required_for": "Federal campaign finance, committee totals, filings, debts, loans, spending, and receipts"},
+    {"key_name": "GOOGLE_CIVIC_API_KEY", "service_name": "Google Civic Information API", "category": "civic_election", "required_for": "Election information, representatives, polling places, and civic geography lookups"},
+    {"key_name": "GOOGLE_FACT_CHECK_API_KEY", "service_name": "Google Fact Check Tools API", "category": "fact_checking", "required_for": "Fact-check claim search and public claim verification tracking"},
+    {"key_name": "GOOGLE_CUSTOM_SEARCH_API_KEY", "service_name": "Google Custom Search API", "category": "web_search", "required_for": "Public mentions, web clippings, article discovery, image search, and open web monitoring"},
+    {"key_name": "GOOGLE_KNOWLEDGE_GRAPH_API_KEY", "service_name": "Google Knowledge Graph API", "category": "identity", "required_for": "Entity disambiguation, knowledge graph IDs, and public identity enrichment"},
+    {"key_name": "GOOGLE_CUSTOM_SEARCH_ENGINE_ID", "service_name": "Google Custom Search Engine", "category": "web_search", "required_for": "Configured custom search engine ID used with Google Custom Search"},
+    {"key_name": "YOUTUBE_API_KEY", "service_name": "YouTube Data API", "category": "media_video", "required_for": "YouTube channel stats, latest videos, channel discovery, and video proof monitoring"},
+    {"key_name": "VIMEO_CHANNEL_URL", "service_name": "Vimeo", "category": "media_video", "required_for": "Vimeo channel/source URL for sync and video inventory workflows"},
+    {"key_name": "VIMEO_ACCESS_TOKEN", "service_name": "Vimeo API", "category": "media_video", "required_for": "Authenticated Vimeo API access"},
+    {"key_name": "VIMEO_USER_ID", "service_name": "Vimeo API", "category": "media_video", "required_for": "Vimeo user-level sync and account identification"},
+    {"key_name": "VIMEO_SYNC_ON_START", "service_name": "Vimeo Sync", "category": "media_video", "required_for": "Local setting to determine whether Vimeo sync should run when backend starts"},
+    {"key_name": "MODECK_API_KEY", "service_name": "MoDeck", "category": "creative_automation", "required_for": "MoDeck render/package automation"},
+    {"key_name": "MODECK_API_BASE_URL", "service_name": "MoDeck", "category": "creative_automation", "required_for": "MoDeck API base URL"},
+    {"key_name": "MODECK_DEFAULT_DECK", "service_name": "MoDeck", "category": "creative_automation", "required_for": "Default MoDeck deck/template target"},
 ]
 
 
@@ -225,6 +126,7 @@ def get_profile_identity_values(person: Dict[str, Any]) -> List[str]:
     ]
 
     source_identity = person.get("sourceIdentity")
+
     if isinstance(source_identity, dict):
         values.extend(
             [
@@ -252,6 +154,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
         if cached_profile_id == clean_profile_id:
             person = cached_person.get("source_json") or {}
+
             if isinstance(person, dict):
                 person.setdefault("id", cached_profile_id)
                 person.setdefault("profile_id", cached_profile_id)
@@ -259,8 +162,10 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
                 return person
 
         source_json = cached_person.get("source_json") or {}
+
         if isinstance(source_json, dict):
             identity_values = get_profile_identity_values(source_json)
+
             if clean_profile_id in identity_values:
                 source_json.setdefault("id", cached_profile_id or clean_profile_id)
                 source_json.setdefault("profile_id", cached_profile_id or clean_profile_id)
@@ -272,7 +177,6 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
             continue
 
         identity_values = get_profile_identity_values(person)
-
         normalized = db.normalize_person_for_cache(person, index)
         identity_values.append(str(normalized.get("profile_id") or "").strip())
 
@@ -286,7 +190,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.6I"
+    server_version = "MemberCommandCenterBackend/1.6J"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -297,7 +201,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.6I",
+                    "version": "v1.6J",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -313,6 +217,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                         "openstates_legislation": True,
                         "race_opponent_context": True,
                     },
+                    "coverage_matrix": True,
                 }
             )
             return
@@ -362,6 +267,14 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             query = parse_qs(parsed.query)
             profile_id = first_query_value(query, "profile_id")
             self.send_json({"runs": db.get_latest_runs_by_profile(profile_id=profile_id)})
+            return
+
+        if parsed.path.startswith("/api/coverage/profile/"):
+            self.handle_profile_coverage(parsed.path)
+            return
+
+        if parsed.path == "/api/coverage/all":
+            self.handle_all_coverage()
             return
 
         self.serve_static_file(parsed.path)
@@ -432,6 +345,32 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             return
 
         self.send_json({"ok": False, "error": "Not found."}, status=HTTPStatus.NOT_FOUND)
+
+    def handle_profile_coverage(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/coverage/profile/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'."}, status=HTTPStatus.NOT_FOUND)
+            return
+
+        latest_runs = db.get_latest_runs_by_profile(profile_id=profile_id)
+        coverage = source_coverage_client.build_profile_coverage(profile_id, person, latest_runs)
+
+        self.send_json({"ok": True, "coverage": coverage})
+
+    def handle_all_coverage(self) -> None:
+        coverage = source_coverage_client.build_all_profiles_coverage(
+            db.list_people_cache(),
+            lambda profile_id: db.get_latest_runs_by_profile(profile_id=profile_id),
+        )
+        self.send_json({"ok": True, "coverage": coverage})
 
     def handle_openfec_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/openfec/", "", 1).strip("/")
@@ -811,6 +750,8 @@ def main() -> None:
     print(f"  http://{host}:{port}/api/config/status", flush=True)
     print(f"  http://{host}:{port}/api/database/status", flush=True)
     print(f"  http://{host}:{port}/api/runs/latest", flush=True)
+    print(f"  http://{host}:{port}/api/coverage/profile/<profile_id>", flush=True)
+    print(f"  http://{host}:{port}/api/coverage/all", flush=True)
     print(f"  POST http://{host}:{port}/api/run/openfec/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/congress/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/youtube/<profile_id>", flush=True)
