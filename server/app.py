@@ -9,11 +9,13 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 import congress_client
 import db
+import hydration_audit_client
 import official_web_client
 import openfec_client
 import openstates_client
 import race_context_client
 import source_coverage_client
+import strategic_briefing_client
 import web_mentions_client
 import youtube_client
 
@@ -110,6 +112,7 @@ def first_query_value(query: Dict[str, List[str]], key: str) -> str:
 def first_payload_value(payload: Dict[str, Any], *keys: str, default: Any = "") -> Any:
     for key in keys:
         value = payload.get(key)
+
         if value is not None and str(value).strip() != "":
             return value
 
@@ -190,18 +193,19 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.6J"
+    server_version = "MemberCommandCenterBackend/1.8A"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
 
         if parsed.path == "/api/health":
             api_key_status = get_api_key_status()
+
             self.send_json(
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.6J",
+                    "version": "v1.8A",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -218,6 +222,8 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                         "race_opponent_context": True,
                     },
                     "coverage_matrix": True,
+                    "strategic_briefing": True,
+                    "hydration_audit": True,
                 }
             )
             return
@@ -275,6 +281,18 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/coverage/all":
             self.handle_all_coverage()
+            return
+
+        if parsed.path.startswith("/api/briefing/profile/"):
+            self.handle_profile_briefing(parsed.path)
+            return
+
+        if parsed.path.startswith("/api/hydration/audit/profile/"):
+            self.handle_profile_hydration_audit(parsed.path)
+            return
+
+        if parsed.path == "/api/hydration/audit/all":
+            self.handle_all_hydration_audit()
             return
 
         self.serve_static_file(parsed.path)
@@ -342,6 +360,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "error": f"Invalid JSON: {error}"}, status=HTTPStatus.BAD_REQUEST)
             except Exception as error:
                 self.send_json({"ok": False, "error": str(error)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
             return
 
         self.send_json({"ok": False, "error": "Not found."}, status=HTTPStatus.NOT_FOUND)
@@ -371,6 +390,72 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             lambda profile_id: db.get_latest_runs_by_profile(profile_id=profile_id),
         )
         self.send_json({"ok": True, "coverage": coverage})
+
+    def handle_profile_briefing(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/briefing/profile/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json({"ok": False, "error": f"No cached profile was found for '{profile_id}'."}, status=HTTPStatus.NOT_FOUND)
+            return
+
+        latest_runs = db.get_latest_runs_by_profile(profile_id=profile_id)
+        coverage = source_coverage_client.build_profile_coverage(profile_id, person, latest_runs)
+        briefing = strategic_briefing_client.build_strategic_briefing(
+            profile_id=profile_id,
+            person=person,
+            latest_runs=latest_runs,
+            coverage=coverage,
+        )
+
+        self.send_json({"ok": True, "briefing": briefing})
+
+    def handle_profile_hydration_audit(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/hydration/audit/profile/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {"ok": False, "error": f"No cached profile was found for '{profile_id}'."},
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        latest_runs = db.get_latest_runs_by_profile(profile_id=profile_id)
+        coverage = source_coverage_client.build_profile_coverage(profile_id, person, latest_runs)
+        audit = hydration_audit_client.build_profile_hydration_audit(
+            profile_id=profile_id,
+            person=person,
+            latest_runs=latest_runs,
+            coverage=coverage,
+        )
+
+        self.send_json({"ok": True, "audit": audit})
+
+    def handle_all_hydration_audit(self) -> None:
+        audit = hydration_audit_client.build_all_profiles_hydration_audit(
+            db.list_people_cache(),
+            lambda profile_id: db.get_latest_runs_by_profile(profile_id=profile_id),
+            lambda profile_id, person, latest_runs: source_coverage_client.build_profile_coverage(
+                profile_id,
+                person,
+                latest_runs,
+            ),
+        )
+
+        self.send_json({"ok": True, "audit": audit})
 
     def handle_openfec_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/openfec/", "", 1).strip("/")
@@ -752,6 +837,9 @@ def main() -> None:
     print(f"  http://{host}:{port}/api/runs/latest", flush=True)
     print(f"  http://{host}:{port}/api/coverage/profile/<profile_id>", flush=True)
     print(f"  http://{host}:{port}/api/coverage/all", flush=True)
+    print(f"  http://{host}:{port}/api/briefing/profile/<profile_id>", flush=True)
+    print(f"  http://{host}:{port}/api/hydration/audit/profile/<profile_id>", flush=True)
+    print(f"  http://{host}:{port}/api/hydration/audit/all", flush=True)
     print(f"  POST http://{host}:{port}/api/run/openfec/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/congress/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/youtube/<profile_id>", flush=True)
