@@ -210,6 +210,29 @@ def get_office_type(person: Dict[str, Any]) -> str:
     if fec_candidate_id.startswith("S"):
         return "senate"
 
+    if fec_candidate_id.startswith("P"):
+        return "president"
+
+    # State legislative titles must be detected before generic "senator" or
+    # "representative" checks. Otherwise profiles like "State Senator" are
+    # incorrectly sent through the federal Senate OpenFEC race search.
+    if (
+        "state senator" in raw
+        or "state senate" in raw
+        or "state representative" in raw
+        or "state rep" in raw
+        or "assembly" in raw
+        or "delegate" in raw
+        or raw in {"state", "state_legislative"}
+    ):
+        return "state_legislative"
+
+    if "mayor" in raw:
+        return "mayor"
+
+    if "governor" in raw:
+        return "governor"
+
     if "senate" in raw or "senator" in raw:
         return "senate"
 
@@ -221,18 +244,6 @@ def get_office_type(person: Dict[str, Any]) -> str:
 
     if raw == "federal":
         return "federal"
-
-    if "assembly" in raw or "delegate" in raw or "state rep" in raw:
-        return "state_house"
-
-    if raw == "state" or "state senator" in raw:
-        return "state"
-
-    if "mayor" in raw:
-        return "mayor"
-
-    if "governor" in raw:
-        return "governor"
 
     return raw or "unknown"
 
@@ -628,12 +639,75 @@ def build_summary(
     opponents: List[Dict[str, Any]],
     request_errors: List[str],
 ) -> Dict[str, Any]:
+    opponents_with_committee_ids = [
+        opponent
+        for opponent in opponents
+        if isinstance(opponent.get("principal_committee_ids"), list)
+        and len(opponent.get("principal_committee_ids")) > 0
+    ]
+    opponents_with_raised_funds = [
+        opponent
+        for opponent in opponents
+        if opponent.get("has_raised_funds") is True
+    ]
+
+    primary_opponents = [
+        opponent
+        for opponent in opponents
+        if opponent.get("opponent_type") == "primary_opponent"
+    ]
+    general_election_opponents = [
+        opponent
+        for opponent in opponents
+        if opponent.get("opponent_type") == "general_election_opponent"
+    ]
+    third_party_or_other_opponents = [
+        opponent
+        for opponent in opponents
+        if opponent.get("opponent_type") == "third_party_or_other_opponent"
+    ]
+    unknown_or_unclassified_opponents = [
+        opponent
+        for opponent in opponents
+        if opponent.get("opponent_type") not in {
+            "primary_opponent",
+            "general_election_opponent",
+            "third_party_or_other_opponent",
+        }
+    ]
+
     return {
         **race_context,
         "candidate_pool_count": len(candidates),
-        "source_backed_opponent_count": len(opponents),
+        "candidate_pool": candidates,
         "self_candidate": self_candidate,
+        "source_backed_opponent_count": len(opponents),
         "source_backed_opponents": opponents,
+        "opponent_baseline_info": [
+            {
+                "name": opponent.get("name", ""),
+                "candidate_id": opponent.get("candidate_id", ""),
+                "party": opponent.get("party", ""),
+                "office": opponent.get("office", ""),
+                "state": opponent.get("state", ""),
+                "district": opponent.get("district", ""),
+                "opponent_type": opponent.get("opponent_type", ""),
+                "candidate_status": opponent.get("candidate_status", ""),
+                "has_raised_funds": opponent.get("has_raised_funds"),
+                "principal_committee_ids": opponent.get("principal_committee_ids", []),
+                "fec_url": opponent.get("fec_url", ""),
+                "evidence_level": opponent.get("evidence_level", ""),
+            }
+            for opponent in opponents
+        ],
+        "opponent_committee_id_count": len(opponents_with_committee_ids),
+        "opponent_finance_flags_count": len(opponents_with_raised_funds),
+        "opponents_with_committee_ids": opponents_with_committee_ids,
+        "opponents_with_raised_funds": opponents_with_raised_funds,
+        "primary_opponent_count": len(primary_opponents),
+        "general_election_opponent_count": len(general_election_opponents),
+        "third_party_or_other_opponent_count": len(third_party_or_other_opponents),
+        "unknown_or_unclassified_opponent_count": len(unknown_or_unclassified_opponents),
         "race_context_status": "source_backed" if candidates else "profile_scaffold",
         "opponent_context_status": "source_backed" if opponents else "not_found_or_not_connected",
         "risk_flags": build_risk_flags(race_context, opponents, request_errors),
@@ -692,15 +766,15 @@ def build_race_opponent_context_run_payload(
     if not clean_profile_id:
         raise RaceContextProfileError("profile_id is required.")
 
-    if not clean_api_key:
-        raise RaceContextProfileError("FEC_API_KEY is required.")
-
     started_at = utc_now_iso()
     request_urls: List[str] = []
     request_errors: List[str] = []
 
     race_context = build_race_context(person, clean_cycle)
     candidates: List[Dict[str, Any]] = []
+
+    if race_context.get("is_federal_fec_supported") and not clean_api_key:
+        raise RaceContextProfileError("FEC_API_KEY is required for federal race/opponent context.")
 
     if race_context.get("is_federal_fec_supported"):
         candidate_results, candidate_urls, candidate_errors = search_federal_candidates(

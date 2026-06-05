@@ -193,7 +193,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.8A"
+    server_version = "MemberCommandCenterBackend/1.8B"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -205,7 +205,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.8A",
+                    "version": "v1.8B",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -723,11 +723,6 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
             return
 
         api_key = os.environ.get("FEC_API_KEY", "").strip()
-
-        if not api_key:
-            self.send_json({"ok": False, "error": "FEC_API_KEY is not configured in server/.env.", "profile_id": profile_id, "module_name": "race_opponent_context"}, status=HTTPStatus.BAD_REQUEST)
-            return
-
         cycle = str(first_payload_value(payload, "cycle", "electionCycle", default="2026")).strip() or "2026"
         candidate_limit_raw = str(first_payload_value(payload, "candidate_limit", "candidateLimit", default="50")).strip() or "50"
 
