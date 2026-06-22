@@ -3,6 +3,7 @@
 
   const CORE_SECTIONS = [
     "Profile Completion",
+    "Source of Truth",
     "Universal Reference",
     "Bio Library",
     "Headshot and Media Asset",
@@ -247,6 +248,18 @@
       if (person.completionNormalized === "partial") return { normalized: "partial", label: "Partial" };
       if (person.completionNormalized === "missing") return { normalized: "missing", label: "Missing" };
       return { normalized: "empty", label: "Not started" };
+    }
+
+    if (sectionTitle === "Source of Truth") {
+      const sourceCount = getSourceTrackingSummary(person).total;
+      const hasIdentity = U.hasContent(person.name || person.displayName || person.fullName) &&
+        U.hasContent(person.title || person.currentOffice) &&
+        U.hasContent(person.state || person.jurisdiction);
+      const hasCoreSource = sourceCount > 0 || U.hasContent(person.sourceIdentity) || U.hasContent(person.campaignImport);
+
+      if (hasIdentity && hasCoreSource) return { normalized: "partial", label: "Partial" };
+      if (hasIdentity) return { normalized: "needs-review", label: "Needs Review" };
+      return { normalized: "missing", label: "Missing" };
     }
 
     if (sectionTitle === "Green Easy Win API Integrations") {

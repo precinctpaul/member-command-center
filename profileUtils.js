@@ -82,6 +82,7 @@
   function shortSectionLabel(sectionTitle) {
     const labels = {
       "Profile Completion": "Completion",
+      "Source of Truth": "Truth",
       "Universal Reference": "IDs",
       "Bio Library": "Bio",
       "Headshot and Media Asset": "Media",

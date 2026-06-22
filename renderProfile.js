@@ -69,6 +69,7 @@
     profileView.innerHTML = `
       ${renderHero(person)}
       ${renderQuickFacts(person)}
+      ${renderSourceOfTruth(person)}
       ${renderSectionNav()}
       ${renderProfileCompletion(person)}
       ${renderUniversalReference(person)}
@@ -177,6 +178,392 @@
         </div>
       </section>
     `;
+  }
+
+  function renderSourceOfTruth(person) {
+    const record = buildCanonicalRecordSummary(person);
+    const verification = record.verification;
+    const identity = record.canonical_identity;
+    const links = record.links;
+    const socials = record.socials;
+    const brand = record.brand_assets;
+
+    const identityRows = [
+      ["Name", record.display_name],
+      ["Title", identity.title],
+      ["Office", identity.office],
+      ["State", identity.state],
+      ["District", identity.district],
+      ["Group", identity.roster_group || identity.category]
+    ];
+
+    const linkRows = [
+      ["Official", links.official_website],
+      ["Campaign", links.campaign_website],
+      ["Congress.gov", links.congress_gov_profile],
+      ["OpenStates", links.openstates_profile],
+      ["FEC/OpenFEC", links.fec_profile]
+    ];
+
+    const socialRows = [
+      ["X", socials.x],
+      ["Facebook", socials.facebook],
+      ["Instagram", socials.instagram],
+      ["Threads", socials.threads],
+      ["YouTube", socials.youtube],
+      ["TikTok", socials.tiktok],
+      ["Bluesky", socials.bluesky],
+      ["LinkedIn", socials.linkedin]
+    ].filter(([, value]) => hasTruthValue(value));
+
+    const missingFieldsHtml = verification.missing_core_fields.length
+      ? renderCompactChipList(verification.missing_core_fields.map((field) => U.humanizeKey(field)))
+      : `<div class="empty">No missing core field flagged.</div>`;
+
+    const needsReviewHtml = verification.needs_review_fields.length
+      ? renderCompactChipList(verification.needs_review_fields.map((field) => U.humanizeKey(field)))
+      : `<div class="empty">No review field flagged.</div>`;
+
+    const assetSummary = hasTruthValue(brand.status) && brand.status !== "missing"
+      ? renderCompactChipList([
+          `Logos: ${brand.logos.length}`,
+          `Fonts: ${brand.fonts.length}`,
+          `Colors: ${brand.colors.length}`,
+          `Templates: ${brand.templates.length}`
+        ])
+      : `<div class="empty">No approved asset on file.</div>`;
+
+    return renderSection({
+      title: "Source of Truth",
+      subtitle: "Canonical Member Record for staff use.",
+      open: true,
+      status: statusPillForCanonical(record.verification.overall_status),
+      body: `
+        <div class="source-truth-summary">
+          <div class="source-truth-card">
+            <div class="source-truth-card-title">
+              <span>Identity / Office</span>
+              ${renderStatusPill(statusPillForCanonical(record.identity_status))}
+            </div>
+            ${renderKeyValueGrid(identityRows, true)}
+          </div>
+
+          <div class="source-truth-card">
+            <div class="source-truth-card-title">
+              <span>Bio / Headshot</span>
+              <span class="status-row">
+                ${renderStatusPill(statusPillForCanonical(record.biography.status))}
+                ${renderStatusPill(statusPillForCanonical(record.headshots.status))}
+              </span>
+            </div>
+            ${renderKeyValueGrid([
+              ["One-line bio", record.biography.one_line],
+              ["Short bio", record.biography.short_bio],
+              ["Headshot", record.headshots.primary_url],
+              ["Headshot source", record.headshots.source]
+            ], true)}
+          </div>
+
+          <div class="source-truth-card">
+            <div class="source-truth-card-title">
+              <span>Official Links</span>
+              ${renderStatusPill(statusPillForCanonical(links.status))}
+            </div>
+            ${linkRows.some(([, value]) => hasTruthValue(value)) ? renderKeyValueGrid(linkRows, true) : renderEmpty("No official link on file.")}
+          </div>
+
+          <div class="source-truth-card">
+            <div class="source-truth-card-title">
+              <span>Socials</span>
+              ${renderStatusPill(statusPillForCanonical(socials.status))}
+            </div>
+            ${socialRows.length ? renderKeyValueGrid(socialRows, true) : renderEmpty("No social handles on file.")}
+          </div>
+
+          <div class="source-truth-card">
+            <div class="source-truth-card-title">
+              <span>Brand / Assets</span>
+              ${renderStatusPill(statusPillForCanonical(brand.status))}
+            </div>
+            ${assetSummary}
+          </div>
+
+          <div class="source-truth-card">
+            <div class="source-truth-card-title">
+              <span>Verification Summary</span>
+              ${renderStatusPill(statusPillForCanonical(verification.overall_status))}
+            </div>
+            ${renderKeyValueGrid([
+              ["Source records", verification.source_count],
+              ["Official/API sources", verification.official_source_count],
+              ["Last verified", verification.last_verified_at || "Not recorded"]
+            ])}
+            <div style="height: 12px"></div>
+            <div class="grid-two">
+              <div>
+                <div class="info-label">Missing core fields</div>
+                ${missingFieldsHtml}
+              </div>
+              <div>
+                <div class="info-label">Needs review</div>
+                ${needsReviewHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    });
+  }
+
+  function buildCanonicalRecordSummary(person) {
+    const sourceItems = getCanonicalSourceItems(person);
+    const identity = {
+      full_name: getTruthValue(person.fullName, person.displayName, person.name),
+      preferred_name: getTruthValue(person.preferredName, person.displayName, person.name),
+      title: getTruthValue(person.title, person.officeTitle, person.currentOffice),
+      office: getTruthValue(person.currentOffice, person.office, person.title, person.raceContext?.office),
+      state: getTruthValue(person.state, person.stateCode, person.office?.state, person.politicalGeography?.state),
+      district: getTruthValue(person.district, person.districtLabel, person.office?.district, person.politicalGeography?.district),
+      jurisdiction: getTruthValue(person.jurisdiction, person.chamber),
+      party: getTruthValue(person.party, person.identity?.party, person.sourceIdentity?.party),
+      roster_group: getTruthValue(person.rosterGroupName, person.group),
+      category: getTruthValue(person.category, person.rosterGroupName, person.group)
+    };
+
+    const bioValue = getTruthValue(person.bio?.short, person.bio?.standard, person.bio?.oneLine, person.shortBio, person.officialBio);
+    const headshotUrl = getFirstTruthUrl(person.headshotUrl, person.photoUrl, person.headshot?.primaryUrl, person.media?.headshotUrl);
+    const links = {
+      official_website: getFirstTruthUrl(person.officialWebsite, person.officialLinks?.officialWebsite, person.links?.officialWebsite),
+      campaign_website: getFirstTruthUrl(person.campaignWebsite, person.officialLinks?.campaignWebsite, person.links?.campaignWebsite, person.campaign?.website),
+      congress_gov_profile: getFirstTruthUrl(person.congressGovUrl, person.officialLinks?.congressGovProfile, person.legislativeMechanics?.congressGovUrl, person.sourceEndpoints?.congressGovProfile),
+      openstates_profile: getFirstTruthUrl(person.sourceIdentity?.openStatesProfile, person.officialLinks?.openStatesProfile, person.legislativeMechanics?.openStatesUrl, person.sourceEndpoints?.openStatesProfile),
+      fec_profile: getFirstTruthUrl(person.fecProfile, person.campaignFinanceSnapshot?.fecProfile, person.campaignFinanceSnapshot?.sourceUrl, person.sourceEndpoints?.financeSource)
+    };
+    links.status = statusForGroup(Object.values(links), (value) => isSourceBacked(person, sourceItems, value, "site") || isSourceBacked(person, sourceItems, value, "source"));
+
+    const socials = getCanonicalSocials(person, sourceItems);
+    const brandAssets = getCanonicalBrandAssets(person);
+    const missingCoreFields = [];
+    Object.entries({
+      display_name: getTruthValue(person.displayName, person.name, person.fullName),
+      title: identity.title,
+      office: identity.office,
+      state_or_jurisdiction: getTruthValue(identity.state, identity.jurisdiction),
+      roster_group_or_category: getTruthValue(identity.roster_group, identity.category),
+      bio: bioValue,
+      headshot: headshotUrl,
+      official_website: links.official_website
+    }).forEach(([field, value]) => {
+      if (!hasTruthValue(value)) missingCoreFields.push(field);
+    });
+
+    const sectionStatuses = {
+      biography: statusForValue(bioValue, isSourceBacked(person, sourceItems, bioValue, "bio")),
+      headshots: statusForValue(headshotUrl, isSourceBacked(person, sourceItems, headshotUrl, "headshot")),
+      links: links.status,
+      socials: socials.status,
+      brand_assets: brandAssets.status
+    };
+    const needsReviewFields = Object.entries(sectionStatuses)
+      .filter(([, status]) => ["partial", "needs_review"].includes(status))
+      .map(([field]) => field);
+    const identityValues = Object.values(identity).filter(hasTruthValue);
+    const identityStatus = identityValues.length >= 4
+      ? sourceItems.length || U.hasContent(person.sourceIdentity) || U.hasContent(person.campaignImport)
+        ? "partial"
+        : "needs_review"
+      : "missing";
+
+    return {
+      profile_id: person.id,
+      display_name: getTruthValue(person.displayName, person.name, person.fullName),
+      identity_status: identityStatus,
+      canonical_identity: identity,
+      biography: {
+        short_bio: getTruthValue(person.bio?.short, person.shortBio),
+        medium_bio: getTruthValue(person.bio?.standard, person.officialBio),
+        long_bio: getTruthValue(person.bio?.long, person.longBio),
+        one_line: getTruthValue(person.bio?.oneLine, person.bio?.headline),
+        status: sectionStatuses.biography,
+        source_url: getFirstTruthUrl(person.bioSource, person.sourceEndpoints?.bioSource),
+        last_verified_at: null
+      },
+      headshots: {
+        primary_url: headshotUrl,
+        source: getTruthValue(person.headshot?.source, person.media?.headshotSource),
+        alt_text: getTruthValue(person.headshot?.altText, person.media?.altText),
+        status: sectionStatuses.headshots
+      },
+      links,
+      socials,
+      brand_assets: brandAssets,
+      verification: {
+        overall_status: overallCanonicalStatus(Object.values(sectionStatuses)),
+        source_count: sourceItems.length,
+        official_source_count: sourceItems.filter((item) => /official|api|congress|openstates|fec/i.test(`${item.label} ${item.type}`)).length,
+        missing_core_fields: missingCoreFields,
+        needs_review_fields: needsReviewFields,
+        conflicting_fields: [],
+        last_verified_at: null,
+        source_summary: sourceItems.slice(0, 8)
+      }
+    };
+  }
+
+  function getCanonicalSocials(person, sourceItems) {
+    const webHandles = U.normalizeArray(person.webHandles);
+    const handle = (matcher) => {
+      const found = webHandles.find((item) => {
+        if (!item || typeof item !== "object") return false;
+        return matcher(String(item.label || "").toLowerCase());
+      });
+      return found ? found.value : "";
+    };
+    const socials = {
+      x: getTruthValue(person.xUrl, person.twitterUrl, person.social?.x, person.social?.twitter, handle((label) => label === "x" || label.includes("twitter") || label.includes("social handle"))),
+      facebook: getTruthValue(person.facebookUrl, person.social?.facebook, handle((label) => label.includes("facebook"))),
+      instagram: getTruthValue(person.instagramUrl, person.social?.instagram, handle((label) => label.includes("instagram"))),
+      threads: getTruthValue(person.social?.threads, handle((label) => label.includes("thread"))),
+      youtube: getTruthValue(person.youtubeUrl, person.social?.youtube, person.officialLinks?.youtubeChannelId, person.officialLinks?.youtubeChannelTitle, person.mediaTracking?.youtubeChannelId, handle((label) => label.includes("youtube"))),
+      tiktok: getTruthValue(person.social?.tiktok, handle((label) => label.includes("tiktok"))),
+      bluesky: getTruthValue(person.social?.bluesky, handle((label) => label.includes("bluesky"))),
+      linkedin: getTruthValue(person.social?.linkedin, handle((label) => label.includes("linkedin")))
+    };
+    const values = Object.values(socials).filter(hasTruthValue);
+    socials.status = values.length
+      ? values.some((value) => isSourceBacked(person, sourceItems, value, "social"))
+        ? "partial"
+        : "needs_review"
+      : "missing";
+    return socials;
+  }
+
+  function getCanonicalBrandAssets(person) {
+    const brand = person.brandAssets || {};
+    const assets = person.assets || {};
+    const record = {
+      logos: U.normalizeArray(brand.logos || assets.logos),
+      fonts: U.normalizeArray(brand.fonts),
+      colors: U.normalizeArray(brand.colors),
+      templates: U.normalizeArray(brand.templates),
+      photo_folders: U.normalizeArray(brand.photoFolders),
+      video_folders: U.normalizeArray(brand.videoFolders),
+      press_kit_links: U.normalizeArray(brand.pressKitLinks),
+      usage_notes: U.normalizeArray(brand.usageNotes)
+    };
+    const hasAsset = [
+      record.logos,
+      record.fonts,
+      record.colors,
+      record.templates,
+      record.photo_folders,
+      record.video_folders,
+      record.press_kit_links
+    ].some((items) => items.length > 0);
+    record.status = hasAsset ? "partial" : "missing";
+    return record;
+  }
+
+  function getCanonicalSourceItems(person) {
+    const rows = [];
+    U.normalizeArray(person.sourceTracking).forEach((item) => {
+      if (item && typeof item === "object" && U.hasContent(item)) {
+        rows.push({
+          label: getTruthValue(item.label, item.type, "Source"),
+          value: getTruthValue(item.value, item.sourceUrl),
+          type: getTruthValue(item.type, "source"),
+          source_url: getTruthValue(item.sourceUrl)
+        });
+      }
+    });
+    Object.entries(person.sourceEndpoints || {}).forEach(([key, value]) => {
+      if (hasTruthValue(value)) rows.push({ label: key, value, type: "source-endpoint", source_url: value });
+    });
+    Object.entries(person.sourceIdentity || {}).forEach(([key, value]) => {
+      if (hasTruthValue(value)) rows.push({ label: key, value, type: "source-identity", source_url: "" });
+    });
+    if (hasTruthValue(person.sourceNodeId) || hasTruthValue(person.campaignImport?.nodeId) || hasTruthValue(person.sourceIdentity?.campaignCommandCenterNodeId)) {
+      rows.push({
+        label: "Campaign Command Center node",
+        value: getTruthValue(person.sourceNodeId, person.campaignImport?.nodeId, person.sourceIdentity?.campaignCommandCenterNodeId),
+        type: "import-provenance",
+        source_url: ""
+      });
+    }
+    return rows.filter((item) => hasTruthValue(item.value));
+  }
+
+  function statusPillForCanonical(status) {
+    const labels = {
+      verified: "Verified",
+      partial: "Partial",
+      missing: "Missing",
+      needs_review: "Needs Review",
+      conflicting: "Conflicting",
+      stale: "Stale"
+    };
+    return {
+      normalized: String(status || "missing").replace(/_/g, "-"),
+      label: labels[status] || U.humanizeKey(status || "missing")
+    };
+  }
+
+  function statusForValue(value, sourceBacked) {
+    if (!hasTruthValue(value)) return "missing";
+    if (isScaffoldValue(value)) return "needs_review";
+    return sourceBacked ? "verified" : "partial";
+  }
+
+  function statusForGroup(values, sourceCheck) {
+    const present = values.filter(hasTruthValue);
+    if (!present.length) return "missing";
+    const backedCount = present.filter((value) => sourceCheck(value)).length;
+    if (backedCount === present.length) return "verified";
+    return backedCount > 0 ? "partial" : "needs_review";
+  }
+
+  function overallCanonicalStatus(statuses) {
+    if (statuses.includes("conflicting")) return "conflicting";
+    if (statuses.includes("needs_review")) return "needs_review";
+    if (statuses.every((status) => status === "missing")) return "missing";
+    if (statuses.every((status) => ["verified", "missing"].includes(status))) return "partial";
+    if (statuses.includes("partial")) return "partial";
+    return "verified";
+  }
+
+  function isSourceBacked(person, sourceItems, value, typeHint) {
+    if (!hasTruthValue(value)) return false;
+    const text = String(value).trim().replace(/\/$/, "");
+    return sourceItems.some((item) => {
+      const itemValue = String(item.value || item.source_url || "").trim().replace(/\/$/, "");
+      const typeText = `${item.type || ""} ${item.label || ""}`.toLowerCase();
+      return (itemValue && itemValue === text) || (typeHint && typeText.includes(typeHint.toLowerCase()));
+    });
+  }
+
+  function getTruthValue(...values) {
+    return values.find(hasTruthValue) || "";
+  }
+
+  function getFirstTruthUrl(...values) {
+    return values.find((value) => hasTruthValue(value) && U.isUrl(String(value))) || "";
+  }
+
+  function hasTruthValue(value) {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string") {
+      const text = value.trim();
+      if (!text) return false;
+      return !["--", "-", "n/a", "na", "none", "null", "unknown", "not populated yet", "not started"].includes(text.toLowerCase());
+    }
+    if (Array.isArray(value)) return value.some(hasTruthValue);
+    if (typeof value === "object") return Object.values(value).some(hasTruthValue);
+    return true;
+  }
+
+  function isScaffoldValue(value) {
+    const text = String(value || "").toLowerCase();
+    return ["required", "needed", "not populated", "not started", "scaffold", "future"].some((marker) => text.includes(marker));
   }
 
   function renderSectionNav() {

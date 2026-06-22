@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
 import congress_client
+import canonical_profile_client
 import db
 import hydration_audit_client
 import official_web_client
@@ -226,6 +227,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                     "strategic_briefing": True,
                     "hydration_audit": True,
                     "readiness": True,
+                    "canonical_profiles": True,
                 }
             )
             return
@@ -247,6 +249,14 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/people/cache":
             self.send_json({"people": db.list_people_cache()})
+            return
+
+        if parsed.path.startswith("/api/canonical/profile/"):
+            self.handle_canonical_profile(parsed.path)
+            return
+
+        if parsed.path == "/api/canonical/all":
+            self.handle_all_canonical_profiles()
             return
 
         if parsed.path == "/api/runs":
@@ -393,6 +403,48 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         coverage = source_coverage_client.build_profile_coverage(profile_id, person, latest_runs)
 
         self.send_json({"ok": True, "coverage": coverage})
+
+    def handle_canonical_profile(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/canonical/profile/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {"ok": False, "error": f"No cached profile was found for '{profile_id}'."},
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        latest_runs = db.get_latest_runs_by_profile(profile_id=profile_id)
+        canonical = canonical_profile_client.build_canonical_profile(profile_id, person, latest_runs)
+        self.send_json({"ok": True, "canonical_profile": canonical})
+
+    def handle_all_canonical_profiles(self) -> None:
+        profiles = []
+
+        for cached_person in db.list_people_cache():
+            profile_id = str(cached_person.get("profile_id") or "").strip()
+            if not profile_id:
+                continue
+
+            person = cached_person.get("source_json")
+            if not isinstance(person, dict):
+                person = {}
+
+            person.setdefault("id", profile_id)
+            person.setdefault("profile_id", profile_id)
+            person.setdefault("displayName", cached_person.get("display_name"))
+            latest_runs = db.get_latest_runs_by_profile(profile_id=profile_id)
+            canonical = canonical_profile_client.build_canonical_profile(profile_id, person, latest_runs)
+            profiles.append(canonical_profile_client.compact_canonical_profile(canonical))
+
+        self.send_json({"ok": True, "count": len(profiles), "canonical_profiles": profiles})
 
     def handle_all_coverage(self) -> None:
         coverage = source_coverage_client.build_all_profiles_coverage(
@@ -894,6 +946,8 @@ def main() -> None:
     print(f"  http://{host}:{port}/api/config/status", flush=True)
     print(f"  http://{host}:{port}/api/database/status", flush=True)
     print(f"  http://{host}:{port}/api/runs/latest", flush=True)
+    print(f"  http://{host}:{port}/api/canonical/profile/<profile_id>", flush=True)
+    print(f"  http://{host}:{port}/api/canonical/all", flush=True)
     print(f"  http://{host}:{port}/api/coverage/profile/<profile_id>", flush=True)
     print(f"  http://{host}:{port}/api/coverage/all", flush=True)
     print(f"  http://{host}:{port}/api/briefing/profile/<profile_id>", flush=True)
