@@ -40,5 +40,7 @@ logs/
 data/local_backups/
 data/campaign_import_report_*.json
 data/roster_reconciliation_report_*.json
+data/hydration_orchestration_report_*.json
+data/hydration_orchestration_state.json
 data/people.pre_campaign_import_*.json
 data/campaign_import_report_pretty.json
