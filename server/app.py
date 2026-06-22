@@ -14,6 +14,7 @@ import official_web_client
 import openfec_client
 import openstates_client
 import race_context_client
+import readiness_client
 import source_coverage_client
 import strategic_briefing_client
 import web_mentions_client
@@ -193,7 +194,7 @@ def find_person_for_profile_id(profile_id: str) -> Optional[Dict[str, Any]]:
 
 
 class MemberCommandCenterHandler(BaseHTTPRequestHandler):
-    server_version = "MemberCommandCenterBackend/1.8B"
+    server_version = "MemberCommandCenterBackend/1.9A"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -205,7 +206,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "app": "Member Command Center",
-                    "version": "v1.8B",
+                    "version": "v1.9A",
                     "database": db.get_database_status(),
                     "api_keys": {
                         "total": api_key_status["total_keys"],
@@ -224,6 +225,7 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
                     "coverage_matrix": True,
                     "strategic_briefing": True,
                     "hydration_audit": True,
+                    "readiness": True,
                 }
             )
             return
@@ -293,6 +295,14 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/hydration/audit/all":
             self.handle_all_hydration_audit()
+            return
+
+        if parsed.path.startswith("/api/readiness/profile/"):
+            self.handle_profile_readiness(parsed.path)
+            return
+
+        if parsed.path == "/api/readiness/all":
+            self.handle_all_readiness()
             return
 
         self.serve_static_file(parsed.path)
@@ -456,6 +466,60 @@ class MemberCommandCenterHandler(BaseHTTPRequestHandler):
         )
 
         self.send_json({"ok": True, "audit": audit})
+
+    def handle_profile_readiness(self, request_path: str) -> None:
+        raw_profile_id = request_path.replace("/api/readiness/profile/", "", 1).strip("/")
+        profile_id = unquote(raw_profile_id).strip()
+
+        if not profile_id:
+            self.send_json({"ok": False, "error": "profile_id is required."}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        person = find_person_for_profile_id(profile_id)
+
+        if not person:
+            self.send_json(
+                {"ok": False, "error": f"No cached profile was found for '{profile_id}'."},
+                status=HTTPStatus.NOT_FOUND,
+            )
+            return
+
+        latest_runs = db.get_latest_runs_by_profile(profile_id=profile_id)
+        coverage = source_coverage_client.build_profile_coverage(profile_id, person, latest_runs)
+        hydration_audit = hydration_audit_client.build_profile_hydration_audit(
+            profile_id=profile_id,
+            person=person,
+            latest_runs=latest_runs,
+            coverage=coverage,
+        )
+        readiness = readiness_client.build_profile_readiness(
+            profile_id=profile_id,
+            person=person,
+            latest_runs=latest_runs,
+            coverage=coverage,
+            hydration_audit=hydration_audit,
+        )
+
+        self.send_json({"ok": True, "readiness": readiness})
+
+    def handle_all_readiness(self) -> None:
+        readiness = readiness_client.build_all_profiles_readiness(
+            db.list_people_cache(),
+            lambda profile_id: db.get_latest_runs_by_profile(profile_id=profile_id),
+            lambda profile_id, person, latest_runs: source_coverage_client.build_profile_coverage(
+                profile_id,
+                person,
+                latest_runs,
+            ),
+            lambda profile_id, person, latest_runs, coverage: hydration_audit_client.build_profile_hydration_audit(
+                profile_id=profile_id,
+                person=person,
+                latest_runs=latest_runs,
+                coverage=coverage,
+            ),
+        )
+
+        self.send_json({"ok": True, "readiness": readiness})
 
     def handle_openfec_run(self, request_path: str) -> None:
         raw_profile_id = request_path.replace("/api/run/openfec/", "", 1).strip("/")
@@ -835,6 +899,8 @@ def main() -> None:
     print(f"  http://{host}:{port}/api/briefing/profile/<profile_id>", flush=True)
     print(f"  http://{host}:{port}/api/hydration/audit/profile/<profile_id>", flush=True)
     print(f"  http://{host}:{port}/api/hydration/audit/all", flush=True)
+    print(f"  http://{host}:{port}/api/readiness/profile/<profile_id>", flush=True)
+    print(f"  http://{host}:{port}/api/readiness/all", flush=True)
     print(f"  POST http://{host}:{port}/api/run/openfec/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/congress/<profile_id>", flush=True)
     print(f"  POST http://{host}:{port}/api/run/youtube/<profile_id>", flush=True)

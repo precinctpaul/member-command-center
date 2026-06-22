@@ -35,6 +35,8 @@
         </div>
       </section>
 
+      ${renderReadinessCommandBriefShell()}
+
       <section class="section open">
         <button class="section-header" type="button">
           <span class="section-title">
@@ -117,6 +119,194 @@
       matrix,
       onOpenProfile,
       onApplyProfileFilter
+    });
+
+    loadRosterReadiness({ onOpenProfile });
+  }
+
+  function renderReadinessCommandBriefShell() {
+    return `
+      <section id="readinessCommandBriefPanel" class="section open">
+        <button class="section-header" type="button">
+          <span class="section-title">
+            <strong>Command Brief</strong>
+            <span>Roster readiness, top gap, and triage queue.</span>
+          </span>
+          <span id="readinessCommandBriefPill" class="status-pill partial">Loading</span>
+          <span class="chevron">&rsaquo;</span>
+        </button>
+
+        <div class="section-body">
+          <div id="readinessCommandBriefStatus" class="empty">
+            Loading roster readiness...
+          </div>
+          <div id="readinessCommandBriefContent"></div>
+        </div>
+      </section>
+    `;
+  }
+
+  async function loadRosterReadiness({ onOpenProfile }) {
+    const status = document.getElementById("readinessCommandBriefStatus");
+    const content = document.getElementById("readinessCommandBriefContent");
+    const pill = document.getElementById("readinessCommandBriefPill");
+
+    if (!status || !content) return;
+
+    try {
+      const response = await fetch("/api/readiness/all");
+      const payload = await response.json();
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || `Readiness request failed with HTTP ${response.status}.`);
+      }
+
+      renderRosterReadiness(payload.readiness || {}, { onOpenProfile });
+
+      if (pill) {
+        pill.className = "status-pill ready";
+        pill.textContent = "Loaded";
+      }
+
+      status.className = "empty briefing-status-ready";
+      status.textContent = "Readiness loaded.";
+    } catch (error) {
+      console.error(error);
+
+      if (pill) {
+        pill.className = "status-pill missing";
+        pill.textContent = "Error";
+      }
+
+      status.className = "empty briefing-status-missing";
+      status.textContent = error.message || "Could not load readiness.";
+      content.innerHTML = "";
+    }
+  }
+
+  function renderRosterReadiness(readiness, { onOpenProfile }) {
+    const content = document.getElementById("readinessCommandBriefContent");
+    if (!content) return;
+
+    const tierCounts = readiness.tier_counts || {};
+    const topGap = Array.isArray(readiness.top_source_gaps) && readiness.top_source_gaps.length
+      ? readiness.top_source_gaps[0]
+      : null;
+    const needsWorkCount = Number(tierCounts.needs_work || 0) + Number(tierCounts.source_poor || 0) + Number(tierCounts.insufficient_data || 0);
+    const criticalProfiles = Array.isArray(readiness.critical_gap_profiles) ? readiness.critical_gap_profiles : [];
+    const compactProfiles = Array.isArray(readiness.profiles) ? readiness.profiles : [];
+
+    content.innerHTML = `
+      <div style="height: 14px"></div>
+
+      <div class="grid-three">
+        ${renderMetricCard("Total Profiles", readiness.total_profiles || 0)}
+        ${renderMetricCard("Command Ready", tierCounts.command_ready || 0)}
+        ${renderMetricCard("Nearly Ready", tierCounts.nearly_ready || 0)}
+        ${renderMetricCard("Needs Work / Source Poor", needsWorkCount)}
+        ${renderMetricCard("Average Readiness", `${readiness.average_readiness_score || 0}%`)}
+        ${renderMetricCard("Top Gap", topGap ? topGap.framework_label : "None")}
+      </div>
+
+      <div style="height: 14px"></div>
+
+      <div class="grid-two">
+        <div class="info-card">
+          <div class="info-label">Roster Triage</div>
+          <div style="height: 8px"></div>
+          ${renderReadinessProfileList(criticalProfiles.slice(0, 8), true)}
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Top Source Gaps</div>
+          <div style="height: 8px"></div>
+          ${renderTopGapList(readiness.top_source_gaps)}
+        </div>
+      </div>
+
+      <div style="height: 14px"></div>
+
+      <details class="info-card">
+        <summary style="cursor: pointer; font-weight: 900; color: var(--text);">
+          Readiness Roster
+        </summary>
+        <div style="height: 12px"></div>
+        ${renderReadinessProfileList(compactProfiles.slice(0, 20), false)}
+      </details>
+    `;
+
+    bindReadinessOpenButtons(onOpenProfile);
+  }
+
+  function renderReadinessProfileList(profiles, emphasizeConstraint) {
+    if (!Array.isArray(profiles) || !profiles.length) {
+      return `<div class="empty">No profiles in this readiness bucket.</div>`;
+    }
+
+    return `
+      <div class="list">
+        ${profiles.map((profile) => {
+          const constraint = profile.main_constraint || {};
+
+          return `
+            <div class="list-item">
+              <div class="copy-row" style="align-items: flex-start; gap: 12px;">
+                <div style="min-width: 0; flex: 1;">
+                  <strong>${U.escapeHtml(profile.display_name || profile.profile_id || "Profile")}</strong>
+                  <p>
+                    ${U.escapeHtml(String(profile.readiness_score ?? 0))}% &middot;
+                    ${U.escapeHtml(tierLabel(profile.readiness_tier))}
+                    ${constraint.framework_label ? ` &middot; ${U.escapeHtml(constraint.framework_label)}` : ""}
+                  </p>
+                </div>
+                <button class="copy-button" type="button" data-readiness-open-profile="${U.escapeAttribute(profile.profile_id || "")}">
+                  Open Profile
+                </button>
+              </div>
+
+              ${emphasizeConstraint ? `
+                <div style="height: 8px"></div>
+                <p>${U.escapeHtml(profile.recommended_next_action || constraint.recommended_action || "Review readiness gaps.")}</p>
+              ` : ""}
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function renderTopGapList(gaps) {
+    const items = Array.isArray(gaps) ? gaps : [];
+
+    if (!items.length) {
+      return `<div class="empty">No roster-wide source gaps found.</div>`;
+    }
+
+    return `
+      <div class="list">
+        ${items.slice(0, 6).map((gap) => `
+          <div class="list-item">
+            <div class="copy-row">
+              <strong>${U.escapeHtml(gap.framework_label || "Gap")}</strong>
+              <span class="status-pill partial">${U.escapeHtml(String(gap.affected_count || 0))}</span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function bindReadinessOpenButtons(onOpenProfile) {
+    document.querySelectorAll("[data-readiness-open-profile]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
+      button.dataset.bound = "true";
+
+      button.addEventListener("click", () => {
+        const profileId = button.getAttribute("data-readiness-open-profile");
+        if (profileId && typeof onOpenProfile === "function") {
+          onOpenProfile(profileId);
+        }
+      });
     });
   }
 
@@ -597,6 +787,18 @@
     if (officeType === "federal") return "ready";
     if (officeType === "state") return "api";
     return "partial";
+  }
+
+  function tierLabel(tier) {
+    const labels = {
+      command_ready: "Command Ready",
+      nearly_ready: "Nearly Ready",
+      needs_work: "Needs Work",
+      source_poor: "Source Poor",
+      insufficient_data: "Insufficient Data"
+    };
+
+    return labels[tier] || "Review";
   }
 
   window.MCCRosterMatrix = {
