@@ -42,15 +42,122 @@ import web_mentions_client  # noqa: E402
 import youtube_client  # noqa: E402
 
 
-RUNNERS = [
+RUNNER_ORDER = [
     "official_web_contact",
-    "openfec_finance",
     "congress_legislation",
-    "youtube_media",
-    "web_mentions",
     "openstates_legislation",
+    "openfec_finance",
     "race_opponent_context",
+    "web_mentions",
+    "youtube_media",
 ]
+
+RUNNERS = RUNNER_ORDER[:]
+
+PRIORITY_RUNNERS = {
+    "core": [
+        "official_web_contact",
+        "congress_legislation",
+        "openstates_legislation",
+        "openfec_finance",
+        "race_opponent_context",
+    ],
+    "media": [
+        "web_mentions",
+        "youtube_media",
+    ],
+    "all": RUNNER_ORDER[:],
+}
+
+GROUP_PRIORITY = {
+    "majority-democrats": 0,
+    "the-bench": 1,
+    "cabinet-others": 3,
+    "other-executive-opposition": 4,
+    "other-executive-opposition-figures": 4,
+    "executive-opposition": 4,
+    "opposition": 4,
+    "other": 4,
+}
+
+MANUAL_INTERNAL_GAP_TYPES = {
+    "approved_internal_headshot",
+    "approved_md_bio",
+    "approved_logos",
+    "approved_fonts",
+    "approved_brand_colors",
+    "approved_templates",
+    "approved_photo_video_folders",
+    "approved_press_kit_links",
+    "approved_usage_notes",
+    "source_of_truth_approval_status",
+    "approved_social_handles",
+    "approved_brand_asset_source",
+}
+
+MANUAL_GAP_MARKERS = {
+    "headshot": "approved_internal_headshot",
+    "headshots": "approved_internal_headshot",
+    "bio": "approved_md_bio",
+    "biography": "approved_md_bio",
+    "logo": "approved_logos",
+    "logos": "approved_logos",
+    "font": "approved_fonts",
+    "fonts": "approved_fonts",
+    "brand color": "approved_brand_colors",
+    "colors": "approved_brand_colors",
+    "template": "approved_templates",
+    "templates": "approved_templates",
+    "photo": "approved_photo_video_folders",
+    "video": "approved_photo_video_folders",
+    "press kit": "approved_press_kit_links",
+    "usage notes": "approved_usage_notes",
+    "approval": "source_of_truth_approval_status",
+    "source-of-truth": "source_of_truth_approval_status",
+    "socials": "approved_social_handles",
+    "brand_assets": "approved_brand_asset_source",
+    "brand": "approved_brand_asset_source",
+}
+
+RUNNER_GAP_CATEGORIES = {
+    "official_web_contact": ["official_web_contact", "core_identity", "biographical_profile"],
+    "congress_legislation": ["legislative_activity"],
+    "openstates_legislation": ["legislative_activity"],
+    "openfec_finance": ["campaign_finance"],
+    "race_opponent_context": ["race_context", "opposition_intelligence"],
+    "web_mentions": ["media_public_attention"],
+    "youtube_media": ["media_public_attention"],
+}
+
+RUNNER_FALLBACK_REASONS = {
+    "official_web_contact": "Official/campaign website exists but socials/contact verification is missing.",
+    "congress_legislation": "Bioguide/Congress.gov source exists but legislative activity is incomplete.",
+    "openstates_legislation": "OpenStates ID exists but state legislative activity is incomplete.",
+    "openfec_finance": "FEC candidate/committee ID exists but finance hydration is incomplete.",
+    "race_opponent_context": "Race context is partial; opponent identity may be discoverable, but contrast will remain separate.",
+    "web_mentions": "Public mentions/media attention coverage is incomplete.",
+    "youtube_media": "YouTube/media video coverage is incomplete.",
+}
+
+RUNNER_SEEDLESS_REASONS = {
+    "official_web_contact": "No public official, campaign, contact, social, or media URLs are present to verify.",
+    "congress_legislation": "No Bioguide ID is present.",
+    "openstates_legislation": "No OpenStates ID or state legislative profile signal is present.",
+    "openfec_finance": "No FEC candidate or committee ID is present.",
+    "race_opponent_context": "No display name is present for race context.",
+    "web_mentions": "No display name is present for public mention searches.",
+    "youtube_media": "No YouTube channel seed or searchable name is present.",
+}
+
+RUNNER_NO_GAP_REASONS = {
+    "official_web_contact": "Official/contact fields do not have a matching core hydration gap for this pass.",
+    "congress_legislation": "Congress.gov fields already appear populated or no matching legislative gap remains.",
+    "openstates_legislation": "OpenStates fields already appear populated or no matching state legislative gap remains.",
+    "openfec_finance": "FEC finance fields already appear populated or no matching finance gap remains.",
+    "race_opponent_context": "Race/opponent context has no matching source-of-truth gap for this pass.",
+    "web_mentions": "Media/public-attention fields have no matching gap for this pass.",
+    "youtube_media": "YouTube/media fields have no matching gap for this pass.",
+}
 
 RUNNER_LABELS = {
     "official_web_contact": "Official Web + Contact",
@@ -445,6 +552,34 @@ def has_gap_in_categories(hydration: Dict[str, Any], categories: Iterable[str]) 
     return False
 
 
+def first_gap_reason(hydration: Dict[str, Any], categories: Iterable[str], fallback: str) -> str:
+    wanted = set(categories)
+    for gap in as_list(hydration.get("priority_gaps")):
+        if not isinstance(gap, dict) or gap.get("category") not in wanted:
+            continue
+
+        label = first_value(gap.get("label"), gap.get("field"), "source field")
+        status = first_value(gap.get("status"), "incomplete")
+        runner = normalize_runner_name(gap.get("recommended_next_runner"))
+
+        if runner == "official_web_contact":
+            return f"Official/campaign web source is present, but {label} is {status}."
+        if runner == "congress_legislation":
+            return f"Bioguide/Congress.gov source exists, but {label} is {status}."
+        if runner == "openstates_legislation":
+            return f"OpenStates/state legislative source exists, but {label} is {status}."
+        if runner == "openfec_finance":
+            return f"FEC candidate/committee ID exists, but {label} is {status}."
+        if runner == "race_opponent_context":
+            return f"Race context is {status}; opponent identity may be discoverable, but contrast will remain separate."
+        if runner in {"web_mentions", "youtube_media"}:
+            return f"Media/public-attention coverage is incomplete because {label} is {status}."
+
+        return fallback
+
+    return fallback
+
+
 def has_fec_identifier(person: Dict[str, Any]) -> bool:
     ids = openfec_client.get_fec_ids(person)
     return bool(ids.get("candidate_id") or ids.get("committee_id"))
@@ -509,46 +644,67 @@ def runner_is_relevant(state: Dict[str, Any], runner: str) -> Tuple[bool, str, b
 
     if runner == "official_web_contact":
         if not has_official_web_seed(person):
-            return False, "No public official, campaign, contact, social, or media URLs are present to verify.", False
-        relevant = has_gap_in_categories(hydration, ["official_web_contact", "core_identity", "biographical_profile"])
-        return relevant, "Official/contact URL or biographical verification gaps remain.", False
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], False
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), False
 
     if runner == "openfec_finance":
         if not has_fec_identifier(person):
-            return False, "No FEC candidate or committee ID is present.", False
-        relevant = has_gap_in_categories(hydration, ["campaign_finance"])
-        return relevant, "FEC-backed campaign finance gaps remain.", True
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], True
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), True
 
     if runner == "congress_legislation":
         if not has_bioguide_id(person):
-            return False, "No Bioguide ID is present.", False
-        relevant = has_gap_in_categories(hydration, ["legislative_activity"])
-        return relevant, "Congress.gov legislative activity gaps remain.", True
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], True
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), True
 
     if runner == "youtube_media":
         if not has_youtube_seed(person):
-            return False, "No YouTube channel seed or searchable name is present.", False
-        relevant = has_gap_in_categories(hydration, ["media_public_attention"])
-        return relevant, "YouTube/media visibility gaps remain.", True
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], True
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), True
 
     if runner == "web_mentions":
         if not has_name:
-            return False, "No display name is present for public mention searches.", False
-        relevant = has_gap_in_categories(hydration, ["media_public_attention"])
-        return relevant, "Public mentions and media attention gaps remain.", False
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], False
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), False
 
     if runner == "openstates_legislation":
         if not has_openstates_seed(person, hydration):
-            return False, "No OpenStates ID or state legislative profile signal is present.", False
-        relevant = has_gap_in_categories(hydration, ["legislative_activity"])
-        return relevant, "OpenStates/state legislative activity gaps remain.", True
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], True
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), True
 
     if runner == "race_opponent_context":
         if not has_name:
-            return False, "No display name is present for race context.", False
-        relevant = has_gap_in_categories(hydration, ["race_context", "opposition_intelligence"])
+            return False, RUNNER_SEEDLESS_REASONS[runner], False
+        categories = RUNNER_GAP_CATEGORIES[runner]
+        relevant = has_gap_in_categories(hydration, categories)
         requires_key = is_federal
-        return relevant, "Race context or source-backed opponent discovery gaps remain.", requires_key
+        if not relevant:
+            return False, RUNNER_NO_GAP_REASONS[runner], requires_key
+        return relevant, first_gap_reason(hydration, categories, RUNNER_FALLBACK_REASONS[runner]), requires_key
 
     return False, "Unknown runner.", False
 
@@ -558,20 +714,11 @@ def canonical_manual_gaps(state: Dict[str, Any]) -> List[Dict[str, Any]]:
     verification = as_dict(canonical.get("verification"))
     fields = as_list(verification.get("missing_core_fields")) + as_list(verification.get("needs_review_fields"))
     gaps = []
-    manual_markers = {
-        "headshot": "approved_internal_headshot",
-        "headshots": "approved_internal_headshot",
-        "bio": "approved_md_bio",
-        "biography": "approved_md_bio",
-        "socials": "approved_social_handles",
-        "brand_assets": "approved_brand_asset_source",
-        "brand": "approved_brand_asset_source",
-    }
     for field in fields:
         field_text = str(field or "")
         field_lower = field_text.lower()
         manual_type = ""
-        for marker, gap_type in manual_markers.items():
+        for marker, gap_type in MANUAL_GAP_MARKERS.items():
             if marker in field_lower:
                 manual_type = gap_type
                 break
@@ -648,9 +795,9 @@ def normalize_runner_name(value: Any) -> str:
     return RUNNER_ALIASES.get(normalized, RUNNER_ALIASES.get(slugify(key), key if key in RUNNERS else ""))
 
 
-def parse_runners(raw_runners: List[str]) -> List[str]:
+def parse_runners(raw_runners: List[str], priority: str) -> List[str]:
     if not raw_runners:
-        return RUNNERS[:]
+        return PRIORITY_RUNNERS[priority][:]
     parsed: List[str] = []
     for raw in raw_runners:
         runner = normalize_runner_name(raw)
@@ -658,13 +805,27 @@ def parse_runners(raw_runners: List[str]) -> List[str]:
             raise SystemExit(f"Unknown runner '{raw}'. Supported runners: {', '.join(RUNNERS)}")
         if runner not in parsed:
             parsed.append(runner)
-    return parsed
+    return sorted(parsed, key=lambda runner: RUNNER_ORDER.index(runner))
+
+
+def group_priority_for_state(state: Dict[str, Any]) -> int:
+    group_slug = slugify(state.get("group"))
+    profile_id = str(state.get("profile_id") or "")
+
+    if group_slug in GROUP_PRIORITY:
+        return GROUP_PRIORITY[group_slug]
+
+    if not profile_id.startswith("campaign-"):
+        return 2
+
+    return 5
 
 
 def sort_profiles_for_hydration(profile_states: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return sorted(
         profile_states,
         key=lambda state: (
+            group_priority_for_state(state),
             safe_int(as_dict(state.get("hydration")).get("hydration_score"), 999),
             str(state.get("display_name") or "").lower(),
             str(state.get("profile_id") or "").lower(),
@@ -676,25 +837,43 @@ def build_plan(
     profile_states: List[Dict[str, Any]],
     requested_runners: List[str],
     explicit_runner: bool,
+    max_runs_per_profile: int,
     resume_state: Dict[str, Any],
     resume: bool,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     plan: List[Dict[str, Any]] = []
     skipped: List[Dict[str, Any]] = []
     completed_records = as_dict(resume_state.get("completed_run_keys"))
+    clean_max_runs_per_profile = max(1, safe_int(max_runs_per_profile, 3))
 
     for state in profile_states:
+        planned_for_profile = 0
         for runner in requested_runners:
             applicable, reason, requires_key = runner_is_relevant(state, runner)
             key = f"{state.get('profile_id')}|{runner}"
+
+            if planned_for_profile >= clean_max_runs_per_profile:
+                skipped.append(
+                    {
+                        "profile_id": state.get("profile_id"),
+                        "display_name": state.get("display_name"),
+                        "group": state.get("group"),
+                        "runner": runner,
+                        "reason": f"Skipped because --max-runs-per-profile is {clean_max_runs_per_profile}.",
+                        "skip_type": "max_runs_per_profile",
+                    }
+                )
+                continue
 
             if resume and completed_records.get(key):
                 skipped.append(
                     {
                         "profile_id": state.get("profile_id"),
                         "display_name": state.get("display_name"),
+                        "group": state.get("group"),
                         "runner": runner,
                         "reason": "Skipped by --resume because this profile/runner completed in orchestration state.",
+                        "skip_type": "resume_completed",
                     }
                 )
                 continue
@@ -704,8 +883,10 @@ def build_plan(
                     {
                         "profile_id": state.get("profile_id"),
                         "display_name": state.get("display_name"),
+                        "group": state.get("group"),
                         "runner": runner,
                         "reason": reason,
+                        "skip_type": "not_applicable",
                     }
                 )
                 continue
@@ -715,8 +896,10 @@ def build_plan(
                     {
                         "profile_id": state.get("profile_id"),
                         "display_name": state.get("display_name"),
+                        "group": state.get("group"),
                         "runner": runner,
                         "reason": "Latest run already completed; remaining gaps are reported as exhausted by this existing pipe.",
+                        "skip_type": "latest_run_completed",
                     }
                 )
                 continue
@@ -733,12 +916,14 @@ def build_plan(
                     "runner": runner,
                     "runner_label": RUNNER_LABELS.get(runner, runner),
                     "reason": reason if applicable else f"Explicit runner requested; {reason}",
+                    "run_reason": reason if applicable else f"Explicit runner requested; {reason}",
                     "latest_run_status": latest_run_status(state, runner),
                     "requires_api_key": env_key or "",
                     "api_key_configured": bool(os.environ.get(env_key or "", "").strip()) if env_key else True,
                     "resume_key": key,
                 }
             )
+            planned_for_profile += 1
     return plan, skipped
 
 
@@ -935,6 +1120,8 @@ def write_report(report: Dict[str, Any]) -> Path:
 
 def print_console_report(report: Dict[str, Any], report_path: Path) -> None:
     mode = report.get("mode")
+    priority = report.get("priority")
+    max_runs_per_profile = report.get("max_runs_per_profile")
     selection = as_dict(report.get("selection"))
     plan = as_list(report.get("run_plan"))
     apply_results = as_list(report.get("apply_results"))
@@ -946,6 +1133,8 @@ def print_console_report(report: Dict[str, Any], report_path: Path) -> None:
     print("Hydration Orchestration Report")
     print("==============================")
     print(f"Mode: {mode}")
+    print(f"Priority: {priority}")
+    print(f"Max runs per profile: {max_runs_per_profile}")
     print(f"Profiles available: {selection.get('profiles_available')}")
     print(f"Profiles selected: {selection.get('profiles_selected')}")
     print(f"Default limit applied: {selection.get('default_limit_applied')}")
@@ -974,11 +1163,29 @@ def print_console_report(report: Dict[str, Any], report_path: Path) -> None:
         print(f"  - {runner}: {count}")
     print("")
 
+    if plan:
+        print("Planned executions by group:")
+        for group, count in count_by(plan, "group").items():
+            print(f"  - {group}: {count}")
+        print("")
+
+        print("Plan reasons:")
+        for reason, count in list(count_by(plan, "run_reason").items())[:8]:
+            print(f"  - {reason}: {count}")
+        print("")
+
     gap_counts = as_dict(gaps.get("counts"))
     if gap_counts:
         print("Gap inventory for selected profiles:")
         for key, count in gap_counts.items():
             print(f"  - {key}: {count}")
+        print("")
+
+    manual_gaps = as_list(gaps.get("manual_or_internal_gaps"))
+    if manual_gaps:
+        print("Manual/internal source-of-truth gaps:")
+        for gap_type, count in count_by(manual_gaps, "manual_or_internal").items():
+            print(f"  - {gap_type}: {count}")
         print("")
 
     if apply_results:
@@ -1002,10 +1209,10 @@ def print_console_report(report: Dict[str, Any], report_path: Path) -> None:
     skipped = as_list(report.get("skipped_plan_items"))
     if skipped:
         print(f"Skipped/non-applicable items: {len(skipped)}")
-        for item in skipped[:10]:
-            print(f"  - {item.get('profile_id')} {item.get('runner')}: {item.get('reason')}")
+        for reason, count in list(count_by(skipped, "reason").items())[:8]:
+            print(f"  - {reason}: {count}")
         if len(skipped) > 10:
-            print(f"  - ... {len(skipped) - 10} more")
+            print("  - See JSON report for profile-level skipped runner details.")
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -1016,6 +1223,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     mode_group.add_argument("--report-only", action="store_true", help="Summarize current hydration/readiness/canonical gaps without running runners.")
     parser.add_argument("--profile", action="append", help="Limit to a profile_id. Repeat for multiple profiles.")
     parser.add_argument("--group", help="Limit to a roster group/category name or slug.")
+    parser.add_argument("--priority", choices=["core", "media", "all"], default="core", help="Runner priority set to plan when --runner is not supplied. Defaults to core.")
+    parser.add_argument("--max-runs-per-profile", type=int, default=3, help="Maximum planned runner executions per profile. Defaults to 3.")
     parser.add_argument("--runner", action="append", help="Limit to a runner name. Repeat for multiple runners.")
     parser.add_argument("--limit", type=int, help="Limit selected profiles. Defaults to 10 unless --all is set.")
     parser.add_argument("--all", action="store_true", help="Select all matching profiles instead of the conservative default limit.")
@@ -1046,10 +1255,21 @@ def main() -> int:
     warnings.extend(selection_warnings)
     selected_states = [build_profile_state(profile) for profile in selected_profiles]
     selected_state_by_id = {str(state.get("profile_id")): state for state in selected_states}
-    requested_runners = parse_runners(args.runner or [])
+    if args.max_runs_per_profile < 1:
+        warnings.append("--max-runs-per-profile must be at least 1; using 1.")
+        args.max_runs_per_profile = 1
+
+    requested_runners = parse_runners(args.runner or [], args.priority)
     explicit_runner = bool(args.runner)
     resume_state = read_state() if args.resume or args.apply else {"completed_run_keys": {}, "attempted_run_keys": {}}
-    plan, skipped = build_plan(selected_states, requested_runners, explicit_runner, resume_state, args.resume)
+    plan, skipped = build_plan(
+        selected_states,
+        requested_runners,
+        explicit_runner,
+        args.max_runs_per_profile,
+        resume_state,
+        args.resume,
+    )
 
     before = summarize_global_state(cached_profiles)
     gap_inventory = collect_gap_inventory(selected_states)
@@ -1072,6 +1292,10 @@ def main() -> int:
     report: Dict[str, Any] = {
         "generated_at": utc_now_iso(),
         "mode": mode,
+        "priority": args.priority,
+        "max_runs_per_profile": args.max_runs_per_profile,
+        "runner_order": RUNNER_ORDER,
+        "selected_runner_set": requested_runners,
         "profile_source": profile_source,
         "environment": env_report,
         "selection": {
@@ -1090,7 +1314,10 @@ def main() -> int:
         "selected_profile_state_before": summarize_selected_state(selected_states),
         "gap_inventory": gap_inventory,
         "run_plan": plan,
+        "run_reasons": count_by(plan, "run_reason"),
         "skipped_plan_items": skipped,
+        "skipped_runner_reasons": count_by(skipped, "reason"),
+        "manual_internal_gaps": gap_inventory.get("manual_or_internal_gaps", []),
         "apply_results": apply_results,
         "after": after,
         "warnings": warnings,
