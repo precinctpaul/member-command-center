@@ -443,13 +443,20 @@ def build_election_framework(person: Dict[str, Any], runs_by_module: Dict[str, D
     race_context = as_dict(person.get("raceContext"))
     run = runs_by_module.get("race_opponent_context")
     summary = get_summary(run)
+    source_url = first_value(
+        race_context.get("sourceUrl"),
+        race_context.get("electionSourceUrl"),
+        race_context.get("filingSourceUrl"),
+        race_context.get("nextElectionSource"),
+    )
+    source_note = race_context.get("electionRulesSource")
 
     source_backed = (
         summary.get("race_context_status") == "source_backed"
-        or has_content(race_context.get("sourceUrl"))
-        or source_text_looks_backed(race_context.get("electionRulesSource"))
+        or has_content(source_url)
     )
-    scaffold = has_content(first_value(race_context.get("office"), race_context.get("district"), race_context.get("electionCycle"), person.get("reelectionYear"), summary.get("race_label")))
+    source_scaffold = source_text_looks_backed(source_note)
+    scaffold = has_content(first_value(race_context.get("office"), race_context.get("district"), race_context.get("electionCycle"), person.get("reelectionYear"), summary.get("race_label"), source_note))
     evidence = []
 
     if has_content(summary.get("race_label")):
@@ -460,6 +467,8 @@ def build_election_framework(person: Dict[str, Any], runs_by_module: Dict[str, D
         evidence.append("district/race field")
     if source_backed:
         evidence.append("source-backed election context")
+    elif source_scaffold:
+        evidence.append("election source note needs URL/detail verification")
 
     score = 100 if source_backed and scaffold else 55 if scaffold else 0
     return make_framework(

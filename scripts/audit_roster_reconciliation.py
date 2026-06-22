@@ -30,6 +30,16 @@ EXPECTED_GROUPS = {
     "Other / Executive / Opposition",
 }
 
+BASELINE_RECOGNITION_ISSUES = {
+    "hydration_official_website_imported_but_runner_only": 36,
+    "hydration_campaign_website_imported_but_runner_only": 22,
+    "hydration_source_tracking_not_counted_as_official_sources": 82,
+    "hydration_fec_committee_id_imported_but_summary_only": 14,
+    "hydration_openstates_identity_imported_but_summary_only": 9,
+    "hydration_headshot_dict_counted_without_primary_url": 45,
+    "readiness_election_context_complete_without_source_url": 3,
+}
+
 PLACEHOLDER_VALUES = {
     "",
     "--",
@@ -329,6 +339,20 @@ def get_readiness_framework(readiness: Dict[str, Any], key: str) -> Dict[str, An
     return {}
 
 
+def has_source_backed_race_run(latest_runs: List[Dict[str, Any]]) -> bool:
+    for run in latest_runs:
+        if not isinstance(run, dict) or run.get("module_name") != "race_opponent_context":
+            continue
+        summary = as_dict(run.get("summary"))
+        if first_value(run.get("source_url")):
+            return True
+        if summary.get("race_context_status") == "source_backed":
+            return True
+        if int(summary.get("candidate_pool_count") or 0) > 0 or int(summary.get("source_backed_opponent_count") or 0) > 0:
+            return True
+    return False
+
+
 def short_profile(profile: Dict[str, Any], profile_id_value: str, extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     payload = {
         "profile_id": profile_id_value,
@@ -459,7 +483,7 @@ def build_scoring_audit(profiles: List[Dict[str, Any]], ids_by_index: List[str])
             )
 
         openstates_field = get_hydration_field(hydration, "legislative_activity", "openstates_identity")
-        if source_fields["openstates"] and openstates_field.get("status") != "populated":
+        if source_fields["openstates"] and openstates_field.get("status") not in {"populated", "not_applicable"}:
             artificial_low["hydration_openstates_identity_imported_but_summary_only"].append(
                 short_profile(profile, pid, {"hydration_status": openstates_field.get("status")})
             )
@@ -480,6 +504,7 @@ def build_scoring_audit(profiles: List[Dict[str, Any]], ids_by_index: List[str])
             election.get("status") == "complete"
             and not first_value(race_context.get("sourceUrl"), race_context.get("electionSourceUrl"))
             and first_value(race_context.get("electionRulesSource"))
+            and not has_source_backed_race_run(latest_runs)
         ):
             artificial_high["readiness_election_context_complete_without_source_url"].append(
                 short_profile(profile, pid, {"election_score": election.get("score")})
@@ -510,14 +535,29 @@ def build_scoring_audit(profiles: List[Dict[str, Any]], ids_by_index: List[str])
                 short_profile(profile, pid)
             )
 
+    issue_counts = {
+        **{key: len(rows) for key, rows in artificial_low.items()},
+        **{key: len(rows) for key, rows in artificial_high.items()},
+    }
+    recognition_delta = {}
+    for key, baseline_count in BASELINE_RECOGNITION_ISSUES.items():
+        current_count = issue_counts.get(key, 0)
+        recognition_delta[key] = {
+            "baseline": baseline_count,
+            "current": current_count,
+            "improved_by": baseline_count - current_count,
+        }
+
     return {
         "average_readiness_score": round(sum(readiness_scores) / len(readiness_scores)) if readiness_scores else 0,
         "average_hydration_score": round(sum(hydration_scores) / len(hydration_scores)) if hydration_scores else 0,
+        "recognition_delta_from_baseline": recognition_delta,
         "artificial_low_risk": {key: rows for key, rows in sorted(artificial_low.items())},
         "artificial_high_risk": {key: rows for key, rows in sorted(artificial_high.items())},
         "notes": [
             "Readiness generally recognizes imported officialLinks, sourceTracking, FEC, Bioguide, OpenStates, raceContext, and legislativeMechanics fields.",
-            "Hydration still relies heavily on saved runner summaries for official web, campaign web, committee ID, and OpenStates identity fields, so static imported source fields can look under-hydrated until runners execute.",
+            "Hydration recognizes normalized imported officialLinks, sourceTracking, sourceIdentity, campaignImport provenance, FEC IDs, Bioguide/Congress.gov fields, OpenStates fields where applicable, voting sources, and legislative source URLs.",
+            "Not-applicable OpenStates fields on non-legislative state executive profiles are no longer reported as missed hydration recognition.",
             "Source health can receive partial readiness from static sourceTracking even when no source runner has executed; this is a review item, not a data duplicate.",
         ],
     }
@@ -758,6 +798,12 @@ def print_report(report: Dict[str, Any], report_path: Path) -> None:
     print("Scoring recognition:")
     print(f"  Average readiness score from local scoring pass: {scoring['average_readiness_score']}")
     print(f"  Average hydration score from local scoring pass: {scoring['average_hydration_score']}")
+    print("  Recognition issue delta from pre-fix audit:")
+    for key, delta in scoring.get("recognition_delta_from_baseline", {}).items():
+        print(
+            f"    {key}: {delta.get('baseline')} -> {delta.get('current')} "
+            f"(improved by {delta.get('improved_by')})"
+        )
     print("  Artificial-low risk buckets:")
     for key, rows in scoring["artificial_low_risk"].items():
         print(f"    {key}: {len(rows)}")

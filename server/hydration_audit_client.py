@@ -8,6 +8,26 @@ STATUS_SCAFFOLDED = "scaffolded"
 STATUS_PARTIAL = "partial"
 STATUS_NOT_APPLICABLE = "not_applicable"
 
+PLACEHOLDER_VALUES = {
+    "",
+    "--",
+    "-",
+    "n/a",
+    "na",
+    "none",
+    "null",
+    "unknown",
+    "not populated yet",
+    "not started",
+    "source needed",
+    "source required",
+    "state source required",
+    "parser required",
+    "missing_source",
+    "source_needed",
+    "not_loaded",
+}
+
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -19,6 +39,59 @@ def first_value(*values: Any) -> str:
             return str(value).strip()
 
     return ""
+
+
+def has_meaningful_content(value: Any) -> bool:
+    if value is None:
+        return False
+
+    if isinstance(value, str):
+        text = value.strip()
+        return bool(text) and text.lower() not in PLACEHOLDER_VALUES
+
+    if isinstance(value, list):
+        return any(has_meaningful_content(item) for item in value)
+
+    if isinstance(value, dict):
+        return any(has_meaningful_content(item) for item in value.values())
+
+    return True
+
+
+def first_meaningful(*values: Any) -> str:
+    for value in values:
+        if has_meaningful_content(value):
+            return str(value).strip()
+
+    return ""
+
+
+def first_url(*values: Any) -> str:
+    for value in values:
+        if not has_meaningful_content(value):
+            continue
+        text = str(value).strip()
+        if text.startswith(("http://", "https://")):
+            return text
+
+    return ""
+
+
+def source_text_looks_backed(value: Any) -> bool:
+    if not has_meaningful_content(value):
+        return False
+
+    text = str(value).strip().lower()
+    blocked_markers = [
+        "required",
+        "needed",
+        "not populated",
+        "not started",
+        "scaffold",
+        "eventually",
+        "future",
+    ]
+    return not any(marker in text for marker in blocked_markers)
 
 
 def safe_int(value: Any) -> int:
@@ -166,6 +239,21 @@ def get_fec_candidate_id(person: Dict[str, Any]) -> str:
     )
 
 
+def get_fec_committee_id(person: Dict[str, Any]) -> str:
+    return first_value(
+        person.get("fecCommitteeId"),
+        person.get("fecPrincipalCommitteeId"),
+        nested_value(person, "ids", "fecCommitteeId"),
+        nested_value(person, "ids", "fecPrincipalCommitteeId"),
+        nested_value(person, "identifiers", "fecCommitteeId"),
+        nested_value(person, "identifiers", "fecPrincipalCommitteeId"),
+        nested_value(person, "sourceIdentity", "fecCommitteeId"),
+        nested_value(person, "sourceIdentity", "fecPrincipalCommitteeId"),
+        nested_value(person, "campaignFinanceSnapshot", "fecCommitteeId"),
+        nested_value(person, "campaignFinanceSnapshot", "fecPrincipalCommitteeId"),
+    )
+
+
 def get_bioguide_id(person: Dict[str, Any]) -> str:
     return first_value(
         person.get("bioguideId"),
@@ -174,6 +262,43 @@ def get_bioguide_id(person: Dict[str, Any]) -> str:
         nested_value(person, "identifiers", "bioguideId"),
         nested_value(person, "sourceIdentity", "bioguideId"),
         nested_value(person, "legislativeSnapshot", "bioguideId"),
+        nested_value(person, "legislativeMechanics", "bioguideId"),
+    )
+
+
+def get_congress_profile_url(person: Dict[str, Any]) -> str:
+    return first_url(
+        person.get("congressGovUrl"),
+        nested_value(person, "officialLinks", "congressGovProfile"),
+        nested_value(person, "legislativeMechanics", "congressGovUrl"),
+        nested_value(person, "sourceEndpoints", "congressGovProfile"),
+    )
+
+
+def get_openstates_person_id(person: Dict[str, Any]) -> str:
+    return first_value(
+        person.get("openStatesPersonId"),
+        nested_value(person, "sourceIdentity", "openStatesPersonId"),
+        nested_value(person, "legislativeMechanics", "openStatesPersonId"),
+    )
+
+
+def get_openstates_profile_url(person: Dict[str, Any]) -> str:
+    return first_url(
+        person.get("openStatesUrl"),
+        nested_value(person, "officialLinks", "openStatesProfile"),
+        nested_value(person, "legislativeMechanics", "openStatesUrl"),
+        nested_value(person, "sourceEndpoints", "openStatesProfile"),
+    )
+
+
+def get_headshot_url(person: Dict[str, Any]) -> str:
+    return first_url(
+        person.get("headshotUrl"),
+        person.get("photoUrl"),
+        person.get("image"),
+        nested_value(person, "headshot", "primaryUrl"),
+        nested_value(person, "identity", "headshotUrl"),
     )
 
 
@@ -186,6 +311,9 @@ def get_office_type(person: Dict[str, Any]) -> str:
         nested_value(person, "office", "type"),
         nested_value(person, "sourceIdentity", "officeType"),
     ).lower()
+
+    if "house of delegates" in raw or "state assembly" in raw:
+        return "state_legislative"
 
     if "house" in raw or "representative" in raw or "congress" in raw:
         return "federal_house"
@@ -227,7 +355,35 @@ def is_federal_profile(person: Dict[str, Any]) -> bool:
 
 
 def is_state_legislative_profile(person: Dict[str, Any]) -> bool:
-    return get_office_type(person) == "state_legislative"
+    if get_office_type(person) == "state_legislative":
+        return True
+
+    title = first_value(
+        person.get("title"),
+        person.get("officeTitle"),
+        person.get("currentOffice"),
+        nested_value(person, "office", "title"),
+    ).lower()
+    office_type = first_value(person.get("officeType"), person.get("officeTypeNormalized")).lower()
+    state_legislative_markers = [
+        "assemblymember",
+        "state senator",
+        "state representative",
+        "house of delegates",
+        "state assembly",
+        "delegate",
+    ]
+
+    if any(marker in title for marker in state_legislative_markers):
+        return True
+
+    if office_type == "state" and title in {"senator", "representative"}:
+        return True
+
+    if office_type == "state" and has_content(get_openstates_person_id(person)):
+        return "attorney general" not in title and "governor" not in title
+
+    return False
 
 
 def classify_from_fields(
@@ -334,6 +490,7 @@ def make_category(
 
 
 def build_core_identity_category(person: Dict[str, Any]) -> Dict[str, Any]:
+    headshot_url = get_headshot_url(person)
     fields = [
         make_field(
             "name",
@@ -383,8 +540,8 @@ def build_core_identity_category(person: Dict[str, Any]) -> Dict[str, Any]:
         make_field(
             "headshot",
             "Headshot",
-            classify_from_fields(has_content(first_value(person.get("headshot"), person.get("headshotUrl"), person.get("image"), nested_value(person, "identity", "headshotUrl")))),
-            first_value(person.get("headshot"), person.get("headshotUrl"), person.get("image"), nested_value(person, "identity", "headshotUrl")),
+            classify_from_fields(has_content(headshot_url)),
+            headshot_url,
             "Official bio / Congress.gov / OpenStates",
             True,
             "official_web_contact",
@@ -402,6 +559,18 @@ def build_biographical_category(person: Dict[str, Any]) -> Dict[str, Any]:
         nested_value(person, "identity", "bio"),
         nested_value(person, "profile", "bio"),
     )
+    source_tracking = as_list(person.get("sourceTracking"))
+    official_links = as_dict(person.get("officialLinks"))
+    source_endpoints = as_dict(person.get("sourceEndpoints"))
+    official_source_value = first_meaningful(
+        person.get("officialSources"),
+        person.get("sources"),
+        nested_value(person, "sourceIdentity", "sources"),
+        official_links.get("officialWebsite"),
+        official_links.get("campaignWebsite"),
+        source_endpoints,
+        source_tracking,
+    )
 
     fields = [
         make_field(
@@ -416,8 +585,8 @@ def build_biographical_category(person: Dict[str, Any]) -> Dict[str, Any]:
         make_field(
             "official_sources",
             "Official source links",
-            classify_from_fields(has_content(person.get("officialSources")) or has_content(person.get("sources")) or has_content(nested_value(person, "sourceIdentity", "sources"))),
-            first_value(person.get("officialSources"), person.get("sources"), nested_value(person, "sourceIdentity", "sources")),
+            classify_from_fields(has_meaningful_content(official_source_value)),
+            official_source_value,
             "Official website / source runner outputs",
             True,
             "official_web_contact",
@@ -425,7 +594,7 @@ def build_biographical_category(person: Dict[str, Any]) -> Dict[str, Any]:
         make_field(
             "aliases",
             "Aliases / alternate names",
-            classify_from_fields(has_content(person.get("aliases")) or has_content(person.get("otherNames")) or has_content(nested_value(person, "sourceIdentity", "other_names"))),
+            classify_from_fields(has_meaningful_content(person.get("aliases")) or has_meaningful_content(person.get("otherNames")) or has_meaningful_content(nested_value(person, "sourceIdentity", "other_names"))),
             first_value(person.get("aliases"), person.get("otherNames"), nested_value(person, "sourceIdentity", "other_names")),
             "OpenStates / profile seed",
             True,
@@ -436,22 +605,32 @@ def build_biographical_category(person: Dict[str, Any]) -> Dict[str, Any]:
     return make_category("biographical_profile", "Biographical Profile", fields, "Narrative and alias information.")
 
 
-def build_official_web_category(runs_by_module: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def build_official_web_category(person: Dict[str, Any], runs_by_module: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     run = runs_by_module.get("official_web_contact")
     summary = get_summary(run)
+    official_links = as_dict(person.get("officialLinks"))
 
     has_run = bool(run)
     urls_checked = safe_int(summary.get("urls_checked"))
     reachable_count = safe_int(summary.get("reachable_count"))
     contact_count = safe_int(summary.get("contact_url_count"))
     social_count = safe_int(summary.get("social_url_count"))
+    official_url = first_url(summary.get("primary_official_url"), official_links.get("officialWebsite"), person.get("officialWebsite"))
+    campaign_url = first_url(summary.get("primary_campaign_url"), official_links.get("campaignWebsite"), person.get("campaignWebsite"))
+    contact_url = first_url(summary.get("primary_contact_url"), official_links.get("contactForm"), person.get("contactForm"))
+    social_value = first_meaningful(
+        social_count if social_count > 0 else "",
+        official_links.get("youtubeChannelId"),
+        official_links.get("youtubeChannelTitle"),
+        nested_value(person, "mediaTracking", "youtubeChannelId"),
+    )
 
     fields = [
         make_field(
             "official_website",
             "Official website",
-            classify_from_fields(has_content(summary.get("primary_official_url")), partial=has_run and not has_content(summary.get("primary_official_url"))),
-            summary.get("primary_official_url", ""),
+            classify_from_fields(has_content(official_url), partial=has_run and not has_content(official_url)),
+            official_url,
             "Official website verification",
             True,
             "official_web_contact",
@@ -459,8 +638,8 @@ def build_official_web_category(runs_by_module: Dict[str, Dict[str, Any]]) -> Di
         make_field(
             "campaign_website",
             "Campaign website",
-            classify_from_fields(has_content(summary.get("primary_campaign_url")), partial=has_run and not has_content(summary.get("primary_campaign_url"))),
-            summary.get("primary_campaign_url", ""),
+            classify_from_fields(has_content(campaign_url), partial=has_run and not has_content(campaign_url)),
+            campaign_url,
             "Campaign website discovery/verification",
             True,
             "official_web_contact",
@@ -468,8 +647,8 @@ def build_official_web_category(runs_by_module: Dict[str, Dict[str, Any]]) -> Di
         make_field(
             "contact_url",
             "Contact form / contact URL",
-            classify_from_fields(has_content(summary.get("primary_contact_url")) or contact_count > 0, partial=has_run and contact_count == 0),
-            summary.get("primary_contact_url", ""),
+            classify_from_fields(has_content(contact_url) or contact_count > 0, partial=has_run and contact_count == 0 and not has_content(contact_url)),
+            contact_url,
             "Official website contact pages",
             True,
             "official_web_contact",
@@ -477,8 +656,8 @@ def build_official_web_category(runs_by_module: Dict[str, Dict[str, Any]]) -> Di
         make_field(
             "social_links",
             "Social links",
-            classify_from_fields(social_count > 0, partial=has_run and social_count == 0),
-            social_count,
+            classify_from_fields(has_meaningful_content(social_value), partial=has_run and social_count == 0 and not has_meaningful_content(social_value)),
+            social_value,
             "Official/campaign/social link discovery",
             True,
             "official_web_contact",
@@ -502,13 +681,15 @@ def build_finance_category(person: Dict[str, Any], runs_by_module: Dict[str, Dic
     run = runs_by_module.get("openfec_finance")
     summary = get_summary(run)
     has_run = bool(run)
+    candidate_id = first_value(summary.get("candidate_id"), summary.get("fec_candidate_id"), get_fec_candidate_id(person))
+    committee_id = first_value(summary.get("committee_id"), summary.get("fec_committee_id"), get_fec_committee_id(person))
 
     fields = [
         make_field(
             "fec_candidate_id",
             "FEC candidate ID",
-            classify_from_fields(has_content(first_value(summary.get("candidate_id"), summary.get("fec_candidate_id"), get_fec_candidate_id(person))), applicable=applicable),
-            first_value(summary.get("candidate_id"), summary.get("fec_candidate_id"), get_fec_candidate_id(person)),
+            classify_from_fields(has_content(candidate_id), applicable=applicable),
+            candidate_id,
             "OpenFEC / profile seed",
             True,
             "openfec_finance",
@@ -516,8 +697,8 @@ def build_finance_category(person: Dict[str, Any], runs_by_module: Dict[str, Dic
         make_field(
             "committee_id",
             "Principal committee ID",
-            classify_from_fields(has_content(first_value(summary.get("committee_id"), summary.get("fec_committee_id"))), partial=has_run, applicable=applicable),
-            first_value(summary.get("committee_id"), summary.get("fec_committee_id")),
+            classify_from_fields(has_content(committee_id), partial=has_run and not has_content(committee_id), applicable=applicable),
+            committee_id,
             "OpenFEC committee lookup",
             True,
             "openfec_finance",
@@ -569,13 +750,32 @@ def build_race_context_category(person: Dict[str, Any], runs_by_module: Dict[str
     summary = get_summary(run)
     has_run = bool(run)
     is_federal_supported = summary.get("is_federal_fec_supported") is True
+    race_context = as_dict(person.get("raceContext"))
+    race_label = first_meaningful(
+        summary.get("race_label"),
+        race_context.get("raceLabel"),
+        " ".join(
+            item
+            for item in [
+                first_meaningful(race_context.get("electionCycle")),
+                first_meaningful(race_context.get("office")),
+                first_meaningful(race_context.get("district")),
+            ]
+            if item
+        ),
+    )
+    race_source_url = first_url(race_context.get("sourceUrl"), race_context.get("electionSourceUrl"), race_context.get("filingSourceUrl"))
+    race_source_text = first_meaningful(race_context.get("sourceName"), race_context.get("electionRulesSource"), race_context.get("filingSource"))
+    has_source_note = source_text_looks_backed(race_source_text)
+    has_source_backing = bool(race_source_url or summary.get("race_context_status") == "source_backed")
+    has_race_scaffold = has_meaningful_content(race_label)
 
     fields = [
         make_field(
             "race_label",
             "Race label",
-            classify_from_fields(has_content(summary.get("race_label")), partial=has_run),
-            summary.get("race_label", ""),
+            classify_from_fields(has_source_backing and has_race_scaffold, scaffolded=has_race_scaffold and not has_source_backing, partial=(has_run or has_source_note) and not has_source_backing),
+            race_label,
             "OpenFEC / profile race scaffold",
             True,
             "race_opponent_context",
@@ -714,13 +914,25 @@ def build_legislative_category(person: Dict[str, Any], runs_by_module: Dict[str,
     congress_summary = get_summary(congress_run)
     openstates_run = runs_by_module.get("openstates_legislation")
     openstates_summary = get_summary(openstates_run)
+    legislative_mechanics = as_dict(person.get("legislativeMechanics"))
+    congress_identity = first_value(congress_summary.get("bioguide_id"), get_bioguide_id(person), get_congress_profile_url(person))
+    sponsored_source = first_url(
+        legislative_mechanics.get("sponsoredLegislationEndpoint"),
+        nested_value(person, "sourceEndpoints", "sponsoredLegislation"),
+    )
+    cosponsored_source = first_url(
+        legislative_mechanics.get("cosponsoredLegislationEndpoint"),
+        nested_value(person, "sourceEndpoints", "cosponsoredLegislation"),
+    )
+    voting_source = first_url(legislative_mechanics.get("votingRecordSourceUrl"), nested_value(person, "sourceEndpoints", "votingRecordSource"))
+    openstates_identity = first_value(openstates_summary.get("openstates_person_id"), get_openstates_person_id(person), get_openstates_profile_url(person))
 
     fields = [
         make_field(
             "congress_bioguide",
             "Congress.gov Bioguide ID",
-            classify_from_fields(has_content(first_value(congress_summary.get("bioguide_id"), get_bioguide_id(person))), partial=bool(congress_run), applicable=federal_applicable),
-            first_value(congress_summary.get("bioguide_id"), get_bioguide_id(person)),
+            classify_from_fields(has_content(congress_identity), partial=bool(congress_run) and not has_content(congress_identity), applicable=federal_applicable),
+            congress_identity,
             "Congress.gov",
             True,
             "congress_legislation",
@@ -728,8 +940,8 @@ def build_legislative_category(person: Dict[str, Any], runs_by_module: Dict[str,
         make_field(
             "congress_sponsored",
             "Sponsored legislation",
-            classify_from_fields(safe_int(congress_summary.get("sponsored_returned")) > 0 or has_content(congress_summary.get("sponsored_legislation")), partial=bool(congress_run), applicable=federal_applicable),
-            congress_summary.get("sponsored_returned", 0),
+            classify_from_fields(safe_int(congress_summary.get("sponsored_returned")) > 0 or has_content(congress_summary.get("sponsored_legislation")) or has_content(sponsored_source), partial=bool(congress_run), applicable=federal_applicable),
+            first_value(congress_summary.get("sponsored_returned"), sponsored_source, 0),
             "Congress.gov sponsored legislation",
             True,
             "congress_legislation",
@@ -737,8 +949,8 @@ def build_legislative_category(person: Dict[str, Any], runs_by_module: Dict[str,
         make_field(
             "congress_cosponsored",
             "Cosponsored legislation",
-            classify_from_fields(safe_int(congress_summary.get("cosponsored_returned")) > 0 or has_content(congress_summary.get("cosponsored_legislation")), partial=bool(congress_run), applicable=federal_applicable),
-            congress_summary.get("cosponsored_returned", 0),
+            classify_from_fields(safe_int(congress_summary.get("cosponsored_returned")) > 0 or has_content(congress_summary.get("cosponsored_legislation")) or has_content(cosponsored_source) or has_content(voting_source), partial=bool(congress_run), applicable=federal_applicable),
+            first_value(congress_summary.get("cosponsored_returned"), cosponsored_source, voting_source, 0),
             "Congress.gov cosponsored legislation",
             True,
             "congress_legislation",
@@ -746,8 +958,8 @@ def build_legislative_category(person: Dict[str, Any], runs_by_module: Dict[str,
         make_field(
             "openstates_identity",
             "OpenStates identity",
-            classify_from_fields(has_content(openstates_summary.get("openstates_person_id")), partial=bool(openstates_run), applicable=state_applicable),
-            openstates_summary.get("openstates_person_id", ""),
+            classify_from_fields(has_content(openstates_identity), partial=bool(openstates_run) and not has_content(openstates_identity), applicable=state_applicable),
+            openstates_identity,
             "OpenStates people lookup",
             True,
             "openstates_legislation",
@@ -755,8 +967,8 @@ def build_legislative_category(person: Dict[str, Any], runs_by_module: Dict[str,
         make_field(
             "openstates_bills",
             "OpenStates bills",
-            classify_from_fields(safe_int(openstates_summary.get("bills_returned")) > 0, partial=bool(openstates_run), applicable=state_applicable),
-            openstates_summary.get("bills_returned", 0),
+            classify_from_fields(safe_int(openstates_summary.get("bills_returned")) > 0 or has_content(get_openstates_profile_url(person)), partial=bool(openstates_run), applicable=state_applicable),
+            first_value(openstates_summary.get("bills_returned"), get_openstates_profile_url(person), 0),
             "OpenStates bill search",
             True,
             "openstates_legislation",
@@ -764,8 +976,8 @@ def build_legislative_category(person: Dict[str, Any], runs_by_module: Dict[str,
         make_field(
             "votes_committees",
             "Votes and committees",
-            classify_from_fields(safe_int(openstates_summary.get("votes_returned")) > 0 or safe_int(openstates_summary.get("committees_returned")) > 0, partial=bool(openstates_run), applicable=state_applicable),
-            {"votes": openstates_summary.get("votes_returned", 0), "committees": openstates_summary.get("committees_returned", 0)},
+            classify_from_fields(safe_int(openstates_summary.get("votes_returned")) > 0 or safe_int(openstates_summary.get("committees_returned")) > 0 or has_content(voting_source), partial=bool(openstates_run), applicable=state_applicable),
+            {"votes": openstates_summary.get("votes_returned", 0), "committees": openstates_summary.get("committees_returned", 0), "voting_source": voting_source},
             "OpenStates votes/committees endpoints, endpoint cleanup needed",
             True,
             "openstates_legislation",
@@ -975,9 +1187,26 @@ def build_power_mapping_category() -> Dict[str, Any]:
     return make_category("power_mapping_staff_networks", "Power Mapping and Staff Networks", fields, "Staff, stakeholders, committee gatekeepers, and relationship coverage.")
 
 
-def build_source_coverage_category(coverage: Dict[str, Any]) -> Dict[str, Any]:
+def build_source_coverage_category(person: Dict[str, Any], coverage: Dict[str, Any]) -> Dict[str, Any]:
     rows = as_list(coverage.get("coverage_rows"))
     status_counts = as_dict(coverage.get("status_counts"))
+    source_tracking = [
+        item
+        for item in as_list(person.get("sourceTracking"))
+        if isinstance(item, dict) and has_meaningful_content(item)
+    ]
+    source_identity = as_dict(person.get("sourceIdentity"))
+    source_identity_values = [
+        value
+        for value in source_identity.values()
+        if has_meaningful_content(value)
+    ]
+    campaign_import = as_dict(person.get("campaignImport"))
+    campaign_node_id = first_meaningful(
+        person.get("sourceNodeId"),
+        campaign_import.get("nodeId"),
+        source_identity.get("campaignCommandCenterNodeId"),
+    )
 
     fields = [
         make_field(
@@ -997,6 +1226,33 @@ def build_source_coverage_category(coverage: Dict[str, Any]) -> Dict[str, Any]:
             "Source coverage matrix",
             True,
             "coverage_matrix",
+        ),
+        make_field(
+            "imported_source_tracking",
+            "Imported source tracking",
+            classify_from_fields(len(source_tracking) > 0),
+            len(source_tracking),
+            "Imported profile source map / normalized sourceTracking records",
+            False,
+            "source_review",
+        ),
+        make_field(
+            "source_identity",
+            "Source identity",
+            classify_from_fields(len(source_identity_values) > 0),
+            source_identity,
+            "Bioguide, OpenStates, FEC/OpenFEC, or other source-backed identifiers",
+            False,
+            "identity_source_review",
+        ),
+        make_field(
+            "campaign_import_provenance",
+            "Campaign import provenance",
+            classify_from_fields(has_meaningful_content(campaign_node_id)),
+            campaign_node_id,
+            "Campaign Command Center import metadata copied into Member Command Center",
+            False,
+            "import_provenance_review",
         ),
         make_field(
             "missing_runs",
@@ -1032,7 +1288,7 @@ def build_profile_hydration_audit(
     categories = [
         build_core_identity_category(person),
         build_biographical_category(person),
-        build_official_web_category(runs_by_module),
+        build_official_web_category(person, runs_by_module),
         build_finance_category(person, runs_by_module),
         build_race_context_category(person, runs_by_module),
         build_opposition_category(runs_by_module),
@@ -1041,7 +1297,7 @@ def build_profile_hydration_audit(
         build_geography_category(person, runs_by_module),
         build_fact_check_category(),
         build_power_mapping_category(),
-        build_source_coverage_category(coverage),
+        build_source_coverage_category(person, coverage),
     ]
 
     aggregate_counts = {
